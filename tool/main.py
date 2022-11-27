@@ -1,17 +1,21 @@
+from io import TextIOWrapper
 import os
+import pathlib
 import yaml
-import docopt
+from docopt import docopt
 
 # Potentially use configparser
-_NAME = 'tool'
-_VERSION = '0.0.1'
-_SYSTEM_CONFIG_FILE = f'.{_NAME}rc'
-_LOCAL_CONFIG_FILE = f'.rc'
+NAME = 'tool'
+VERSION = '0.0.1'
+SYSTEM_CONFIG_FILE = f'.{NAME}rc'
+LOCAL_CONFIG_FILE = f'{NAME}.rc'
 
-_CLI = f"""{_NAME}
+CLI = f"""{NAME}
 
 Usage:
-  {_NAME} [options] <src>
+  {NAME} [options] <src>
+  {NAME} link <language>
+  {NAME} install <config>
 
 Options:
   -h --help               Show this screen.
@@ -20,45 +24,62 @@ Options:
                           the system config.
   -l --language=LANGUAGE  Specify the name of the language to use from the 
                           system config.
-  -s --symlink            Create a symbolic link of the current language
 """
 
-_is_using_cli = False
+def yaml_load_all(file: TextIOWrapper) -> dict:
+    config = {}
+    for i, doc in enumerate(yaml.safe_load_all(file)):
+        if type(doc) != dict:
+            continue
+        # Note: If a language is named with an index it could be overriden
+        name = doc.get('name', i)
+        config[name] = doc
+    return config
 
-def _get_system_config() -> dict:
+def get_system_config() -> dict:
     home = os.path.expanduser('~')
     
-    with open(os.path.join(home, _SYSTEM_CONFIG_FILE)) as file:
+    try:
+        with open(os.path.join(home, SYSTEM_CONFIG_FILE)) as file:
+            system_config = yaml_load_all(file)
+    except FileNotFoundError:
         system_config = {}
-        for doc in yaml.safe_load_all(file):
-            system_config[doc['name']] = doc
     
     return system_config
 
-def _get_path_config(path: str | None) -> dict:
+def get_path_config(path: str | None) -> dict:
     if path == None:
         return {}
-
-    with open(path) as file:
-        path_config = yaml.safe_load(file)
     
+    # Note: may want this error to be shown to users
+    try:
+        with open(path) as file:
+            path_config = yaml_load_all(file)
+    except FileNotFoundError:
+        path_config = {}
+
     return path_config
 
-def _get_local_config() -> dict:
-    if path == None:
+def get_local_config() -> dict:
+    local_path = None
+    
+    for path in pathlib.Path().rglob(LOCAL_CONFIG_FILE):
+        local_path = path
+        break
+    
+    if local_path == None:
         return {}
 
-    with open(path) as file:
-        path_config = yaml.safe_load(file)
-    
+    with open(local_path) as file:
+        path_config = yaml_load_all(file)
+
     return path_config
 
 def main():
-    global _is_using_cli 
-    _is_using_cli = True
-
-    args = docopt(_CLI, version=f'{_NAME} {_VERSION}')
-
-    system_config = _get_system_config()
-    path_config = _get_path_config(args['--config'])
+    args = docopt(CLI, version=f'{NAME} {VERSION}')
+    # system_config = _get_system_config()
+    # path_config = _get_path_config(args['--config'])
+    local_config = get_local_config()
+    print(local_config)
+    # inline_config = 
 
