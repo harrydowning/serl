@@ -1,8 +1,7 @@
-from io import TextIOWrapper
-import os
-import pathlib
+import os, io, pathlib
 import yaml
 from docopt import docopt
+from lexer import build_lexer
 
 # Potentially use configparser
 NAME = 'tool'
@@ -26,7 +25,7 @@ Options:
                           system config.
 """
 
-def yaml_load_all(file: TextIOWrapper) -> dict:
+def yaml_load_all(file: io.TextIOWrapper) -> dict:
     config = {}
     for i, doc in enumerate(yaml.safe_load_all(file)):
         if type(doc) != dict:
