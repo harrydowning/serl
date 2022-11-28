@@ -2,17 +2,18 @@ tool: 0.0.1
 name: gantt
 
 rules:
-  text: "([a-zA-Z0-9\s]*)"
+  text: ([a-zA-Z0-9 ]+)
   title: text
   -----: ---+
   bar: \s*=*
   id: (\d+)
-  ref: "\[id\]"
-  row: text \| (bar \*?) (?| ref | text | ())? \n?
+  ref: "\\[id\\]"
+  row: "text \\| (bar \\*?) (?: ref | text | ())? \\n?"
   rows: "(?: row)+"
 
 block:
-  def: "[id]: text"
+  def: | 
+    ref: text
   gantt: |
       title
       -----

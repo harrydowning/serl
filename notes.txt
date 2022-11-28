@@ -2,4 +2,3 @@
 - Just have a block and inline section which contain everything (although having reusable referencable functionality may be good)
 
 - Lexer throws error on empty string match
-- Best for users to not use new line characters as this will effect line numbers in error messages
