@@ -1,0 +1,49 @@
+block:
+
+
+---
+
+[1]: First Milstone
+    
+    Gantt Chart 1
+----------------------
+task 1  | ====*[1]
+task 2  |   =======
+  sub 1 |   ===
+  sub 2 |      ====
+goal 1  |          *
+
+
+    Gantt Chart 2
+----------------------
+task 1  | ====
+task 2  |   ====
+  sub 1 |    ===* [1]
+  sub 2 |   =
+task 3  |        ====
+
+
+    3rd Year Project
+-------------------------
+Background  | ======
+Prototype   |    ======
+Interim     |        ===* Report handin
+Iteration 1 |            ===
+Iteration 2 |               ====
+Testing     |              ===
+Final       |                 ====*
+
+
+[5]: First milestone
+
+                      Gantt Chart 2
+---------------------------------------------------------
+        | oct | nov | dec | jan | feb | mar | apr | may
+task 1  |=====
+task 2  |   ====
+  sub 1 |    ===* [5]
+  sub 2 |   =
+task 3  |        ====
+
+
+Note: we would want it to behave such that is the definition of [5] didn't exist it would be treated as text

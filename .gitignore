@@ -4,7 +4,3 @@ venv
 *.egg-info
 dist/
 
-*.yaml
-!spec.yaml
-*.txt
-!requirements.txt

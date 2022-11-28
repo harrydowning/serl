@@ -14,7 +14,6 @@ CLI = f"""{NAME}
 Usage:
   {NAME} [options] <src>
   {NAME} link <language>
-  {NAME} install <config>
 
 Options:
   -h --help               Show this screen.
@@ -74,10 +73,15 @@ def get_local_config() -> dict:
 
     return path_config
 
+# def get_inline_config(src: str) -> tuple[dict, str]:
+#     with open(src) as file:
+#         inline_config, content = list(yaml.safe_load_all(file))[:2]
+#     return inline_config, content
+
 def main():
     args = docopt(CLI, version=f'{NAME} {VERSION}')
-    # system_config = _get_system_config()
-    # path_config = _get_path_config(args['--config'])
+    # system_config = get_system_config()
+    # path_config = get_path_config(args['--config'])
     local_config = get_local_config()
     print(local_config)
     # inline_config = 

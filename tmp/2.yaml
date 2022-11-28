@@ -1,0 +1,43 @@
+version: 3.12
+
+rules:
+  idn4: \s\s\s\s
+  hash: "#{1,6}"
+
+syntax:
+  block: # Could have the option for implicit template and specifying the property if other fields needed
+    slide:
+      template: |-
+        [ {header}
+          {idn4} {text} {\n}
+        ]
+    codeblock: 
+    - |
+      ({idn4} {text} {\n})+
+    - |
+      ```
+      {text}
+      ```
+    header:
+      - |
+        {hash} {text} {hash}?
+
+        h
+
+      - |
+        {text} {\n}
+        ---
+    default:
+
+  inline:
+    code: |
+        `{text}`
+    bold: |
+        **{text}**
+    default:
+    
+
+# Could be implicitly paired if the syntax name matches the semantics name
+semantics: 
+  slide:
+  codeblock:
