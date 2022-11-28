@@ -7,7 +7,7 @@ from lexer import build_lexer
 NAME = 'tool'
 VERSION = '0.0.1'
 SYSTEM_CONFIG_FILE = f'.{NAME}rc'
-LOCAL_CONFIG_FILE = f'{NAME}.rc'
+LOCAL_CONFIG_FILE = f'config.yaml'
 
 CLI = f"""{NAME}
 
