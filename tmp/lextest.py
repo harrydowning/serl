@@ -1,5 +1,4 @@
 import ply.lex as lex
-from types import FunctionType
 import regex
 
 tokens = (
@@ -63,12 +62,11 @@ def get_pattern_function(name, pattern):
         t.value = m.allcaptures()
         return t
     
-    pattern_function = FunctionType(f.__code__, f.__globals__, name, f.__defaults__, f.__closure__)
-    pattern_function.__doc__ = pattern
-    return pattern_function
+    f.__doc__ = pattern
+    return f
 
 g = globals()
-g['t_OP'] = get_pattern_function('t_OP', r'\((?:\{(.{7})\})+\)')
+g['t_OP'] = get_pattern_function('t_OP', r'[\+\-\*\/]')
 
 
 def build():
@@ -83,6 +81,6 @@ further text with a [nested [link [another nested]] lorem] like that [lorem [lin
 
 """
 
-lexer.input('({ text1 }{ text2 }{ text3 })')
+lexer.input('text + text - text * text / text')
 for token in lexer:
     print(token)

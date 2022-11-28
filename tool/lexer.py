@@ -1,4 +1,3 @@
-from types import FunctionType
 import ply.lex as lex
 import regex
 
@@ -9,17 +8,16 @@ def get_pattern_function(name, pattern):
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
         m = regex.match(pattern, string, regex.VERBOSE)
-        t.value = m.allcaptures()[1:]
+        t.value = m.allcaptures()
         t.lexer.lineno += string.count('\n')
         return t
     
-    pattern_function = FunctionType(f.__code__, f.__globals__, name, f.__defaults__, f.__closure__)
-    pattern_function.__doc__ = pattern
-    return pattern_function
+    f.__doc__ = pattern
+    return f
 
 t_DEFAULT = r'.+'
 
-def t_newline(t):
+def newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
 
@@ -36,5 +34,7 @@ def build_lexer(config: dict):
         name = f't_{token}'
         g['tokens'] = (*g['tokens'], token)
         g[name] = get_pattern_function(name, pattern)
+
+    g['t_newline'] = newline # Ensures lower precedence compared to user rules
 
     return lex.lex()

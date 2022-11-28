@@ -13,7 +13,7 @@ CLI = f"""{NAME}
 
 Usage:
   {NAME} [options] <src>
-  {NAME} link <language>
+  {NAME} link [-d] <language>
 
 Options:
   -h --help               Show this screen.
