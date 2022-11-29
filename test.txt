@@ -1,6 +1,9 @@
 [1]: First Milstone
 
-some other text
-
-[1]: First Milstone
-more text
+    Gantt Chart 1
+----------------------
+task 1  | ====* [1]
+task 2  |   ======= hello
+  sub 1 |   ===
+  sub 2 |      ====
+goal 1  |          *

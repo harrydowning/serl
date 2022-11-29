@@ -1,5 +1,6 @@
-
+import sys
 from docopt import docopt
+import networkx as nx
 from tool.lexer import build_lexer
 import tool.utils as utils
 
@@ -18,10 +19,15 @@ Usage:
 Options:
   -h --help               Show this screen.
   -v --version            Show version.
-  -c --config=CONFIG      Specify a file to partially or completely override 
-                          the system config.
+  -c --config=PATH        Specify a path to another config file to add to the 
+                          overall config. Config precedence is as follows: 
+                          system (lowest), path, local, inline (highest). 
   -l --language=LANGUAGE  Specify the name of the language to use from the 
-                          system config.
+                          config.
+  --debug                 Run in debug mode. This displays the master regex
+                          construction.
+  --strict                Run in strict mode. This stops evaluation at the
+                          first warning.
 """
 
 def main():
@@ -33,14 +39,25 @@ def main():
     # path_config = get_path_config(args['--config'])
 
     local_config = utils.get_local_config(LOCAL_CONFIG_FILE)[language]
-    rules = local_config['rules']
+    rules = utils.get_sorted_rules(local_config['rules'])
     block = local_config['block']
 
-    rules = utils.expand_patterns(rules, rules)
+    v, e = utils.get_rule_graph(rules)
+    G = nx.DiGraph(e)
+    cycles = list(nx.simple_cycles(G))
+
+    if cycles:
+        cycle_nodes = {n for l in cycles for n in l}
+        G.remove_nodes_from(cycle_nodes)
+        # TODO: warnings own module (and includ strict mode logic)
+        for node in cycle_nodes:
+            print(f"[Warning]: Cycle detected involving rule '{node}'. Rule not expanded any further. This is most likely not indended, check rule.", file=sys.stderr)
+
+    rule_order = list(nx.topological_sort(G))
+    rules = utils.expand_rules(rule_order, rules)
+
     syntax = utils.expand_patterns(block, rules)
-    lexer = build_lexer(syntax)
-    
-    print(syntax)
+    lexer = build_lexer(syntax, args['--debug'])
 
     with open(src) as file:
         src_str = file.read()

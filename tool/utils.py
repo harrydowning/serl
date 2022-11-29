@@ -55,12 +55,31 @@ def get_local_config(filename) -> dict:
 #         inline_config, content = list(yaml.safe_load_all(file))[:2]
 #     return inline_config, content
 
+def get_sorted_rules(rules):
+    sorted_rules = {}
+    for key in sorted(rules, key=len, reverse=True):
+        sorted_rules[key] = rules[key]
+    return sorted_rules
+
+def get_rule_graph(rules):
+    vertices = list(rules.keys())
+    edges = []
+    for rule1 in rules:
+        for rule2 in rules:
+            if rule2 in rules[rule1]:
+                edges.append((rule2, rule1))
+    return vertices, edges
+
+def expand_rules(rule_order, rules):
+    expanded_rules = rules.copy()
+    for rule1 in rule_order:
+        for rule2 in rules:
+            expanded_rules[rule1] = expanded_rules[rule1].replace(rule2, expanded_rules[rule2])
+    return expanded_rules
+
 def expand_patterns(patterns, rules):
     new_patterns = patterns.copy()
     for pattern in patterns:
         for rule in rules:
-            # At the moment disallow recursion
-            if pattern == rule:
-                continue
             new_patterns[pattern] = new_patterns[pattern].replace(rule, rules[rule])
     return new_patterns

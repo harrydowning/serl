@@ -7,6 +7,7 @@ def get_pattern_function(pattern):
     def f(t):
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
+        # Match again to get only the relevant captures
         m = regex.match(pattern, string, regex.VERBOSE)
         t.value = m.allcaptures()
         t.lexer.lineno += string.count('\n')
@@ -15,12 +16,7 @@ def get_pattern_function(pattern):
     f.__doc__ = pattern
     return f
 
-t_DEFAULT = r'.+'
-
-# def default(t):
-#     r'(.|\n)+'
-#     t.lexer.lineno += t.value.count('\n')
-#     return t
+t_DEFAULT = r'.'
 
 def newline(t):
     r'\n+'
@@ -30,7 +26,7 @@ def t_error(t):
     print(f"Illegal character '{t.value[0]}'")
     t.lexer.skip(1)
 
-def build_lexer(config: dict):
+def build_lexer(config: dict, debug: bool):
     g = globals()
     g['tokens'] = ('DEFAULT',)
 
@@ -40,7 +36,7 @@ def build_lexer(config: dict):
         g[f't_{token}'] = get_pattern_function(pattern)
 
     g['t_newline'] = newline # Ensures lower precedence compared to user rules
-    #g['t_DEFAULT'] = default
 
+    lex.re = regex # Backward compatible, but allows for better regex support
 
-    return lex.lex()
+    return lex.lex(debug=debug)

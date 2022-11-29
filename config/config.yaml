@@ -3,21 +3,27 @@ name: gantt
 
 rules:
   text: ([a-zA-Z0-9 ]+)
-  title: text
-  -----: ---+
-  bar: \s*=*
+  title: text \n
+  annotation: | 
+    (?| ref | text | ())
+  -----: ---+ \n
+  bar: (\s*=* \*?)
   id: (\d+)
-  ref: "\\[id\\]"
-  row: "text \\| (bar \\*?) (?: ref | text | ())? \\n?"
-  rows: "(?: row)+"
+  ref: |
+    \[id\]
+  row: |
+    text \| bar \s* annotation \n
+  rows: |
+    (?: row)+
+
 
 block:
-  def: | 
+  def: |
     ref: text
   gantt: |
-      title
-      -----
-      rows
+    title
+    -----
+    rows
 
 ---
 

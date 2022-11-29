@@ -8,7 +8,7 @@ block:
     Gantt Chart 1
 ----------------------
 task 1  | ====*[1]
-task 2  |   =======
+task 2  |   ======= hello
   sub 1 |   ===
   sub 2 |      ====
 goal 1  |          *
@@ -16,7 +16,7 @@ goal 1  |          *
 
     Gantt Chart 2
 ----------------------
-task 1  | ====
+task 1| ====
 task 2  |   ====
   sub 1 |    ===* [1]
   sub 2 |   =
@@ -26,7 +26,7 @@ task 3  |        ====
     3rd Year Project
 -------------------------
 Background  | ======
-Prototype   |    ======
+Prototype   |    ====== [2]
 Interim     |        ===* Report handin
 Iteration 1 |            ===
 Iteration 2 |               ====
