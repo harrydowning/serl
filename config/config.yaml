@@ -12,7 +12,7 @@ rules:
   ref: |
     \[id\]
   row: |
-    text \| bar \s* annotation \n
+    text \| bar \ * annotation \n
   rows: |
     (?: row)+
 

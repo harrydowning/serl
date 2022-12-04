@@ -7,3 +7,14 @@ task 2  |   ======= hello
   sub 1 |   ===
   sub 2 |      ====
 goal 1  |          *
+
+
+    Gantt Chart 2
+----------------------
+task 15 | ====*
+task 6  |   =======
+task  5 |   === annotation
+  sub 2 |      ==== [7]
+goal 1  |       ==*
+
+

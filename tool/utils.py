@@ -35,7 +35,7 @@ def get_path_config(path: str | None) -> dict:
 
     return path_config
 
-def get_local_config(filename) -> dict:
+def get_local_config(filename: str) -> dict:
     local_path = None
     
     for path in pathlib.Path().rglob(filename):
@@ -55,27 +55,29 @@ def get_local_config(filename) -> dict:
 #         inline_config, content = list(yaml.safe_load_all(file))[:2]
 #     return inline_config, content
 
-def get_sorted_rules(rules):
+def get_sorted_rules(rules: dict) -> dict:
     sorted_rules = {}
     for key in sorted(rules, key=len, reverse=True):
         sorted_rules[key] = rules[key]
     return sorted_rules
 
-def get_rule_graph(rules):
-    vertices = list(rules.keys())
+def get_rule_graph(rules: dict) -> list[tuple[str, str]]:
+    rules = rules.copy()
     edges = []
-    for rule1 in rules:
-        for rule2 in rules:
-            if rule2 in rules[rule1]:
-                edges.append((rule2, rule1))
-    return vertices, edges
+    for def_rule in rules:
+        for ref_rule in rules:
+            if ref_rule in rules[def_rule]:
+                edges.append((ref_rule, def_rule))
+                # Replace ref_rule with '' so substrings of it aren't added
+                rules[def_rule] = rules[def_rule].replace(ref_rule, '')
+    return edges
 
 def expand_rules(rule_order, rules):
-    expanded_rules = rules.copy()
-    for rule1 in rule_order:
+    exp_rules = rules.copy()
+    for def_rule in rule_order:
         for rule2 in rules:
-            expanded_rules[rule1] = expanded_rules[rule1].replace(rule2, expanded_rules[rule2])
-    return expanded_rules
+            exp_rules[def_rule] = exp_rules[def_rule].replace(rule2, exp_rules[rule2])
+    return exp_rules
 
 def expand_patterns(patterns, rules):
     new_patterns = patterns.copy()

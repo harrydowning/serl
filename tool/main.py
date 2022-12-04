@@ -1,10 +1,10 @@
-import sys
+import sys, logging
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
 import tool.utils as utils
 
-# Potentially use configparser
+# TODO: Potentially use configparser
 NAME = 'tool'
 VERSION = '0.0.1'
 SYSTEM_CONFIG_FILE = f'.{NAME}rc'
@@ -30,7 +30,11 @@ Options:
                           first warning.
 """
 
+def setup():
+    logging.basicConfig(format='%(levelname)s:%(message)s')
+
 def main():
+    setup()
     args = docopt(CLI, version=f'{NAME} {VERSION}')
     language = args['<language>'] # Also check 0th arg for symlink
     src = args['<src>']
@@ -42,18 +46,21 @@ def main():
     rules = utils.get_sorted_rules(local_config['rules'])
     block = local_config['block']
 
-    v, e = utils.get_rule_graph(rules)
-    G = nx.DiGraph(e)
-    cycles = list(nx.simple_cycles(G))
+    rule_graph = nx.DiGraph(utils.get_rule_graph(rules))
+    cycles = list(nx.simple_cycles(rule_graph))
 
     if cycles:
-        cycle_nodes = {n for l in cycles for n in l}
-        G.remove_nodes_from(cycle_nodes)
+        cycle_nodes = {node for cycle in cycles for node in cycle}
+        rule_graph.remove_nodes_from(cycle_nodes)
         # TODO: warnings own module (and includ strict mode logic)
-        for node in cycle_nodes:
-            print(f"[Warning]: Cycle detected involving rule '{node}'. Rule not expanded any further. This is most likely not indended, check rule.", file=sys.stderr)
+        for cycle in cycles:
+            msg = (f"Cycle detected in rules: '{', '.join(cycle)}']'."
+                    " Rules will won't be expanded. This is most likely not" 
+                    " indended, please check rules.")
+            logging.warning(msg)
+            exit(1)
 
-    rule_order = list(nx.topological_sort(G))
+    rule_order = list(nx.topological_sort(rule_graph))
     rules = utils.expand_rules(rule_order, rules)
 
     syntax = utils.expand_patterns(block, rules)
@@ -65,7 +72,7 @@ def main():
 
     lexer.input(src_str)
     for token in lexer:
-        print(token)
+        print(token.value[1:])
     
     
 
