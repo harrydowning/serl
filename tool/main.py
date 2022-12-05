@@ -1,4 +1,4 @@
-import sys, logging
+import os, logging
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -13,8 +13,8 @@ LOCAL_CONFIG_FILE = f'config.yaml'
 CLI = f"""{NAME}
 
 Usage:
-  {NAME} [options] <language> <src>
   {NAME} link [-d] <language>
+  {NAME} [options] <language> <src>
 
 Options:
   -h --help               Show this screen.
@@ -33,11 +33,30 @@ Options:
 def setup():
     logging.basicConfig(format='%(levelname)s:%(message)s')
 
-def main():
-    setup()
-    args = docopt(CLI, version=f'{NAME} {VERSION}')
+def warning(message, strict_mode):
+    logging.warning(message)
+    if strict_mode:
+        exit(1)
+
+def link(args):
+    language = args['<language>']
+    delete = args['-d']
+    
+    if delete:
+        pass
+
+    src = os.path.abspath(__file__)
+    dst = os.path.join(os.getcwd(), f'{language}')
+    if os.name == 'nt':
+        dst += '.exe'
+
+    #os.symlink(src, dst)
+
+
+def default(args):
     language = args['<language>'] # Also check 0th arg for symlink
     src = args['<src>']
+    strict_mode = args['--strict']
 
     # system_config = get_system_config(SYSTEM_CONFIG_FILE)
     # path_config = get_path_config(args['--config'])
@@ -52,13 +71,12 @@ def main():
     if cycles:
         cycle_nodes = {node for cycle in cycles for node in cycle}
         rule_graph.remove_nodes_from(cycle_nodes)
-        # TODO: warnings own module (and includ strict mode logic)
+
         for cycle in cycles:
-            msg = (f"Cycle detected in rules: '{', '.join(cycle)}']'."
-                    " Rules will won't be expanded. This is most likely not" 
+            msg = (f"Cyclic reference in rules: '{', '.join(cycle)}'."
+                    " Rules will not be expanded. This is most likely not" 
                     " indended, please check rules.")
-            logging.warning(msg)
-            exit(1)
+            warning(msg, strict_mode)
 
     rule_order = list(nx.topological_sort(rule_graph))
     rules = utils.expand_rules(rule_order, rules)
@@ -70,10 +88,29 @@ def main():
         src_str = file.read()
         # TODO: inline_config 
 
+    code = local_config['code'] # make keys upper to match tokens
+    env = {
+        'src': src
+    }
+    _setup = code['setup']
+    exec(_setup, env)
+
     lexer.input(src_str)
     for token in lexer:
-        print(token.value[1:])
-    
-    
+        #print(token)
+        env['captures'] = token.value
+        _token_code = code[token.type.lower()]
+        exec(_token_code, env)
 
+    _result = code['result']
+    exec(_result, env)
+
+
+def main():
+    setup()
+    args = docopt(CLI, version=f'{NAME} {VERSION}')
+    if args['link']:
+        link(args)
+    else:
+        default(args)
 

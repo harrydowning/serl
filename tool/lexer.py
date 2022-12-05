@@ -1,7 +1,8 @@
 import ply.lex as lex
 import regex
 
-# TODO: Define a couple of set functionality functions (e.g., switching lexing state)
+# TODO: Define a couple of set functionality functions (e.g., switching 
+# lexing state)
 
 def get_pattern_function(pattern):
     def f(t):
@@ -37,6 +38,6 @@ def build_lexer(config: dict, debug: bool):
 
     g['t_newline'] = newline # Ensures lower precedence compared to user rules
 
-    lex.re = regex # Backward compatible, but allows for better regex support
+    lex.re = regex # Backward compatible and allows for better regex support
 
     return lex.lex(debug=debug)
