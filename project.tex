@@ -1,0 +1,72 @@
+
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[margin = 2.5cm]{geometry}
+\usepackage{pgfgantt}
+\usepackage{pdflscape}
+
+\begin{document}
+
+
+\begin{landscape}
+
+
+\begin{figure}
+\noindent\resizebox{\columnwidth}{!}{
+\begin{ganttchart}[
+  vgrid, 
+  hgrid, 
+  x unit = 1cm, 
+  y unit chart= 0.9cm, 
+  bar/.append style={fill = lightgray}]{1}{42}
+
+\gantttitle{Part III Project}{42}\\
+\gantttitle{Oct}{6}\gantttitle{Nov}{6}\gantttitle{Dec}{6}\gantttitle{Jan}{6}\gantttitle{Feb}{6}\gantttitle{Mar}{6}\gantttitle{Apr}{6}\\
+\ganttbar{Background}{1}{7}\\
+\ganttbar{Prototyping}{7}{12}\\
+\ganttbar{Interim Report}{12}{13}\ganttmilestone[inline]{Interim Handin}{13}\\
+\ganttbar{1st Iteration}{16}{22}\\
+\ganttbar{2nd Iteration}{21}{26}\\
+\ganttbar{Testing}{25}{28}\\
+\ganttbar{Tool Examples}{26}{27}\\
+\ganttbar{Documentation}{28}{30}\\
+\ganttbar{Final Report}{31}{36}\ganttmilestone[inline]{Final Handin}{36}
+
+
+\end{ganttchart}
+}
+\label{fig-gantt1}
+\caption{Initial project gantt chart}
+\end{figure}
+\begin{figure}
+\noindent\resizebox{\columnwidth}{!}{
+\begin{ganttchart}[
+  vgrid, 
+  hgrid, 
+  x unit = 1cm, 
+  y unit chart= 0.9cm, 
+  bar/.append style={fill = lightgray}]{1}{42}
+
+\gantttitle{Part III Project}{42}\\
+\gantttitle{Oct}{6}\gantttitle{Nov}{6}\gantttitle{Dec}{6}\gantttitle{Jan}{6}\gantttitle{Feb}{6}\gantttitle{Mar}{6}\gantttitle{Apr}{6}\\
+\ganttbar{Background}{1}{7}\\
+\ganttbar{Prototyping}{7}{12}\\
+\ganttbar{Interim Report}{12}{13}\ganttmilestone[inline]{Interim Handin}{13}\\
+\ganttbar{1st Iteration}{16}{22}\\
+\ganttbar{2nd Iteration}{21}{26}\\
+\ganttbar{Testing}{25}{28}\\
+\ganttbar{Tool Examples}{26}{27}\\
+\ganttbar{Documentation}{28}{30}\\
+\ganttbar{Final Report}{31}{36}\ganttmilestone[inline]{Final Handin}{36}
+
+
+\end{ganttchart}
+}
+\label{fig-gantt2}
+\caption{Final project gantt chart}
+\end{figure}
+
+\end{landscape}
+
+
+\end{document}

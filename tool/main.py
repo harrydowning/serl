@@ -32,11 +32,16 @@ Options:
 
 def setup():
     logging.basicConfig(format='%(levelname)s:%(message)s')
+    logging.getLogger().setLevel(logging.INFO)
 
 def warning(message, strict_mode):
     logging.warning(message)
     if strict_mode:
         exit(1)
+
+def info(message, debug_mode):
+    if debug_mode:
+        logging.info(message)
 
 def link(args):
     language = args['<language>']
@@ -57,13 +62,14 @@ def default(args):
     language = args['<language>'] # Also check 0th arg for symlink
     src = args['<src>']
     strict_mode = args['--strict']
+    debug_mode = args['--debug']
 
     # system_config = get_system_config(SYSTEM_CONFIG_FILE)
     # path_config = get_path_config(args['--config'])
 
     local_config = utils.get_local_config(LOCAL_CONFIG_FILE)[language]
     rules = utils.get_sorted_rules(local_config['rules'])
-    block = local_config['block']
+    tokens = local_config['tokens']
 
     rule_graph = nx.DiGraph(utils.get_rule_graph(rules))
     cycles = list(nx.simple_cycles(rule_graph))
@@ -81,7 +87,7 @@ def default(args):
     rule_order = list(nx.topological_sort(rule_graph))
     rules = utils.expand_rules(rule_order, rules)
 
-    syntax = utils.expand_patterns(block, rules)
+    syntax = utils.expand_patterns(tokens, rules)
     lexer = build_lexer(syntax, args['--debug'])
 
     with open(src) as file:
@@ -96,8 +102,9 @@ def default(args):
     exec(_setup, env)
 
     lexer.input(src_str)
+    info(' ==== TOKENS FOLLOW ====', debug_mode)
     for token in lexer:
-        #print(token)
+        info(token, debug_mode)
         env['captures'] = token.value
         _token_code = code[token.type.lower()]
         exec(_token_code, env)

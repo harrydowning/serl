@@ -1,12 +1,30 @@
+[-]
                   Part III Project
-------------------------------------------------
-Background     |=====
-Prototyping    |  ===
-Interim Report |   ==* Interim Handin
-1st Iteration  |     ===
-2nd Iteration  |        ===
-Testing        |          ==
-Tool Examples  |           =
-Documentation  |           ==
-Final Report   |          ====* Final Handin
+--------------------------------------------------------
+               | Oct | Nov | Dec | Jan | Feb | Mar | Apr
+Background     |=======
+Prototyping    |      ======
+Interim Report |           ==* Interim Handin
+1st Iteration  |               =======
+2nd Iteration  |                    ======
+Testing        |                        ====
+Tool Examples  |                         ==
+Documentation  |                           ===
+Final Report   |                              ======* Final Handin
+--------------------------------------------------------
+fig-gantt1: Initial project gantt chart
 
+                  Part III Project
+--------------------------------------------------------
+               | Oct | Nov | Dec | Jan | Feb | Mar | Apr
+Background     |=======
+Prototyping    |      ======
+Interim Report |           ==* Interim Handin
+1st Iteration  |               =======
+2nd Iteration  |                    ======
+Testing        |                        ====
+Tool Examples  |                         ==
+Documentation  |                           ===
+Final Report   |                              ======* Final Handin
+--------------------------------------------------------
+fig-gantt2: Final project gantt chart
