@@ -1,15 +1,15 @@
-.35
+0.35
                   Part III Project
 --------------------------------------------------------------
                | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May
 Background     |========
-Prototyping    |      =========
+Prototype      |      =========
 Interim Report |         ======* Interim Handin
 1st Iteration  |               ========
 2nd Iteration  |                       ========
-Testing        |                            =====
-Tool Examples  |                                ====
-Documentation  |                                 =====
+Testing        |                          =====
+Tool Examples  |                             ======
+Documentation  |                                ===
 Final Report   |                                =========* Final Handin
 -------------------------------------------------------------
 fig-gantt: Part III Estimated Gantt Chart
