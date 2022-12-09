@@ -4,26 +4,22 @@ rules:
   text: |
     [a-zA-Z0-9 ]*
   title: (text) \n
-  <->: \ *
+  space: \ *
   milestone: |
     (?| \* (text) | () (?: text))
   -----: ---+ \n
-  bar: (<-> =*)
+  bar: (space =*)
   row: |
     (text) \| bar milestone \n
   rows: |
     (?: row)+
   titles: |
-    (?: <-> \| (text))+ \n
+    (?: space \| (text))+ \n
   label: |
     ([a-zA-Z0-9\-]*)
   caption: (text) \n?
 
 tokens:
-  landscape: |
-    \[ - \]
-  portrait: |
-    \[ \| \]
   gantt: |
     title
     -----
@@ -31,6 +27,12 @@ tokens:
     rows
     -----
     label: caption
+  vertical: |
+    \[ \| \]
+  horizontal: |
+    \[ - \]
+  scale: |
+    (0?\.[1-9]+ | 1)
 
 code:
   setup: |
@@ -39,7 +41,7 @@ code:
     \usepackage[utf8]{inputenc}
     \usepackage[margin = 2.5cm]{geometry}
     \usepackage{pgfgantt}
-    \usepackage{pdflscape}
+    \usepackage[figuresleft]{rotating}
 
     \begin{document}
     
@@ -47,21 +49,14 @@ code:
 
     \end{document}
     ''' % content
-    
-    lscape = lambda content: r'''
-    \begin{landscape}
 
-    %s
-
-    \end{landscape}
-    ''' % content
-
-    is_lscape = False
-    orien = [r'\textwidth', r'\columnwidth']
+    sideways = False
+    scale = 1
+    fig_type = ['figure', 'sidewaysfigure']
 
     gantt = lambda width, content, fig_label, caption: r'''
-    \begin{figure}
-    \noindent\resizebox{%s}{!}{
+    \begin{%s}
+    \noindent\resizebox{\textwidth}{!}{
     \begin{ganttchart}[
       vgrid, 
       hgrid, 
@@ -75,36 +70,31 @@ code:
     }
     \label{%s}
     \caption{%s}
-    \end{figure}''' % (orien[is_lscape], width, content, fig_label, caption)
+    \end{%s}''' % (fig_type[sideways], width, content, fig_label, caption, fig_type[sideways])
 
     gantt_title = lambda title, width: r'\gantttitle{%s}{%s}' % (title, width)
     gantt_bar = lambda label, start, end: r'\ganttbar{%s}{%s}{%s}' % (label, start, end)
     gantt_milestone = lambda text, pos: r'\ganttmilestone[inline]{%s}{%s}' % (text, pos)
 
     content = ''
-    current = ''
+  
+  vertical: |
+    sideways = True
+  
+  horizontal: |
+    sideways = False
 
-    def update_content():
-      global content, current
-      if is_lscape:
-        content += lscape(current)
-      else:
-        content += current
-      current = ''
-  
-  landscape: |
-    update_content()
-    is_lscape = True
-  
-  portrait: |
-    update_content()
-    is_lscape = False
-  
+  scale: |
+    scale = float(captures[1][0])
+
   gantt: |
     _, title, titles, labels, bars, milestones, fig_label, caption = captures
     width = len(max(bars, key=len))
     width += len(titles) - (width % len(titles))
     t_width = width // len(titles)
+
+    t_width = round(t_width * scale)
+    width = t_width * len(titles)
 
     rows = len(labels)
     fig_label = fig_label[0]
@@ -119,8 +109,8 @@ code:
 
     for row in range(rows):
       label = labels[row].strip()
-      start = bars[row].find('=')
-      end = len(bars[row])
+      start = round(bars[row].find('=') * scale)
+      end = min(round(len(bars[row]) * scale), width)
       m = milestones[row]
 
       if start != -1:
@@ -134,12 +124,11 @@ code:
       else:
         _content += r'\\' + '\n'
     
-    current += gantt(width, _content, fig_label, caption)
+    content += gantt(width, _content, fig_label, caption)
   
   default: pass
   
   result: |
-    update_content()
     document = doc(content)
     with open(f'{src.split(".")[0]}.tex', 'w') as file:
       file.write(document)

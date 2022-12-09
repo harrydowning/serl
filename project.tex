@@ -3,70 +3,37 @@
 \usepackage[utf8]{inputenc}
 \usepackage[margin = 2.5cm]{geometry}
 \usepackage{pgfgantt}
-\usepackage{pdflscape}
+\usepackage[figuresleft]{rotating}
 
 \begin{document}
 
 
-\begin{landscape}
-
-
 \begin{figure}
-\noindent\resizebox{\columnwidth}{!}{
+\noindent\resizebox{\textwidth}{!}{
 \begin{ganttchart}[
   vgrid, 
   hgrid, 
   x unit = 1cm, 
   y unit chart= 0.9cm, 
-  bar/.append style={fill = lightgray}]{1}{42}
+  bar/.append style={fill = lightgray}]{1}{16}
 
-\gantttitle{Part III Project}{42}\\
-\gantttitle{Oct}{6}\gantttitle{Nov}{6}\gantttitle{Dec}{6}\gantttitle{Jan}{6}\gantttitle{Feb}{6}\gantttitle{Mar}{6}\gantttitle{Apr}{6}\\
-\ganttbar{Background}{1}{7}\\
-\ganttbar{Prototyping}{7}{12}\\
-\ganttbar{Interim Report}{12}{13}\ganttmilestone[inline]{Interim Handin}{13}\\
-\ganttbar{1st Iteration}{16}{22}\\
-\ganttbar{2nd Iteration}{21}{26}\\
-\ganttbar{Testing}{25}{28}\\
-\ganttbar{Tool Examples}{26}{27}\\
-\ganttbar{Documentation}{28}{30}\\
-\ganttbar{Final Report}{31}{36}\ganttmilestone[inline]{Final Handin}{36}
-
-
-\end{ganttchart}
-}
-\label{fig-gantt1}
-\caption{Initial project gantt chart}
-\end{figure}
-\begin{figure}
-\noindent\resizebox{\columnwidth}{!}{
-\begin{ganttchart}[
-  vgrid, 
-  hgrid, 
-  x unit = 1cm, 
-  y unit chart= 0.9cm, 
-  bar/.append style={fill = lightgray}]{1}{42}
-
-\gantttitle{Part III Project}{42}\\
-\gantttitle{Oct}{6}\gantttitle{Nov}{6}\gantttitle{Dec}{6}\gantttitle{Jan}{6}\gantttitle{Feb}{6}\gantttitle{Mar}{6}\gantttitle{Apr}{6}\\
-\ganttbar{Background}{1}{7}\\
-\ganttbar{Prototyping}{7}{12}\\
-\ganttbar{Interim Report}{12}{13}\ganttmilestone[inline]{Interim Handin}{13}\\
-\ganttbar{1st Iteration}{16}{22}\\
-\ganttbar{2nd Iteration}{21}{26}\\
-\ganttbar{Testing}{25}{28}\\
-\ganttbar{Tool Examples}{26}{27}\\
-\ganttbar{Documentation}{28}{30}\\
-\ganttbar{Final Report}{31}{36}\ganttmilestone[inline]{Final Handin}{36}
+\gantttitle{Part III Project}{16}\\
+\gantttitle{Oct}{2}\gantttitle{Nov}{2}\gantttitle{Dec}{2}\gantttitle{Jan}{2}\gantttitle{Feb}{2}\gantttitle{Mar}{2}\gantttitle{Apr}{2}\gantttitle{May}{2}\\
+\ganttbar{Background}{1}{3}\\
+\ganttbar{Prototyping}{3}{5}\\
+\ganttbar{Interim Report}{4}{5}\ganttmilestone[inline]{Interim Handin}{5}\\
+\ganttbar{1st Iteration}{6}{8}\\
+\ganttbar{2nd Iteration}{9}{11}\\
+\ganttbar{Testing}{11}{12}\\
+\ganttbar{Tool Examples}{12}{13}\\
+\ganttbar{Documentation}{13}{13}\\
+\ganttbar{Final Report}{12}{14}\ganttmilestone[inline]{Final Handin}{14}
 
 
 \end{ganttchart}
 }
-\label{fig-gantt2}
-\caption{Final project gantt chart}
+\label{fig-gantt}
+\caption{Part III Estimated Gantt Chart}
 \end{figure}
-
-\end{landscape}
-
 
 \end{document}
