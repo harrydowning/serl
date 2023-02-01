@@ -22,8 +22,6 @@ Options:
   -c --config=PATH        Specify a path to another config file to add to the 
                           overall config. Config precedence is as follows: 
                           system (lowest), path, local, inline (highest). 
-  -l --language=LANGUAGE  Specify the name of the language to use from the 
-                          config.
   --debug                 Run in debug mode. This displays the master regex
                           construction.
   --strict                Run in strict mode. This stops evaluation at the
