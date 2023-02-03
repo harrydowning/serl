@@ -55,6 +55,7 @@ def get_local_config(filename: str) -> dict:
 #         inline_config, content = list(yaml.safe_load_all(file))[:2]
 #     return inline_config, content
 
+# change to an OrderedDict to then call sort
 def get_sorted_rules(rules: dict) -> dict:
     sorted_rules = {}
     for key in sorted(rules, key=len, reverse=True):

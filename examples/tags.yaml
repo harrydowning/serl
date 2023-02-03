@@ -1,0 +1,22 @@
+grammar:
+  data:
+    - tag
+    - literal
+  tag: |
+    <(id)>
+      data
+    </\1>
+  literal:
+    - "[0-9]+"
+    - "[a-zA-Z0-9 ]+"
+  id: "[a-z]+"
+
+# Need to think how convinience definitions (e.g., literal). Maybe if nothing is defined the value gets passed on as is???
+# Need to think about symbol table
+code:
+  data: | # python
+    # code
+  tag: | # python
+    # code
+  literal: | # python
+    return int(captures[0])

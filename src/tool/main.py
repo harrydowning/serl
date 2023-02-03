@@ -1,13 +1,13 @@
-import os, logging
+import os
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
 import tool.utils as utils
+import tool.logger as logger
 
-# TODO: Potentially use configparser
 NAME = 'tool'
 VERSION = '0.0.1'
-SYSTEM_CONFIG_FILE = f'.{NAME}rc'
+SYSTEM_CONFIG_DIR = f'.{NAME}'
 LOCAL_CONFIG_FILE = f'config.yaml'
 
 CLI = f"""{NAME}
@@ -27,19 +27,6 @@ Options:
   --strict                Run in strict mode. This stops evaluation at the
                           first warning.
 """
-
-def setup():
-    logging.basicConfig(format='%(levelname)s:%(message)s')
-    logging.getLogger().setLevel(logging.INFO)
-
-def warning(message, strict_mode):
-    logging.warning(message)
-    if strict_mode:
-        exit(1)
-
-def info(message, debug_mode):
-    if debug_mode:
-        logging.info(message)
 
 def link(args):
     language = args['<language>']
@@ -80,7 +67,7 @@ def default(args):
             msg = (f"Cyclic reference in rules: '{', '.join(cycle)}'."
                     " Rules will not be expanded. This is most likely not" 
                     " indended, please check rules.")
-            warning(msg, strict_mode)
+            logger.warning(msg, strict_mode)
 
     rule_order = list(nx.topological_sort(rule_graph))
     rules = utils.expand_rules(rule_order, rules)
@@ -100,9 +87,9 @@ def default(args):
     exec(_setup, env)
 
     lexer.input(src_str)
-    info(' ==== TOKENS FOLLOW ====', debug_mode)
+    logger.info(' ==== TOKENS FOLLOW ====', debug_mode)
     for token in lexer:
-        info(token, debug_mode)
+        logger.info(token, debug_mode)
         env['captures'] = token.value
         _token_code = code[token.type.lower()]
         exec(_token_code, env)
@@ -112,7 +99,6 @@ def default(args):
 
 
 def main():
-    setup()
     args = docopt(CLI, version=f'{NAME} {VERSION}')
     if args['link']:
         link(args)
