@@ -1,37 +1,39 @@
-version: mylang 0.0.1
+version: tags 0.0.1
 usage: |
-  mylang
+  tags
   
   Usage:
-  mylang (link | unlink) <language>
-  mylang [options] [(-l <language>)] [<input>]
+  tags [options] [<input>]
 
   Options:
-    -h --help     Show this screen.
-    -v --version  Show version.
-    --debug       Run in debug mode.
-    --strict      Run in strict mode. This stops evaluation at the
-                  first warning.
+    -h --help             Show this screen.
+    -v --version          Show version.
+    -o --output=FILENAME  Output target.
+
+# Not all tokens will be used during tokenization. Only those
+# referenced in the grammar. This is because tokens will be fully 
+# expanded and so some may just be used in the construction of 
+# other larger tokens.
+tokens:
+  <: <
+  ">": ">"
+  /: /
+  alpha: \w+
+  number: \d+
+  space: "[ \t]+"
 
 grammar:
   data:
-    - tag1
-    - tag2
+    - tag
     - literal
-  tag1: |
-    <id>
+  tag: |
+    <alpha>
       data
-    </id>
-  tag2: |
-    <id>
-      data
-    <\|id>
-  literal: |
-    [a-zA-Z0-9 ]+
-  id: |
-    [a-z]+
+    </alpha>
+  literal:
+    - literal space alpha
+    - alpha
 
-# Need to think how convinience definitions (e.g., literal). Maybe if nothing is defined the value gets passed on as is???
 # Need to think about symbol table
 code:
   data: | # python
@@ -39,4 +41,4 @@ code:
   tag: | # python
     # code
   literal: | # python
-    return int(captures[0])
+    # code
