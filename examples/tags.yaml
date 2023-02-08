@@ -18,21 +18,18 @@ tokens:
   <: <
   ">": ">"
   /: /
-  alpha: \w+
-  number: \d+
-  space: "[ \t]+"
+  alpha: (\w+)
+  literal: ([\w\t ]+)
 
 grammar:
   data:
     - tag
+    - alpha
     - literal
   tag: |
     <alpha>
       data
     </alpha>
-  literal:
-    - literal space alpha
-    - alpha
 
 # Need to think about symbol table
 code:
