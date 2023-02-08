@@ -3,3 +3,4 @@ docopt==0.6.2
 ply==3.11
 regex==2022.10.31
 networkx==2.8.8
+jsonschema==4.17.3

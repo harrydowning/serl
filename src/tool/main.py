@@ -81,7 +81,7 @@ def default(args):
     # User language docopt
     #language_args = docopt(usage, argv=[], version=version)
     
-    _input = args['<input>'][0] # default 0
+    _input = args['<input>'][0] # TODO default 0
     # Read input file if prsent else read from stdin
     with fileinput.input(files=_input or ()) as file:
         src = ''.join(file)
