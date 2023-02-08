@@ -1,6 +1,6 @@
 grammar:
   setext-heading: |
-    (?:text \n)+
+    text \n
     setext-heading-underline
   setext-heading-underline:
     - ---+
@@ -12,7 +12,7 @@ grammar:
   atx-heading: |
     (#{1,6}) inline #*
   
-  text: [a-z]+
+  text: "[a-z]+"
   
 
   inline:

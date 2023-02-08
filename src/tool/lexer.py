@@ -37,6 +37,7 @@ def build_lexer(config: dict, debug: bool):
         g[f't_{token}'] = get_pattern_function(pattern)
 
     g['t_newline'] = newline # Ensures lower precedence compared to user rules
+    g['t_ignore'] = ' \t'
 
     lex.re = regex # Backward compatible and allows for better regex support
 

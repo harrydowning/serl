@@ -1,15 +1,35 @@
+version: mylang 0.0.1
+usage: |
+  mylang
+  
+  Usage:
+  mylang (link | unlink) <language>
+  mylang [options] [(-l <language>)] [<input>]
+
+  Options:
+    -h --help     Show this screen.
+    -v --version  Show version.
+    --debug       Run in debug mode.
+    --strict      Run in strict mode. This stops evaluation at the
+                  first warning.
+
 grammar:
   data:
-    - tag
+    - tag1
+    - tag2
     - literal
-  tag: |
-    <(id)>
+  tag1: |
+    <id>
       data
-    </\1>
-  literal:
-    - "[0-9]+"
-    - "[a-zA-Z0-9 ]+"
-  id: "[a-z]+"
+    </id>
+  tag2: |
+    <id>
+      data
+    <\|id>
+  literal: |
+    [a-zA-Z0-9 ]+
+  id: |
+    [a-z]+
 
 # Need to think how convinience definitions (e.g., literal). Maybe if nothing is defined the value gets passed on as is???
 # Need to think about symbol table

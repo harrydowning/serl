@@ -1,58 +1,21 @@
-import os
+import os, fileinput
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
 import tool.utils as utils
 import tool.logger as logger
+from tool.constants import CLI, NAME, VERSION
 
-NAME = 'tool'
-VERSION = '0.0.1'
-SYSTEM_CONFIG_DIR = f'.{NAME}'
-LOCAL_CONFIG_FILE = f'config.yaml'
-
-CLI = f"""{NAME}
-
-Usage:
-  {NAME} link [-d] <language>
-  {NAME} [options] <language> <src>
-
-Options:
-  -h --help               Show this screen.
-  -v --version            Show version.
-  -c --config=PATH        Specify a path to another config file to add to the 
-                          overall config. Config precedence is as follows: 
-                          system (lowest), path, local, inline (highest). 
-  --debug                 Run in debug mode. This displays the master regex
-                          construction.
-  --strict                Run in strict mode. This stops evaluation at the
-                          first warning.
-"""
-
-def link(args):
-    language = args['<language>']
-    delete = args['-d']
-    
-    if delete:
-        pass
-
-    src = os.path.abspath(__file__)
-    dst = os.path.join(os.getcwd(), f'{language}')
-    if os.name == 'nt':
-        dst += '.exe'
-
-    #os.symlink(src, dst)
-
-
-def default(args):
+def default_old(args):
     language = args['<language>'] # Also check 0th arg for symlink
-    src = args['<src>']
+    src = args['<input>']
     strict_mode = args['--strict']
     debug_mode = args['--debug']
 
     # system_config = get_system_config(SYSTEM_CONFIG_FILE)
     # path_config = get_path_config(args['--config'])
 
-    local_config = utils.get_local_config(LOCAL_CONFIG_FILE)[language]
+    local_config = {} #utils.get_local_config(LOCAL_CONFIG_FILE)[language]
     rules = utils.get_sorted_rules(local_config['rules'])
     tokens = local_config['tokens']
 
@@ -97,11 +60,40 @@ def default(args):
     _result = code['result']
     exec(_result, env)
 
+def link(args):
+    language = args['<language>']
+
+    src = os.path.abspath(__file__)
+    dst = os.path.join(os.getcwd(), f'{language}')
+    if os.name == 'nt':
+        dst += '.exe'
+
+    #os.symlink(src, dst)
+
+def unlink(args):
+    pass
+
+def default(args):
+    print(args)
+    language = args['<language>']
+    # get config
+
+    # User language docopt
+    #language_args = docopt(usage, argv=[], version=version)
+    
+    _input = args['<input>'][0] # default 0
+    # Read input file if prsent else read from stdin
+    with fileinput.input(files=_input or ()) as file:
+        src = ''.join(file)
+    print(src)
+    
+    
 
 def main():
     args = docopt(CLI, version=f'{NAME} {VERSION}')
-    if args['link']:
-        link(args)
-    else:
-        default(args)
+    default(args)
+    # if args['link']:
+    #     link(args)
+    # else:
+    #     default(args)
 
