@@ -61,17 +61,16 @@ def default_old(args):
     exec(_result, env)
 
 def link(args):
-    language = args['<language>']
-
+    language = args['<language>'].split('.')[0]
+    dir = args['<dir>'] or os.getcwd()
+    
     src = os.path.abspath(__file__)
-    dst = os.path.join(os.getcwd(), f'{language}')
+    dst = os.path.join(dir, f'{language}')
+    
     if os.name == 'nt':
         dst += '.exe'
-
-    #os.symlink(src, dst)
-
-def unlink(args):
-    pass
+    
+    os.symlink(src, dst)
 
 def default(args):
     print(args)
@@ -88,12 +87,10 @@ def default(args):
     print(src)
     
     
-
 def main():
     args = docopt(CLI, version=f'{NAME} {VERSION}')
-    default(args)
-    # if args['link']:
-    #     link(args)
-    # else:
-    #     default(args)
+    if args['link']:
+        link(args)
+    else:
+        default(args)
 

@@ -12,7 +12,9 @@ py -m tool --help
 ```
 
 ### Test
-
+```
+pytest tests
+```
 ### Build
 
 ### Publish
