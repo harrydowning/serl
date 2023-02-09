@@ -86,7 +86,7 @@ def default(args):
     if usage != None:
         language_argv = [language, *inputs]
         language_args = docopt(usage, argv=language_argv, version=version)
-        # Requirement: User must specify <input> file to be the one parsed.
+        # Requirement: Must specify single <input> in usage to be file parsed.
         src_input = language_args['<input>']
     else:
         src_input = next(iter(inputs), None) # First element if it exists
@@ -95,7 +95,6 @@ def default(args):
     with fileinput.input(files=src_input or ()) as file:
         src = ''.join(file)
     print(src)
-    
     
 def main():
     args = docopt(CLI, version=f'{NAME} {VERSION}')
