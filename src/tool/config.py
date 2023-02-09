@@ -1,7 +1,9 @@
 import os, re
 import yaml
 import requests
+import tool.logger as logger
 from tool.constants import SYSTEM_CONFIG_DIR
+from tool.schema import validate
 
 def get_system_config(language: str) -> dict:
     home = os.path.expanduser('~')
@@ -31,17 +33,27 @@ def get_file_config(file_path: str) -> dict:
 
 def get_url_config(url: str) -> dict:
     r = requests.get(url)
+    r.raise_for_status()
     return yaml.safe_load(r.text)
 
 def get_config(language: str) -> dict:
-    pass
-    # try:
-    #     if re.match(r'https?://.*', language):
-    #         config = get_url_config(language)
-    #     else:
-    #         try:
-    #             config = get_file_config
-    #         except FileNotFoundError:
-    #             config
+    if re.match(r'https?://.*', language):
+        try:
+            config = get_url_config(language)
+        except requests.exceptions.ConnectionError as ce:
+            pass
+        except requests.exceptions.HTTPError as httpe:
+            pass 
+        except requests.exceptions.RequestException as re:
+            pass
+    else:
+        pass
+    # system/file config
+
+    valid = validate(config)
+    if valid:
+        return config
+    else:
+        logger.error(f"Invalid configuration") # Get detailed validation errors
                 
         

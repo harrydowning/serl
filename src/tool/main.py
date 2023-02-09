@@ -5,6 +5,7 @@ from tool.lexer import build_lexer
 import tool.utils as utils
 import tool.logger as logger
 from tool.constants import CLI, NAME, VERSION
+from tool.config import get_config
 
 def default_old(args):
     language = args['<language>'] # Also check 0th arg for symlink
@@ -73,16 +74,25 @@ def link(args):
     os.symlink(src, dst)
 
 def default(args):
-    print(args)
     language = args['<language>']
-    # get config
+    config = get_config(language)
+
+    version = config.get('version', None)
+    usage = config.get('usage', None)
+
+    inputs = args['<input>']
 
     # User language docopt
-    #language_args = docopt(usage, argv=[], version=version)
+    if usage != None:
+        language_argv = [language, *inputs]
+        language_args = docopt(usage, argv=language_argv, version=version)
+        # Requirement: User must specify <input> file to be the one parsed.
+        src_input = language_args['<input>']
+    else:
+        src_input = next(iter(inputs), None) # First element if it exists
     
-    _input = args['<input>'][0] # TODO default 0
     # Read input file if prsent else read from stdin
-    with fileinput.input(files=_input or ()) as file:
+    with fileinput.input(files=src_input or ()) as file:
         src = ''.join(file)
     print(src)
     
