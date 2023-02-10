@@ -19,16 +19,14 @@ def get_system_config(language: str) -> dict:
                 config = yaml.safe_load(file)
             break
 
-    if config == {}:
-        err_msg = f"No system config for language {language} found."
-        raise FileNotFoundError(err_msg)
-
     return config
 
 def get_file_config(file_path: str) -> dict:
-    config = {}
-    with open(file_path) as file:
-        config = yaml.safe_load(file)
+    try:
+        with open(file_path) as file:
+            config = yaml.safe_load(file)
+    except FileNotFoundError:
+        config = {}
     return config
 
 def get_url_config(url: str) -> dict:
@@ -41,14 +39,15 @@ def get_config(language: str) -> dict:
         try:
             config = get_url_config(language)
         except requests.exceptions.ConnectionError as ce:
-            pass
+            logger.error(ce)
         except requests.exceptions.HTTPError as httpe:
-            pass 
+            logger.error(httpe)
         except requests.exceptions.RequestException as re:
-            pass
+            logger.error(re)
     else:
-        pass
-    # system/file config
+        config = get_file_config(language) or get_system_config(language)
+        if config == {}:
+            logger.error(f"Could not find language config for {language}.")
 
     valid, message = validate(config)
     if valid:
