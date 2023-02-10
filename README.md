@@ -2,19 +2,25 @@
 University of Southampton 3YP project.
 
 ## Workflow
-### Build Local
+### Build
 ```
-pip install .
+$ pip install .
 ```
-### Run Local
+### Run
 ```
-py -m tool --help
+$ py -m tool --help
+$ tool --help
 ```
 
 ### Test
 ```
-pytest tests
+$ pytest tests
 ```
-### Build
+### Build dist
 
-### Publish
+### Publish dist
+
+### Build docs
+```
+$ sphinx-build -b html docs/source/ docs/build/html
+```

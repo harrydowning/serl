@@ -23,9 +23,12 @@ tokens:
 
 grammar:
   data:
-    - tag
+    - tags
     - alpha
     - literal
+  tags:
+    - tags tag
+    - tag
   tag: |
     <alpha>
       data
@@ -34,6 +37,8 @@ grammar:
 # Need to think about symbol table
 code:
   data: | # python
+    # code
+  tags: | # python
     # code
   tag: | # python
     # code

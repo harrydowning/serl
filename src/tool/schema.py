@@ -1,3 +1,4 @@
+from typing import Tuple
 import jsonschema
 
 config_schema = {
@@ -22,9 +23,9 @@ config_schema = {
     "required": ["tokens", "grammar", "code"]
 }
 
-def validate(config: dict) -> bool:
+def validate(config: dict) -> Tuple[bool, str]:
     try:
         jsonschema.validate(config, config_schema)
-    except jsonschema.exceptions.ValidationError:
-        return False
-    return True
+    except jsonschema.exceptions.ValidationError as ve:
+        return False, ve.message
+    return True, ''

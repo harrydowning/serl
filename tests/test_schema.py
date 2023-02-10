@@ -78,4 +78,5 @@ test_data = [
 @pytest.mark.parametrize("test_config,expected", test_data)
 def test_schema(test_config, expected):
     config = yaml.safe_load(test_config)
-    assert schema.validate(config) == expected
+    valid, _ = schema.validate(config)
+    assert valid == expected

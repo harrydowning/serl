@@ -50,10 +50,10 @@ def get_config(language: str) -> dict:
         pass
     # system/file config
 
-    valid = validate(config)
+    valid, message = validate(config)
     if valid:
         return config
     else:
-        logger.error(f"Invalid configuration") # Get detailed validation errors
+        logger.error(message)
                 
         

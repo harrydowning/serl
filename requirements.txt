@@ -4,3 +4,6 @@ ply==3.11
 regex==2022.10.31
 networkx==2.8.8
 jsonschema==4.17.3
+
+Sphinx==5.3.0
+pydata-sphinx-theme==0.12.0
