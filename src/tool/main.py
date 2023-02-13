@@ -1,9 +1,8 @@
 import os, fileinput
 from docopt import docopt
-import networkx as nx
 from tool.lexer import build_lexer
 import tool.utils as utils
-import tool.logger as logger
+from tool.logger import Logger
 from tool.constants import CLI, NAME, VERSION
 from tool.config import get_config
 
@@ -31,7 +30,7 @@ def default_old(args):
             msg = (f"Cyclic reference in rules: '{', '.join(cycle)}'."
                     " Rules will not be expanded. This is most likely not" 
                     " indended, please check rules.")
-            logger.warning(msg, strict_mode)
+            # logger.warning(msg, strict_mode)
 
     rule_order = list(nx.topological_sort(rule_graph))
     rules = utils.expand_rules(rule_order, rules)
@@ -51,9 +50,9 @@ def default_old(args):
     exec(_setup, env)
 
     lexer.input(src_str)
-    logger.info(' ==== TOKENS FOLLOW ====', debug_mode)
+    # logger.info(' ==== TOKENS FOLLOW ====', debug_mode)
     for token in lexer:
-        logger.info(token, debug_mode)
+        # logger.info(token, debug_mode)
         env['captures'] = token.value
         _token_code = code[token.type.lower()]
         exec(_token_code, env)
@@ -62,6 +61,7 @@ def default_old(args):
     exec(_result, env)
 
 def link(args):
+    # TODO should <language> be checked?
     language = args['<language>'].split('.')[0]
     dir = args['<dir>'] or os.getcwd()
     
@@ -74,12 +74,13 @@ def link(args):
     os.symlink(src, dst)
 
 def default(args):
+    logger = Logger(args['--debug'], args['--strict'])
     language = args['<language>']
-    config = get_config(language)
+    config = get_config(language, logger)
 
     version = config.get('version', None)
     usage = config.get('usage', None)
-
+    
     inputs = args['<input>']
 
     # User language docopt
@@ -94,8 +95,15 @@ def default(args):
     # Read input file if prsent else read from stdin
     with fileinput.input(files=src_input or ()) as file:
         src = ''.join(file)
-    print(src)
     
+    tokens = config['tokens']
+    # Special ignore token, not to be expanded
+    ignore_tok = tokens.pop('ignore', None)
+    exp_tokens = utils.token_expansion(tokens, logger)
+
+
+
+
 def main():
     args = docopt(CLI, version=f'{NAME} {VERSION}')
     if args['link']:

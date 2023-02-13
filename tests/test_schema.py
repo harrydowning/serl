@@ -50,6 +50,14 @@ test_data = [
         rule: string
     """, True),
     ("""
+    tokens:
+        ignore: string
+    grammar:
+        rule: string
+    code:
+        rule: string
+    """, True),
+    ("""
     version: string
     usage: string
     grammar:

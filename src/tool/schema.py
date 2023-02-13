@@ -11,7 +11,12 @@ config_schema = {
             "type": "string"
         },
         "tokens": {
-            "type": "object"
+            "type": "object",
+            "properties": {
+                "ignore": {
+                    "type": "string"
+                }
+            }
         },
         "grammar": {
             "type": "object"

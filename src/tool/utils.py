@@ -1,88 +1,53 @@
-import os, io, pathlib
-import yaml
+import networkx as nx
+from tool.logger import Logger
 
-def yaml_load_all(file: io.TextIOWrapper) -> dict:
-    config = {}
-    for i, doc in enumerate(yaml.safe_load_all(file)):
-        if type(doc) != dict:
-            continue
-        # Note: If a language is named with an index it could be overriden
-        name = doc.get('name', i)
-        config[name] = doc
-    return config
+def get_sorted_tokens(tokens: dict[str, str]) -> dict:
+    sorted_tokens = {}
+    for key in sorted(tokens, key=len, reverse=True):
+        sorted_tokens[key] = tokens[key]
+    return sorted_tokens
 
-def get_system_config(filename: str) -> dict:
-    home = os.path.expanduser('~')
-    
-    try:
-        with open(os.path.join(home, filename)) as file:
-            system_config = yaml_load_all(file)
-    except FileNotFoundError:
-        system_config = {}
-    
-    return system_config
-
-def get_path_config(path: str | None) -> dict:
-    if path == None:
-        return {}
-    
-    # Note: may want this error to be shown to users
-    try:
-        with open(path) as file:
-            path_config = yaml_load_all(file)
-    except FileNotFoundError:
-        path_config = {}
-
-    return path_config
-
-def get_local_config(filename: str) -> dict:
-    local_path = None
-    
-    for path in pathlib.Path().rglob(filename):
-        local_path = path
-        break
-    
-    if local_path == None:
-        return {}
-
-    with open(local_path) as file:
-        path_config = yaml_load_all(file)
-
-    return path_config
-
-# def get_inline_config(src: str) -> tuple[dict, str]:
-#     with open(src) as file:
-#         inline_config, content = list(yaml.safe_load_all(file))[:2]
-#     return inline_config, content
-
-# change to an OrderedDict to then call sort
-def get_sorted_rules(rules: dict) -> dict:
-    sorted_rules = {}
-    for key in sorted(rules, key=len, reverse=True):
-        sorted_rules[key] = rules[key]
-    return sorted_rules
-
-def get_rule_graph(rules: dict) -> list[tuple[str, str]]:
-    rules = rules.copy()
+def get_token_graph(tokens: dict[str, str]) -> list[tuple[str, str]]:
+    tokens = tokens.copy()
     edges = []
-    for def_rule in rules:
-        for ref_rule in rules:
-            if ref_rule in rules[def_rule]:
-                edges.append((ref_rule, def_rule))
-                # Replace ref_rule with '' so substrings of it aren't added
-                rules[def_rule] = rules[def_rule].replace(ref_rule, '')
+    for token_def in tokens:
+        for token_ref in tokens:
+            if token_ref in tokens[token_def]:
+                edges.append((token_ref, token_def))
+                # Replace token_ref with '' so substrings of it aren't added
+                tokens[token_def] = tokens[token_def].replace(token_ref, '')
     return edges
 
-def expand_rules(rule_order, rules):
-    exp_rules = rules.copy()
-    for def_rule in rule_order:
-        for rule2 in rules:
-            exp_rules[def_rule] = exp_rules[def_rule].replace(rule2, exp_rules[rule2])
-    return exp_rules
+def expand_dict(d1: dict[str, str], d2: dict[str, str]) -> dict[str, str]:
+    exp_d1 = d1.copy()
+    for k1 in d1:
+        for k2 in d2:
+            exp_d1[k1] = exp_d1[k1].replace(k2, d2[k2])
+    return exp_d1
 
-def expand_patterns(patterns, rules):
-    new_patterns = patterns.copy()
-    for pattern in patterns:
-        for rule in rules:
-            new_patterns[pattern] = new_patterns[pattern].replace(rule, rules[rule])
-    return new_patterns
+def expand_tokens(exp_order: list[str], tokens: dict[str, str]):
+    order_dict = {tok: tokens[tok] for tok in exp_order}
+    sorted_tokens = get_sorted_tokens(tokens)
+    return expand_dict(order_dict, sorted_tokens)
+
+def expand_grammar(grammar: dict[str, str], tokens: dict[str, str]):
+    sorted_tokens = get_sorted_tokens(tokens)
+    return expand_dict(grammar, sorted_tokens)
+
+def token_expansion(tokens: dict[str, str], logger: Logger) -> dict:
+    token_graph = nx.DiGraph(get_token_graph(tokens))
+    cycles = list(nx.simple_cycles(token_graph))
+
+    if cycles:
+        cycle_nodes = {node for cycle in cycles for node in cycle}
+        token_graph.remove_nodes_from(cycle_nodes)
+
+        for cycle in cycles:
+            msg = (f"Cyclic reference in tokens: '{', '.join(cycle)}'."
+                    " Tokens will not be expanded, check token definitions.")
+            logger.warning(msg)
+
+    exp_order = list(nx.topological_sort(token_graph))
+    exp_tokens = expand_tokens(exp_order, tokens)
+    # Return in original order
+    return {tok: exp_tokens[tok] for tok in tokens}

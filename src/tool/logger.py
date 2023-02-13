@@ -1,18 +1,21 @@
 import logging
 
-# Setup
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.getLogger().setLevel(logging.INFO)
+class Logger:
+    def __init__(self, debug, strict) -> None:
+        logging.basicConfig(format='%(levelname)s:%(message)s')
+        logging.getLogger().setLevel(logging.INFO)
+        self.debug = debug
+        self.strict = strict
 
-def info(message, debug_mode):
-    if debug_mode:
-        logging.info(message)
+    def info(self, message):
+        if self.debug:
+            logging.info(message)
 
-def warning(message, strict_mode):
-    logging.warning(message)
-    if strict_mode:
+    def warning(self, message):
+        logging.warning(message)
+        if self.strict_mode:
+            exit(1)
+
+    def error(self, message):
+        logging.error(message)
         exit(1)
-
-def error(message):
-    logging.error(message)
-    exit(1)
