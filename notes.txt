@@ -1,4 +1,5 @@
-- Command line interface ambiguity (solved by options_first=True)
+- Test symlink -- I believe it will work but only when built as an executable i.e., when installed from pip
+
 - Don't modify token names as it there could be a situation like: Data and data (lexer find with case sensitive tokens)
 - Symbol table
 - ability to override -h, is this really needed?

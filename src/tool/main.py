@@ -1,9 +1,9 @@
-import os, fileinput
+import sys, os, fileinput
 from docopt import docopt
 from tool.lexer import build_lexer
 import tool.utils as utils
 from tool.logger import Logger
-from tool.constants import CLI, NAME, VERSION
+from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION
 from tool.config import get_config
 
 def default_old(args):
@@ -101,11 +101,15 @@ def default(args):
     ignore_tok = tokens.pop('ignore', None)
     exp_tokens = utils.token_expansion(tokens, logger)
 
-
-
-
 def main():
-    args = docopt(CLI, version=f'{NAME} {VERSION}', options_first=True)
+    if os.path.islink(sys.argv[0]):
+        # Stop special args (e.g., -v) acting on the tool and not the language
+        if not '--' in sys.argv:
+            sys.argv.insert(1, '--')
+        args = docopt(SYMLINK_CLI, version=f'{NAME} {VERSION}', options_first=True)
+    else:
+        args = docopt(CLI, version=f'{NAME} {VERSION}', options_first=True)
+    
     if args['link']:
         link(args)
     else:
