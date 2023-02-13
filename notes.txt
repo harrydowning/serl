@@ -1,0 +1,4 @@
+- Command line interface ambiguity (solved by options_first=True)
+- Don't modify token names as it there could be a situation like: Data and data (lexer find with case sensitive tokens)
+- Symbol table
+- ability to override -h, is this really needed?

@@ -105,7 +105,7 @@ def default(args):
 
 
 def main():
-    args = docopt(CLI, version=f'{NAME} {VERSION}')
+    args = docopt(CLI, version=f'{NAME} {VERSION}', options_first=True)
     if args['link']:
         link(args)
     else:

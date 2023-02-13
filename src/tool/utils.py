@@ -30,11 +30,7 @@ def expand_tokens(exp_order: list[str], tokens: dict[str, str]):
     sorted_tokens = get_sorted_tokens(tokens)
     return expand_dict(order_dict, sorted_tokens)
 
-def expand_grammar(grammar: dict[str, str], tokens: dict[str, str]):
-    sorted_tokens = get_sorted_tokens(tokens)
-    return expand_dict(grammar, sorted_tokens)
-
-def token_expansion(tokens: dict[str, str], logger: Logger) -> dict:
+def token_expansion(tokens: dict[str, str], logger: Logger) -> dict[str, str]:
     token_graph = nx.DiGraph(get_token_graph(tokens))
     cycles = list(nx.simple_cycles(token_graph))
 
@@ -44,10 +40,16 @@ def token_expansion(tokens: dict[str, str], logger: Logger) -> dict:
 
         for cycle in cycles:
             msg = (f"Cyclic reference in tokens: '{', '.join(cycle)}'."
-                    " Tokens will not be expanded, check token definitions.")
+                    " These tokens will not be expanded, check tokens.")
             logger.warning(msg)
 
     exp_order = list(nx.topological_sort(token_graph))
     exp_tokens = expand_tokens(exp_order, tokens)
     # Return in original order
     return {tok: exp_tokens[tok] for tok in tokens}
+
+# TODO remove tokens not used in grammar
+# TODO warning/error if grammar contains tokens not defined
+
+def get_grammar_tokens(grammar: dict[str, str], tokens: dict[str, str]) -> dict[str, str]:
+    pass
