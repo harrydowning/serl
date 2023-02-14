@@ -4,10 +4,11 @@ SYSTEM_CONFIG_DIR = f'.{NAME}'
 
 OPTIONS = f"""
 Options:
-  -h --help     Show this screen.
-  -v --version  Show version.
-  --debug       Run in debug mode, logging runtime information.
-  --strict      Run in strict mode, stopping evaluation on warnings.
+  -h --help          Show this screen.
+  -v --version       Show version.
+  -r --requirements  Create pip requirements file.
+  --debug            Run in debug mode, logging runtime information.
+  --strict           Run in strict mode, stopping evaluation on warnings.
 """
 
 CLI = f"""{NAME}

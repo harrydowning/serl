@@ -60,8 +60,23 @@ def default_old(args):
     _result = code['result']
     exec(_result, env)
 
+def requirements(reqs: str, logger: Logger) -> None:
+    file = 'requirements.txt'
+    if reqs == '':
+        logger.warning('No requirements specified.')
+    
+    if os.path.exists(file):
+        question = 'File "requirements.txt" alread exists, overwrite?'
+        overwrite = logger.confirm(question)
+        if not overwrite:
+            exit(0)
+    
+    with open(file, 'w') as file:
+        file.write(reqs)
+    exit(0)
+
 def link(args):
-    # TODO should <language> be checked?
+    # TODO Check <language> exists in .tool and not a path?
     language = args['<language>'].split('.')[0]
     dir = args['<dir>'] or os.getcwd()
     
@@ -77,6 +92,9 @@ def default(args):
     logger = Logger(args['--debug'], args['--strict'])
     language = args['<language>']
     config = get_config(language, logger)
+
+    if args['--requirements']:
+        requirements(config.get('requirements', ''), logger)
 
     version = config.get('version', None)
     usage = config.get('usage', None)
@@ -101,15 +119,27 @@ def default(args):
     ignore_tok = tokens.pop('ignore', None)
     exp_tokens = utils.token_expansion(tokens, logger)
 
-def main():
-    if os.path.islink(sys.argv[0]):
-        # Stop special args (e.g., -v) acting on the tool and not the language
+def get_args() -> dict:
+    # default configs used to align properties between interface variants
+    cli_default = docopt(CLI, argv=[])
+    symlink_cli_default = docopt(SYMLINK_CLI, argv=[])
+    
+    command = sys.argv[0]
+    if os.path.islink(command):
+        # Stop initial args acting on the tool and not the language
         if not '--' in sys.argv:
             sys.argv.insert(1, '--')
-        args = docopt(SYMLINK_CLI, version=f'{NAME} {VERSION}', options_first=True)
+        args = cli_default | docopt(SYMLINK_CLI, version=f'{NAME} {VERSION}', 
+                                    options_first=True)
+        base = os.path.basename(command)
+        args['<language>'] = base.split('.')[0]
     else:
-        args = docopt(CLI, version=f'{NAME} {VERSION}', options_first=True)
-    
+        args = symlink_cli_default | docopt(CLI, version=f'{NAME} {VERSION}', 
+                                            options_first=True)
+    return args
+
+def main():
+    args = get_args()
     if args['link']:
         link(args)
     else:

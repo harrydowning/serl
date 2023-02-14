@@ -1,5 +1,6 @@
 - Test symlink -- I believe it will work but only when built as an executable i.e., when installed from pip
+  - Is argv[0] is the symbolic link (YES)
 
 - Don't modify token names as it there could be a situation like: Data and data (lexer find with case sensitive tokens)
 - Symbol table
-- ability to override -h, is this really needed?
+- importing modules, warning user about dependencies

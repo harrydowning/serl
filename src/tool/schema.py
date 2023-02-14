@@ -23,6 +23,9 @@ config_schema = {
         },
         "code": {
             "type": "object"
+        },
+        "requirements": {
+            "type": "string"
         }
     },
     "required": ["tokens", "grammar", "code"]
