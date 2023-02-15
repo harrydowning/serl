@@ -115,7 +115,7 @@ def default(args):
         src = ''.join(file)
     
     tokens = config['tokens']
-    # Special ignore token, not to be expanded
+    # Special token(s), not to be expanded
     ignore_tok = tokens.pop('ignore', None)
     exp_tokens = utils.token_expansion(tokens, logger)
 
