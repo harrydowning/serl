@@ -1,9 +1,27 @@
 from typing import Tuple
 import jsonschema
 
+meta = {
+    "type": "object",
+    "properties": {
+        "token-ref": {
+            "type": "object",
+            "properties": {
+                "start": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
+
 config_schema = {
     "type": "object",
     "properties": {
+        "meta": meta,
         "version": {
             "type": ["string", "number"]
         },
@@ -13,7 +31,7 @@ config_schema = {
         "tokens": {
             "type": "object",
             "properties": {
-                "ignore": {
+                "_ignore": {
                     "type": "string"
                 }
             }

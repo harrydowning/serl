@@ -51,7 +51,7 @@ test_data = [
     """, True),
     ("""
     tokens:
-        ignore: string
+        _ignore: string
     grammar:
         rule: string
     code:
@@ -84,7 +84,7 @@ test_data = [
 ]
 
 @pytest.mark.parametrize("test_config,expected", test_data)
-def test_schema(test_config, expected):
+def test_validate(test_config, expected):
     config = yaml.safe_load(test_config)
     valid, _ = schema.validate(config)
     assert valid == expected
