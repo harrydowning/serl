@@ -39,6 +39,14 @@ exp_repl_tokens = {
     '@rows': r'(([\w ]+) \| text(?:, ([\w ]+))* \n)+'
 }
 
+exp_tokens = {
+    'text': r'([\w ]+)',
+    'list': r'text(?:, ([\w ]+))*',
+    '*': r'\*',
+    'row': r'([\w ]+) \| text(?:, ([\w ]+))*',
+    'rows': r'(([\w ]+) \| text(?:, ([\w ]+))* \n)+'
+}
+
 def test_get_sorted_tokens():
     actual = list(utils.get_sorted_tokens(tokens).keys())
     expected = ['text', 'list', 'rows', 'row', '*']
@@ -59,4 +67,10 @@ def test_get_token_graph():
 def test_expand_tokens():
     actual = utils.expand_tokens(exp_order, repl_tokens)
     expected = exp_repl_tokens
+    assert actual == expected
+
+def test_token_expansion():
+    start, end = token_ref.values()
+    actual = utils.token_expansion(tokens, start, end)
+    expected = exp_tokens
     assert actual == expected

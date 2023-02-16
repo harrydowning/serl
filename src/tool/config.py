@@ -1,7 +1,7 @@
 import os, re
 import yaml
 import requests
-from tool.logger import Logger
+import tool.logger as logger
 from tool.constants import SYSTEM_CONFIG_DIR
 from tool.schema import validate
 
@@ -34,7 +34,7 @@ def get_url_config(url: str) -> dict:
     r.raise_for_status()
     return yaml.safe_load(r.text)
 
-def get_config(language: str, logger: Logger) -> dict:
+def get_config(language: str) -> dict:
     if re.match(r'https?://.*', language):
         try:
             config = get_url_config(language)
