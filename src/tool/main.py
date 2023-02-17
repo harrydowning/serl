@@ -117,14 +117,21 @@ def default(args):
     
     meta = config.get('meta', {})
     tokens = config['tokens']
-    # Special token(s), not to be expanded
-    ignore_tok = tokens.pop('_ignore', ' \t')
+    ignore_tok = tokens.pop('_ignore', ' \t') # Special token, not expanded
     ref = meta.get('ref', {'start': '@', 'end': ''})
     if ref:
         start, end = ref.get('start', ''), ref.get('end', '')
         tokens = utils.token_expansion(tokens, start, end)
     
-    print(tokens)
+    lexer, token_map = build_lexer(tokens, ignore_tok)
+    print(token_map)
+    lexer.input(src)
+
+    while True:
+        tok = lexer.token()
+        if not tok: 
+            break # No more input
+        print(tok)
 
 def get_args() -> dict:
     version = f'{NAME} {VERSION}'

@@ -1,23 +1,20 @@
+import re
+import tool.logger as logger
 import ply.lex as lex
-import regex
-
-# TODO: Define a couple of set functionality functions (e.g., switching 
-# lexing state)
+# import regex
 
 def get_pattern_function(pattern):
     def f(t):
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
-        # Match again to get only the relevant captures
-        m = regex.match(pattern, string, regex.VERBOSE)
-        t.value = m.allcaptures()
+        # Obtain capture groups
+        m = re.match(pattern, string, re.VERBOSE)
+        t.value = (string, *m.groups())
         t.lexer.lineno += string.count('\n')
         return t
     
     f.__doc__ = pattern
     return f
-
-t_DEFAULT = r'.'
 
 def newline(t):
     r'\n+'
@@ -27,18 +24,20 @@ def t_error(t):
     print(f"Illegal character '{t.value[0]}'")
     t.lexer.skip(1)
 
-def build_lexer(config: dict, debug: bool):
+def build_lexer(_tokens: dict[str, str], ignore: str):
     g = globals()
     g['tokens'] = ('DEFAULT',)
 
-    for token, pattern in config.items():
-        token = token.upper()
-        g['tokens'] = (*g['tokens'], token)
-        g[f't_{token}'] = get_pattern_function(pattern)
+    token_map = {}
+    for token, pattern in _tokens.items():
+        token_name = f'TOKEN{len(token_map)}'
+        token_map[token_name] = token
 
-    g['t_newline'] = newline # Ensures lower precedence compared to user rules
-    g['t_ignore'] = ' \t'
+        g['tokens'] = (*g['tokens'], token_name)
+        g[f't_{token_name}'] = get_pattern_function(pattern)
 
-    lex.re = regex # Backward compatible and allows for better regex support
-
-    return lex.lex(debug=debug)
+    g['t_DEFAULT'] = r'.'
+    g['t_newline'] = newline # Lower precedence than user rules
+    g['t_ignore'] = ignore
+    #lex.re = regex
+    return lex.lex(debug=logger.debug), token_map
