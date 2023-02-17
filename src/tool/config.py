@@ -48,11 +48,11 @@ def get_config(language: str) -> dict:
         # File config has higher precedence than system
         config = get_file_config(language) or get_system_config(language)
         if config == {}:
-            logger.error(f"Could not find system or file config for language: " 
-                         f"{language}.")
+            logger.error(f"Could not find system or file config for " 
+                         f"\'{language}\'.")
 
-    valid, message = validate(config)
+    valid, error = validate(config)
     if valid:
         return config
     else:
-        logger.error(message)
+        logger.error(f'Validation error in config \'{language}\'. {error}')

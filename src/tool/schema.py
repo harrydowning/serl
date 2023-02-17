@@ -4,8 +4,8 @@ import jsonschema
 meta = {
     "type": "object",
     "properties": {
-        "token-ref": {
-            "type": "object",
+        "ref": {
+            "type": ["object", "boolean"],
             "properties": {
                 "start": {
                     "type": "string"
@@ -53,5 +53,6 @@ def validate(config: dict) -> Tuple[bool, str]:
     try:
         jsonschema.validate(config, config_schema)
     except jsonschema.exceptions.ValidationError as ve:
-        return False, ve.message
+        error = f'{ve.message} for key \'{".".join(ve.absolute_path)}\'.'
+        return False, error
     return True, ''
