@@ -1,3 +1,8 @@
+meta:
+  ref:
+    start: "@"
+    end: (?=[?\*])
+
 version: tags 0.0.1
 usage: |
   tags

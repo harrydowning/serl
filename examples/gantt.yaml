@@ -1,7 +1,18 @@
 meta:
-  token-ref: 
-    stat: "@"
-    end: (?=[?\*])
+  ref:
+    start: \$
+
+version: gantt 0.0.1
+usage: |
+  gantt
+  
+  Usage:
+    gantt [options] [<input>]
+
+  Options:
+    -h --help     Show this screen.
+    -v --version  Show version.
+    --pdf         Output as pdf.
 
 tokens:
   text: ([\w ]+)
@@ -9,7 +20,7 @@ tokens:
   "|": \|
   ===: ([ ]* =*)
   "*": \*
-  milestone: "* @text?"
+  milestone: "* $text?"
 
 grammar:
   gantt: |
@@ -18,7 +29,7 @@ grammar:
     headings
     rows
     -----
-  headings:
+  headings: #!list # Could look into YAML constructors as way to specify SDT format
     - headings | text
     - "| text"
   rows:
@@ -28,16 +39,12 @@ grammar:
     - text | ===
     - text | === milestone
 
-# {
-#   headdings: {...},
-#   text: {...}
-# }
-
 code: # python
   gantt: |
     pass
   heading:
 
+requirements: PyLaTex==1.4.1
 
 # code:
 #   setup: | # python

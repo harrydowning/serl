@@ -21,11 +21,12 @@ def get_token_graph(repl_tokens: dict[str, str]) -> list[tuple[str, str]]:
     edges = []
     for token_def in repl_tokens:
         for token_ref in repl_tokens:
-            if re.search(token_ref, repl_tokens[token_def]):
+            if re.search(token_ref, repl_tokens[token_def], flags=re.VERBOSE):
                 edges.append((token_ref, token_def))
                 # Replace token_ref with '' so substrings of it aren't added
                 repl_tokens[token_def] = re.sub(token_ref, '', 
-                                                repl_tokens[token_def])
+                                                repl_tokens[token_def],
+                                                flags=re.VERBOSE)
     return edges
 
 def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
@@ -37,7 +38,8 @@ def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
             # See https://docs.python.org/3/library/re.html#re.sub
             repl = exp_repl_tokens[repl_tok].replace('\\', '\\\\')
             exp_repl_tokens[exp_tok] = re.sub(repl_tok, repl, 
-                                              exp_repl_tokens[exp_tok])
+                                              exp_repl_tokens[exp_tok], 
+                                              flags=re.VERBOSE)
     return exp_repl_tokens
 
 def token_expansion(tokens: dict[str, str], 
@@ -49,8 +51,10 @@ def token_expansion(tokens: dict[str, str],
     if cycles:
         cycle_nodes = {node for cycle in cycles for node in cycle}
         token_graph.remove_nodes_from(cycle_nodes)
+        token_map = dict(zip(repl_tokens.keys(), tokens.keys()))
 
         for cycle in cycles:
+            cycle = map(lambda tok: token_map[tok], cycle)
             msg = (f"Cyclic reference in tokens: '{', '.join(cycle)}'."
                     " These tokens will not be expanded.")
             logger.warning(msg)
