@@ -74,3 +74,5 @@ def test_token_expansion():
     actual = utils.token_expansion(tokens, start, end)
     expected = exp_tokens
     assert actual == expected
+    # ensure order is also preserved
+    assert list(actual.keys()) == list(expected.keys())
