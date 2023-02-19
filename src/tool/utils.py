@@ -63,8 +63,17 @@ def token_expansion(tokens: dict[str, str],
     exp_tokens = expand_tokens(exp_order, repl_tokens)
     return dict(zip(tokens.keys(), exp_tokens.values()))
 
-# TODO remove tokens not used in grammar
 # TODO warning/error if grammar contains tokens not defined
 
-def get_grammar_tokens(grammar: dict[str, str], tokens: dict[str, str]) -> dict[str, str]:
-    pass
+def normalise_grammar(token_map: dict[str, str], 
+                      grammar: dict) -> dict[str, list[str]]:
+    for nt in grammar:
+        rules = grammar[nt]
+        if type(rules) == str:
+            rules = [rules]
+        
+        for i, rule in enumerate(rules):
+            rules[i] = rule.replace('\n', ' ')
+            # TODO token sub
+    return grammar
+        

@@ -18,6 +18,24 @@ tokens:
   "<": <
   ">": ">"
 
+# constructors/tags:
+#   list: | # python
+#     p[0] = [*p[1], (*p[2:])]
+
+# precedence:
+#   - !nonassoc < >
+#   - !left + -
+#   - !left / *
+#   - !right uminus # need to think how this could be achieved
+
+# headings: !list
+#   - headings | text
+#   - "| text"
+# Would be equivalent to 
+# headings:
+#   - !list headings | text
+#   - !list "| text"
+
 grammar:
   gantt: |
     text

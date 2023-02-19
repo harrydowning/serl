@@ -2,16 +2,16 @@ from typing import Tuple
 import jsonschema
 
 meta = {
-    "type": "object",
-    "properties": {
-        "ref": {
-            "type": ["object", "boolean"],
-            "properties": {
-                "start": {
-                    "type": "string"
+    'type': 'object',
+    'properties': {
+        'ref': {
+            'type': ['object', 'boolean'],
+            'properties': {
+                'start': {
+                    'type': 'string'
                 },
-                "end": {
-                    "type": "string"
+                'end': {
+                    'type': 'string'
                 }
             }
         }
@@ -19,34 +19,42 @@ meta = {
 }
 
 config_schema = {
-    "type": "object",
-    "properties": {
-        "meta": meta,
-        "version": {
-            "type": ["string", "number"]
+    'type': 'object',
+    'properties': {
+        'meta': meta,
+        'version': {
+            'type': ['string', 'number']
         },
-        "usage": {
-            "type": "string"
+        'usage': {
+            'type': 'string'
         },
-        "tokens": {
-            "type": "object",
-            "properties": {
-                "_ignore": {
-                    "type": "string"
+        'tokens': {
+            'type': 'object',
+            'properties': {
+                '_ignore': {
+                    'type': 'string'
                 }
             }
         },
-        "grammar": {
-            "type": "object"
+        'grammar': {
+            'type': 'object',
+            'patternProperties': {
+                '^.*$': {
+                    'type': ['string', 'array'],
+                    'items': {
+                        'type': 'string'
+                    }
+                }
+            },
         },
-        "code": {
-            "type": "object"
+        'code': {
+            'type': 'object'
         },
-        "requirements": {
-            "type": "string"
+        'requirements': {
+            'type': 'string'
         }
     },
-    "required": ["tokens", "grammar", "code"]
+    'required': ['tokens', 'grammar', 'code']
 }
 
 def validate(config: dict) -> Tuple[bool, str]:

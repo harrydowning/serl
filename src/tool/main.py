@@ -1,6 +1,7 @@
 import sys, os, fileinput
 from docopt import docopt
 from tool.lexer import build_lexer
+from tool.parser import build_parser
 import tool.utils as utils
 import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION
@@ -124,14 +125,20 @@ def default(args):
         tokens = utils.token_expansion(tokens, start, end)
     
     lexer, token_map = build_lexer(tokens, ignore_tok)
-    print(token_map)
-    lexer.input(src)
+    grammar = config['grammar']
+    # TODO filter_tokens to remove those not in grammar
+    # TODO Function for following:
+    #   - replace tokens in grammar using token_map
+    #   - flatten grammar rule i.e., no new lines
+    #   - norm. grammar rules i.e., same format, list of one for string nonterminals
+    parser = build_parser(language, list(token_map.keys()), grammar) # TODO language name may not be unique
+    
+    ast = parser.parse(src, lexer=lexer)
+    code = config['code']
+    execute(ast, code)
 
-    while True:
-        tok = lexer.token()
-        if not tok: 
-            break # No more input
-        print(tok)
+def execute(ast, code: dict):
+    pass # TODO language execution
 
 def get_args() -> dict:
     version = f'{NAME} {VERSION}'
