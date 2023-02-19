@@ -1,4 +1,4 @@
-import re
+import re, copy
 import networkx as nx
 import tool.logger as logger
 
@@ -63,17 +63,40 @@ def token_expansion(tokens: dict[str, str],
     exp_tokens = expand_tokens(exp_order, repl_tokens)
     return dict(zip(tokens.keys(), exp_tokens.values()))
 
-# TODO warning/error if grammar contains tokens not defined
+def filter_tokens():
+    pass
 
-def normalise_grammar(token_map: dict[str, str], 
+def normalise_grammar(token_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
+    grammar = copy.deepcopy(grammar)
     for nt in grammar:
         rules = grammar[nt]
         if type(rules) == str:
             rules = [rules]
+            grammar[nt] = rules
         
-        for i, rule in enumerate(rules):
-            rules[i] = rule.replace('\n', ' ')
-            # TODO token sub
+        for i, _ in enumerate(rules):
+            sorted_map = get_sorted_tokens(token_map)
+            for token in sorted_map:
+                rules[i] = rules[i].replace(token, f' {sorted_map[token]} ')
+            rules[i] = re.sub(r'\s+', ' ', rules[i]).strip()
     return grammar
-        
+
+def get_undefined_symbols(token_map: list[str, str], 
+                          norm_grammar: dict[str, list[str]]) -> list[str]:
+    nonterms, terms = list(norm_grammar.keys()), list(token_map.values())
+    symbols = sorted(nonterms + terms, key=len, reverse=True)
+    rules = [rule for rules in norm_grammar.values() for rule in rules]
+    undefined = []
+    for rule in rules:
+        for symbol in symbols:
+            rule = re.sub(fr'\b{symbol}\b', '', rule)
+        undefined += rule.strip().split(' ')
+    return [symbol for symbol in undefined if symbol != '' ]
+
+def check_undefined(token_map: list[str, str], 
+                    norm_grammar: dict[str, list[str]]):
+    undefined = get_undefined_symbols(token_map, norm_grammar)
+    if len(undefined) > 0:
+        undef_list = ', '.join(f'\'{symbol}\'' for symbol in undefined)
+        logger.error(f'Undefined symbols {undef_list} used in grammar.')

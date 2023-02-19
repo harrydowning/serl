@@ -34,7 +34,21 @@ config_schema = {
                 '_ignore': {
                     'type': 'string'
                 }
+            },
+            'patternProperties': {
+                '^.*$': {
+                    'type': 'string',
+                }
+            },
+        },
+        'precedence': {
+            'type': 'array',
+            'items': {
+                'type': 'string'
             }
+        },
+        'constructors': {
+            'type': 'object'
         },
         'grammar': {
             'type': 'object',

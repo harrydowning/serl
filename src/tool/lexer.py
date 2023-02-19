@@ -31,7 +31,7 @@ def build_lexer(_tokens: dict[str, str], ignore: str):
     token_map = {}
     for token, pattern in _tokens.items():
         token_name = f'TOKEN{len(token_map)}'
-        token_map[token_name] = token
+        token_map[token] = token_name
 
         g['tokens'] = (*g['tokens'], token_name)
         g[f't_{token_name}'] = get_pattern_function(pattern)

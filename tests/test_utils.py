@@ -76,3 +76,42 @@ def test_token_expansion():
     assert actual == expected
     # ensure order is also preserved
     assert list(actual.keys()) == list(expected.keys())
+
+token_map = {
+    '<': 'TOKEN0',
+    '>': 'TOKEN1',
+    'foo': 'TOKEN2',
+    'foos': 'TOKEN3',
+    'bar': 'TOKEN4'
+}
+
+grammar = {
+    'MAIN': ['''
+    <foo>
+        OTHER
+    <foos>
+    ''', 'bar OTHER'],
+    'OTHER': '<>'
+}
+
+norm_grammar = {
+    'MAIN': ['TOKEN0 TOKEN2 TOKEN1 OTHER TOKEN0 TOKEN3 TOKEN1',
+              'TOKEN4 OTHER'],
+    'OTHER': ['TOKEN0 TOKEN1']
+}
+
+undef_norm_grammar = {
+    'MAIN': ['TOKEN0 TOKEN2 TOKEN1 OTHER + ANOTHER TOKEN0 TOKEN3 TOKEN1',
+              'TOKEN4 OTHER'], 
+    'OTHER': ['TOKEN0 TOKEN1']
+}
+
+def test_normalise_grammar():
+    actual = utils.normalise_grammar(token_map, grammar)
+    expected = norm_grammar
+    assert actual == expected
+
+def test_undefined_symbol():
+    actual = utils.get_undefined_symbols(token_map, undef_norm_grammar)
+    expected = ['+', 'ANOTHER']
+    assert sorted(actual) == sorted(expected)

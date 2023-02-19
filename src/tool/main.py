@@ -124,15 +124,12 @@ def default(args):
         start, end = ref.get('start', ''), ref.get('end', '')
         tokens = utils.token_expansion(tokens, start, end)
     
-    lexer, token_map = build_lexer(tokens, ignore_tok)
-    grammar = config['grammar']
     # TODO filter_tokens to remove those not in grammar
-    # TODO Function for following:
-    #   - replace tokens in grammar using token_map
-    #   - flatten grammar rule i.e., no new lines
-    #   - norm. grammar rules i.e., same format, list of one for string nonterminals
-    parser = build_parser(language, list(token_map.keys()), grammar) # TODO language name may not be unique
+    lexer, token_map = build_lexer(tokens, ignore_tok)
+    grammar = utils.normalise_grammar(token_map, config['grammar'])
+    utils.check_undefined(token_map, grammar)
     
+    parser = build_parser(language, list(token_map.values()), grammar) # TODO language name may not be unique
     ast = parser.parse(src, lexer=lexer)
     code = config['code']
     execute(ast, code)
