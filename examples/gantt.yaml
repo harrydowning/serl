@@ -12,7 +12,7 @@ usage: |
 
 meta:
   tokens:
-    ref: ^token(?!$)| token
+    ref: \$
 
 tokens:
   text: ([\w ]+)
@@ -21,7 +21,7 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
-  "*": "text \\* text"
+  "*": "$text \\* text"
 
 # constructors: # (tags/directive/pragma/sdt)
 #   list: | # python

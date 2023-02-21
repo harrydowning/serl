@@ -25,3 +25,5 @@ Usage:
   {NAME} [[options] --] [<input>]...
 {OPTIONS}
 """
+
+DEFAULT_REF = r'^token(?!$)| token'

@@ -4,7 +4,7 @@ from tool.lexer import build_lexer
 from tool.parser import build_parser
 import tool.utils as utils
 import tool.logger as logger
-from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION
+from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
 from tool.config import get_config
 
 # def default_old(args):
@@ -122,10 +122,12 @@ def default(args):
     tokens = config['tokens']
     ignore_tok = tokens.pop('_ignore', ' \t') # Special token, not expanded
     
-    ref = meta_tokens.get('ref', '^token(?!$)| token')
+    ref = meta_tokens.get('ref', DEFAULT_REF)
     if ref != False:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
+        logger.info(f'Performing token expansion with pattern \'{ref}\' '
+                    f'(default: \'{DEFAULT_REF}\')')
         tokens = utils.token_expansion(tokens, ref.split('token'))
     
     logger.announce('TOKENS', [f'{token}: \'{pattern}\'' 
