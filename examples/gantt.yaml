@@ -10,6 +10,10 @@ usage: |
     -v --version  Show version.
     --pdf         Output as pdf.
 
+meta:
+  tokens:
+    ref: ^token(?!$)| token
+
 tokens:
   text: ([\w ]+)
   -----: ---+
@@ -17,6 +21,7 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
+  "*": "text \\* text"
 
 # constructors: # (tags/directive/pragma/sdt)
 #   list: | # python
@@ -36,7 +41,6 @@ tokens:
 #   - !nonassoc < > # list of space seperated tokens
 #   - !left + -
 #   - !left / *
-#   - !right uminus # need to think how this could be achieved
 
 grammar:
   gantt: |

@@ -5,6 +5,19 @@ import tool.logger as logger
 from tool.constants import SYSTEM_CONFIG_DIR
 from tool.schema import validate
 
+def tagger(loader: yaml.Loader, tag_suffix, node):
+    match type(node):
+        case yaml.nodes.ScalarNode:
+            val = loader.construct_scalar(node)
+        case yaml.nodes.MappingNode:
+            val = loader.construct_mapping(node)
+        case yaml.nodes.SequenceNode:
+            val = loader.construct_sequence(node)
+    return (tag_suffix, val)
+
+yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
+
+# TODO add error handling for yaml.safe_load
 def get_system_config(language: str) -> dict:
     home = os.path.expanduser('~')
     directory = os.path.join(home, SYSTEM_CONFIG_DIR)

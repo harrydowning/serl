@@ -40,4 +40,4 @@ def build_lexer(_tokens: dict[str, str], ignore: str):
     g['t_newline'] = newline # Lower precedence than user rules
     g['t_ignore'] = ignore
     #lex.re = regex
-    return lex.lex(debug=logger.debug), token_map
+    return lex.lex(), token_map

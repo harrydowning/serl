@@ -10,6 +10,12 @@ def info(message):
     if debug:
         logging.info(message)
 
+def announce(title: str, messages: list[str]):
+    info(f'===== {title.upper()} =====')
+    for message in messages:
+          info(message)
+    info(f'===== {title.upper()} =====')
+
 def confirm(question, positive=['y'], negative=['n']):
     prompt = f'{question} [{"".join(positive)}/{"".join(negative)}] '
     ans = ""

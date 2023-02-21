@@ -4,14 +4,11 @@ import jsonschema
 meta = {
     'type': 'object',
     'properties': {
-        'ref': {
-            'type': ['object', 'boolean'],
+        'tokens': {
+            'type': 'object',
             'properties': {
-                'start': {
-                    'type': 'string'
-                },
-                'end': {
-                    'type': 'string'
+                'ref': {
+                    'type': ['string', 'boolean']
                 }
             }
         }

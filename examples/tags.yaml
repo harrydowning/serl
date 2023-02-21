@@ -1,7 +1,6 @@
 meta:
-  ref:
-    start: "@"
-    end: (?=[?\*])
+  tokens:
+    ref: $token(?=[?\*])
 
 version: tags 0.0.1
 usage: |

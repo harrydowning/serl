@@ -117,22 +117,28 @@ def default(args):
         src = ''.join(file)
     
     meta = config.get('meta', {})
+    meta_tokens = meta.get('tokens', {})
+
     tokens = config['tokens']
     ignore_tok = tokens.pop('_ignore', ' \t') # Special token, not expanded
-    ref = meta.get('ref', {'start': '@', 'end': ''})
-    if ref:
-        start, end = ref.get('start', ''), ref.get('end', '')
-        tokens = utils.token_expansion(tokens, start, end)
     
+    ref = meta_tokens.get('ref', '^token(?!$)| token')
+    if ref != False:
+        # if 'token' not used assume given string is prefix of token repl.
+        ref += '' if 'token' in ref else 'token'
+        tokens = utils.token_expansion(tokens, ref.split('token'))
+    
+    logger.announce('TOKENS', [f'{token}: \'{pattern}\'' 
+                               for token, pattern in tokens.items()])
     # TODO filter_tokens to remove those not in grammar
     lexer, token_map = build_lexer(tokens, ignore_tok)
     grammar = utils.normalise_grammar(token_map, config['grammar'])
     utils.check_undefined(token_map, grammar)
     
-    parser = build_parser(language, list(token_map.values()), grammar) # TODO language name may not be unique
-    ast = parser.parse(src, lexer=lexer)
-    code = config['code']
-    execute(ast, code)
+    # parser = build_parser(language, list(token_map.values()), grammar) # TODO language name may not be unique
+    # ast = parser.parse(src, lexer=lexer)
+    # code = config['code']
+    # execute(ast, code)
 
 def execute(ast, code: dict):
     pass # TODO language execution
