@@ -1,6 +1,7 @@
 import re, copy
 import networkx as nx
 import tool.logger as logger
+from tool.constants import DEFAULT_REF
 
 def get_sorted_tokens(tokens: dict[str, str]) -> dict[str, str]:
     sorted_tokens = {}
@@ -55,10 +56,11 @@ def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
             msg = (f'Cyclic reference involving {", ".join(cycle)}.'
                     ' Preceding token(s) will not be expanded.')
             logger.warning(msg)
-            if i + 1 >= len(tokens):
-                logger.warning(f'[{len(cycles) - (i + 1)} more cycles...] Check '
-                               f'characters are correctly escaped in custom '
-                               f'\'ref\' pattern if used.')
+            
+            shown = i + 1 
+            remaining = len(cycles) - shown
+            if shown >= len(tokens) and remaining > 1:
+                logger.warning(f'[{remaining} more cycles...]')
                 break
 
     exp_order = list(nx.topological_sort(token_graph))
@@ -101,4 +103,4 @@ def check_undefined(token_map: list[str, str],
     undefined = get_undefined_symbols(token_map, norm_grammar)
     if len(undefined) > 0:
         undef_list = ', '.join(f'\'{symbol}\'' for symbol in undefined)
-        logger.error(f'Undefined symbols {undef_list} used in grammar.')
+        logger.error(f'Undefined symbols used in grammar: {undef_list}.')
