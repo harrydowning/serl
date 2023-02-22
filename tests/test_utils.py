@@ -1,9 +1,6 @@
 import tool.utils as utils
 
-token_ref = {
-    'start': '@',
-    'end': ''
-}
+token_split = ['@', '']
 
 tokens = {
     'text': r'([\w ]+)',
@@ -53,8 +50,7 @@ def test_get_sorted_tokens():
     assert actual == expected
 
 def test_get_repl_tokens():
-    start, end = token_ref.values()
-    actual = utils.get_repl_tokens(tokens, start, end)
+    actual = utils.get_repl_tokens(tokens, token_split)
     expected = repl_tokens
     assert actual == expected
 
@@ -70,8 +66,7 @@ def test_expand_tokens():
     assert actual == expected
 
 def test_token_expansion():
-    start, end = token_ref.values()
-    actual = utils.token_expansion(tokens, start, end)
+    actual = utils.token_expansion(tokens, token_split)
     expected = exp_tokens
     assert actual == expected
     # ensure order is also preserved

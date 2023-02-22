@@ -126,8 +126,8 @@ def default(args):
     if ref != False:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
-        logger.info(f'Performing token expansion with pattern \'{ref}\' '
-                    f'(default: \'{DEFAULT_REF}\')')
+        logger.info(f'Performing token expansion with \'ref\' pattern '
+                    f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
         tokens = utils.token_expansion(tokens, ref.split('token'))
     
     logger.announce('TOKENS', [f'{token}: \'{pattern}\'' 

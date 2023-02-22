@@ -49,12 +49,17 @@ def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
         cycle_nodes = {node for cycle in cycles for node in cycle}
         token_graph.remove_nodes_from(cycle_nodes)
         token_map = dict(zip(repl_tokens.keys(), tokens.keys()))
-
-        for cycle in cycles:
-            cycle = map(lambda tok: token_map[tok], cycle)
-            msg = (f"Cyclic reference in token(s): '{', '.join(cycle)}'."
-                    " These tokens will not be expanded.")
+        
+        for i, cycle in enumerate(cycles):
+            cycle = map(lambda tok: f'\'{token_map[tok]}\'', cycle)
+            msg = (f'Cyclic reference involving {", ".join(cycle)}.'
+                    ' Preceding token(s) will not be expanded.')
             logger.warning(msg)
+            if i + 1 >= len(tokens):
+                logger.warning(f'[{len(cycles) - (i + 1)} more cycles...] Check '
+                               f'characters are correctly escaped in custom '
+                               f'\'ref\' pattern if used.')
+                break
 
     exp_order = list(nx.topological_sort(token_graph))
     exp_tokens = expand_tokens(exp_order, repl_tokens)

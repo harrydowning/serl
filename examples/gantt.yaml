@@ -16,6 +16,7 @@ meta:
 
 tokens:
   text: ([\w ]+)
+  title: text 
   -----: ---+
   "|": \|
   ===: ([ ]* =+)
