@@ -67,9 +67,6 @@ def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     exp_tokens = expand_tokens(exp_order, repl_tokens)
     return dict(zip(tokens.keys(), exp_tokens.values()))
 
-def filter_tokens():
-    pass
-
 def normalise_grammar(token_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
     grammar = copy.deepcopy(grammar)
@@ -86,7 +83,20 @@ def normalise_grammar(token_map: dict[str, str],
             rules[i] = re.sub(r'\s+', ' ', rules[i]).strip()
     return grammar
 
-def get_undefined_symbols(token_map: list[str, str], 
+def get_tokens_in_grammar(token_map: dict[str, str], 
+                          norm_grammar: dict[str, list[str]]) -> list[str]:
+    tokens = sorted(token_map.values(), key=len, reverse=True)
+    rules = [rule for rules in norm_grammar.values() for rule in rules]
+    used = set()
+    for rule in rules:
+        for token in tokens:
+            if token in rule:
+                rule.replace(token, '')
+                used.add(token)
+    return [token for token, token_name in token_map.items() 
+            if token_name in used]
+
+def get_undefined_symbols(token_map: dict[str, str], 
                           norm_grammar: dict[str, list[str]]) -> list[str]:
     nonterms, terms = list(norm_grammar.keys()), list(token_map.values())
     symbols = sorted(nonterms + terms, key=len, reverse=True)
@@ -98,7 +108,7 @@ def get_undefined_symbols(token_map: list[str, str],
         undefined += rule.strip().split(' ')
     return [symbol for symbol in undefined if symbol != '' ]
 
-def check_undefined(token_map: list[str, str], 
+def check_undefined(token_map: dict[str, str], 
                     norm_grammar: dict[str, list[str]]):
     undefined = get_undefined_symbols(token_map, norm_grammar)
     if len(undefined) > 0:

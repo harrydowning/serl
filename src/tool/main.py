@@ -61,18 +61,22 @@ from tool.config import get_config
 #     _result = code['result']
 #     exec(_result, env)
 
-def requirements(reqs: str) -> None:
-    file = 'requirements.txt'
+def extension(file: str) -> str:
+    if os.name == 'nt':
+        file += '.exe'
+    return file
+
+def requirements(req_file: str, reqs: str) -> None:
     if reqs == '':
         logger.warning('No requirements specified.')
     
-    if os.path.exists(file):
-        question = 'File "requirements.txt" alread exists, overwrite?'
+    if os.path.exists(req_file):
+        question = f'File \'{req_file}\' alread exists, overwrite?'
         overwrite = logger.confirm(question)
         if not overwrite:
             exit(0)
     
-    with open(file, 'w') as file:
+    with open(req_file, 'w') as file:
         file.write(reqs)
     exit(0)
 
@@ -81,11 +85,8 @@ def link(args):
     language = args['<language>'].split('.')[0]
     dir = args['<dir>'] or os.getcwd()
     
-    src = os.path.abspath(__file__)
-    dst = os.path.join(dir, f'{language}')
-    
-    if os.name == 'nt':
-        dst += '.exe'
+    src = extension(sys.argv[0])
+    dst = extension(os.path.join(dir, f'{language}'))
     
     try:
         os.symlink(src, dst)
@@ -96,8 +97,9 @@ def default(args):
     language = args['<language>']
     config = get_config(language)
 
-    if args['--requirements']:
-        requirements(config.get('requirements', ''))
+    req_file = args['--requirements']
+    if req_file:
+        requirements(req_file, config.get('requirements', ''))
 
     version = config.get('version', None)
     usage = config.get('usage', None)
@@ -132,12 +134,18 @@ def default(args):
     
     logger.announce('TOKENS', [f'{token}: \'{pattern}\'' 
                                for token, pattern in tokens.items()])
-    # TODO filter_tokens to remove those not in grammar
-    lexer, token_map = build_lexer(tokens, ignore_tok)
+
+    token_map = {k: f'TOKEN{i}' for i, (k, _) in enumerate(tokens.items())}
     grammar = utils.normalise_grammar(token_map, config['grammar'])
+
+    # TODO improve
+    tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
+    tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
+    token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     utils.check_undefined(token_map, grammar)
-    
-    # parser = build_parser(language, list(token_map.values()), grammar) # TODO language name may not be unique
+
+    # lexer = build_lexer(tokens, token_map, ignore_tok)
+    # parser = build_parser(list(token_map.values()), grammar)
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)
@@ -147,7 +155,7 @@ def execute(ast, code: dict):
 
 def get_args() -> dict:
     version = f'{NAME} {VERSION}'
-    command = sys.argv[0]
+    command = extension(sys.argv[0])
     if os.path.islink(command):
         # Stop initial args acting on the tool and not the language
         if not '--' in sys.argv:
@@ -161,8 +169,8 @@ def get_args() -> dict:
 
 def main():
     args = get_args()
-    logger.debug = args.get('--debug', False)
-    logger.strict = args.get('--strict', False)
+    logger.debug_mode = args.get('--debug', False)
+    logger.strict_mode = args.get('--strict', False)
 
     if args.get('link', False):
         link(args)

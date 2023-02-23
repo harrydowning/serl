@@ -24,14 +24,13 @@ def t_error(t):
     print(f"Illegal character '{t.value[0]}'")
     t.lexer.skip(1)
 
-def build_lexer(_tokens: dict[str, str], ignore: str):
+def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], 
+                ignore: str):
     g = globals()
     g['tokens'] = ('DEFAULT',)
 
-    token_map = {}
     for token, pattern in _tokens.items():
-        token_name = f'TOKEN{len(token_map)}'
-        token_map[token] = token_name
+        token_name = token_map[token]
 
         g['tokens'] = (*g['tokens'], token_name)
         g[f't_{token_name}'] = get_pattern_function(pattern)
@@ -40,4 +39,4 @@ def build_lexer(_tokens: dict[str, str], ignore: str):
     g['t_newline'] = newline # Lower precedence than user rules
     g['t_ignore'] = ignore
     #lex.re = regex
-    return lex.lex(), token_map
+    return lex.lex()

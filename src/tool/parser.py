@@ -1,3 +1,4 @@
+import os
 import tool.logger as logger
 import ply.yacc as yacc
 
@@ -11,7 +12,7 @@ def get_prod_function(prod: tuple[str, str]):
 def p_error(p):
     print("Syntax error in input!") # TODO appropriate response
 
-def build_parser(name: str, tokens: list[str], grammar: dict[str, list[str]]):
+def build_parser(tokens: list[str], grammar: dict[str, list[str]]):
     g = globals()
     g['tokens'] = tokens
 
@@ -19,4 +20,6 @@ def build_parser(name: str, tokens: list[str], grammar: dict[str, list[str]]):
         for i, rule in enumerate(grammar[nt]):
             g[f'p_{nt}_{i}'] = get_prod_function((nt, rule))
 
-    return yacc.yacc(debug=logger.debug, tabmodule=name)
+    # file = os.path.join(os.getcwd(), 'test.txt')
+    return yacc.yacc(debug=logger.debug_mode, write_tables=False,
+                     debuglog=logger, errorlog=logger)#, debugfile=file)
