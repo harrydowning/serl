@@ -132,20 +132,23 @@ def default(args):
                     f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
         tokens = utils.token_expansion(tokens, ref.split('token'))
     
-    logger.announce('TOKENS', [f'{token}: \'{pattern}\'' 
-                               for token, pattern in tokens.items()])
+    logger.group('TOKENS', [f'{token}: \'{pattern}\'' 
+                            for token, pattern in tokens.items()])
 
-    token_map = {k: f'TOKEN{i}' for i, (k, _) in enumerate(tokens.items())}
-    grammar = utils.normalise_grammar(token_map, config['grammar'])
+    grammar = config['grammar']
+    token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
+    grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
+    # TODO want to combine to 'symbol_map'
+    grammar = utils.normalise_grammar(token_map, grammar)
 
     # TODO improve
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
     tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
-    token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
+    # token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     utils.check_undefined(token_map, grammar)
 
-    # lexer = build_lexer(tokens, token_map, ignore_tok)
-    # parser = build_parser(list(token_map.values()), grammar)
+    lexer = build_lexer(tokens, token_map, ignore_tok)
+    parser = build_parser(list(token_map.values()), token_map, grammar)
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)

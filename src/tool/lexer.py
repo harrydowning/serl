@@ -27,7 +27,7 @@ def t_error(t):
 def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], 
                 ignore: str):
     g = globals()
-    g['tokens'] = ('DEFAULT',)
+    g['tokens'] = () #('DEFAULT',)
 
     for token, pattern in _tokens.items():
         token_name = token_map[token]
@@ -35,7 +35,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
         g['tokens'] = (*g['tokens'], token_name)
         g[f't_{token_name}'] = get_pattern_function(pattern)
 
-    g['t_DEFAULT'] = r'.'
+    # g['t_DEFAULT'] = r'.'
     g['t_newline'] = newline # Lower precedence than user rules
     g['t_ignore'] = ignore
     #lex.re = regex
