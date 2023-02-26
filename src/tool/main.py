@@ -1,5 +1,6 @@
 import sys, os, fileinput
 from docopt import docopt
+import networkx as nx
 from tool.lexer import build_lexer
 from tool.parser import build_parser
 import tool.utils as utils
@@ -60,6 +61,32 @@ from tool.config import get_config
 
 #     _result = code['result']
 #     exec(_result, env)
+
+def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
+    repl_tokens = utils.get_repl_tokens(tokens, split)
+    token_graph = nx.DiGraph(utils.get_token_graph(repl_tokens))
+    cycles = list(nx.simple_cycles(token_graph))
+
+    if cycles:
+        cycle_nodes = {node for cycle in cycles for node in cycle}
+        token_graph.remove_nodes_from(cycle_nodes)
+        token_map = dict(zip(repl_tokens.keys(), tokens.keys()))
+        
+        for i, cycle in enumerate(cycles):
+            cycle = map(lambda tok: f'\'{token_map[tok]}\'', cycle)
+            msg = (f'Cyclic reference involving {", ".join(cycle)}.'
+                    ' Preceding token(s) will not be expanded.')
+            logger.warning(msg)
+            
+            shown = i + 1 
+            remaining = len(cycles) - shown
+            if shown >= len(tokens) and remaining > 1:
+                logger.warning(f'[{remaining} more cycles...]')
+                break
+
+    exp_order = list(nx.topological_sort(token_graph))
+    exp_tokens = utils.expand_tokens(exp_order, repl_tokens)
+    return dict(zip(tokens.keys(), exp_tokens.values()))
 
 def extension(file: str) -> str:
     if os.name == 'nt':
@@ -125,7 +152,7 @@ def default(args):
         ref += '' if 'token' in ref else 'token'
         logger.info(f'Performing token expansion with \'ref\' pattern '
                     f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
-        tokens = utils.token_expansion(tokens, ref.split('token'))
+        tokens = token_expansion(tokens, ref.split('token'))
     
     logger.group('TOKENS', [f'{token}: \'{pattern}\'' 
                             for token, pattern in tokens.items()])
@@ -136,21 +163,20 @@ def default(args):
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
     if common_keys:
         s = "\', \'"
-        logger.error(f'Grammar rules \'{s.join(common_keys)}\' are already '
-                     f'defined as tokens')
+        logger.error(f'Grammar identifiers \'{s.join(common_keys)}\' already '
+                     f'used in tokens')
     
     symbol_map = token_map | grammar_map
-    # TODO change to use symbol map from this point
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
-    # TODO improve
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
+    print(tokens_in_grammar)
+    # tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
     # token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     # utils.check_undefined(token_map, grammar) TODO remove
 
-    lexer = build_lexer(tokens, token_map, ignore_tok)
-    parser = build_parser(list(token_map.values()), token_map, grammar)
+    # lexer = build_lexer(tokens, token_map, ignore_tok)
+    # parser = build_parser(list(token_map.values()), token_map, grammar)
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)

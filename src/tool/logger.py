@@ -1,4 +1,5 @@
 import logging
+import utils
 
 debug_mode = False
 strict_mode = False
@@ -13,7 +14,7 @@ class LoggerWrapper():
     
     def _repl(self, msg, args):
         msg = msg % args
-        for symbol, repl in self.repl_map.items():
+        for symbol, repl in utils.get_sorted_map(self.repl_map).items():
             msg = msg.replace(symbol, repl)
         return msg
 
