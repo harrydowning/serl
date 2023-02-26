@@ -1,7 +1,15 @@
-import re, copy
+import re
 import networkx as nx
 import tool.logger as logger
 from tool.constants import DEFAULT_REF
+
+def expand(rule: str, symbol_map: list[tuple[str, str]], pad = 0):
+    if symbol_map == []:
+        return rule
+    symbol, repl = symbol_map[0]
+    repl = f'{" " * pad}{repl}{" " * pad}'
+    return repl.join([expand(s, symbol_map[1:], pad) 
+                      for s in re.split(symbol, rule)])
 
 def get_sorted_tokens(tokens: dict[str, str]) -> dict[str, str]:
     sorted_tokens = {}
@@ -18,27 +26,24 @@ def get_repl_tokens(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     return repl_tokens
 
 def get_token_graph(repl_tokens: dict[str, str]) -> list[tuple[str, str]]:
-    repl_tokens = repl_tokens.copy()
-    edges = []
+    sorted_repl_tokens = get_sorted_tokens(repl_tokens)
+    edges = set()
     for token_def in repl_tokens:
-        for token_ref in repl_tokens:
-            if re.search(token_ref, repl_tokens[token_def]):
-                edges.append((token_ref, token_def))
-                # Replace token_ref with '' so substrings of it aren't added
-                repl_tokens[token_def] = re.sub(token_ref, '', 
-                                                repl_tokens[token_def])
-    return edges
+        splits = [repl_tokens[token_def]]
+        for token_ref in sorted_repl_tokens:
+            for i, split in enumerate(splits):
+                if re.search(token_ref, split):
+                    edges.add((token_ref, token_def))
+                    splits[i] = re.split(token_ref, split)
+            splits = [s for split in splits for s in split]
+    return list(edges)
 
 def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
-    sorted_repl_tokens = get_sorted_tokens(repl_tokens)
     exp_repl_tokens = repl_tokens.copy()
     for exp_tok in exp_order:
-        for repl_tok in sorted_repl_tokens:
-            # Due to behaviour of sub need to double up escapes
-            # See https://docs.python.org/3/library/re.html#re.sub
-            repl = exp_repl_tokens[repl_tok].replace('\\', '\\\\')
-            exp_repl_tokens[exp_tok] = re.sub(repl_tok, repl, 
-                                              exp_repl_tokens[exp_tok])
+        sorted_repl_tokens = list(get_sorted_tokens(exp_repl_tokens).items())
+        exp_repl_tokens[exp_tok] = expand(exp_repl_tokens[exp_tok], 
+                                          sorted_repl_tokens)
     return exp_repl_tokens
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
@@ -67,21 +72,20 @@ def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     exp_tokens = expand_tokens(exp_order, repl_tokens)
     return dict(zip(tokens.keys(), exp_tokens.values()))
 
-def normalise_grammar(token_map: dict[str, str],
+def normalise_grammar(symbol_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
-    grammar = copy.deepcopy(grammar)
+    sorted_map = list(get_sorted_tokens(symbol_map).items())
+    norm_grammar = {}
     for nt in grammar:
-        rules = grammar[nt]
-        if type(rules) == str:
-            rules = [rules]
-            grammar[nt] = rules
+        if type(grammar[nt]) == str:
+            rules = [grammar[nt]]
+        else:
+            rules = grammar[nt].copy()
         
-        for i, _ in enumerate(rules):
-            sorted_map = get_sorted_tokens(token_map)
-            for token in sorted_map:
-                rules[i] = rules[i].replace(token, f' {sorted_map[token]} ')
-            rules[i] = re.sub(r'\s+', ' ', rules[i]).strip()
-    return grammar
+        for i, rule in enumerate(rules):
+            rules[i] = re.sub(r'\s+', ' ', expand(rule, sorted_map, pad = 1)).strip()
+        norm_grammar[symbol_map[nt]] = rules
+    return norm_grammar
 
 def get_tokens_in_grammar(token_map: dict[str, str], 
                           norm_grammar: dict[str, list[str]]) -> list[str]:

@@ -134,20 +134,20 @@ def default(args):
     token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
-    if not common_keys:
+    if common_keys:
         s = "\', \'"
         logger.error(f'Grammar rules \'{s.join(common_keys)}\' are already '
                      f'defined as tokens')
     
     symbol_map = token_map | grammar_map
     # TODO change to use symbol map from this point
-    grammar = utils.normalise_grammar(token_map, grammar)
+    grammar = utils.normalise_grammar(symbol_map, grammar)
 
     # TODO improve
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
     tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
     # token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
-    utils.check_undefined(token_map, grammar)
+    # utils.check_undefined(token_map, grammar) TODO remove
 
     lexer = build_lexer(tokens, token_map, ignore_tok)
     parser = build_parser(list(token_map.values()), token_map, grammar)

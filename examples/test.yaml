@@ -1,0 +1,20 @@
+meta:
+  tokens:
+    ref: \$
+
+# tokens: # expansion example
+#   <>LONGER: BAD
+#   FIRST: ">"
+#   MID: $<$FIRSTLONGER
+#   <>: BAD
+
+tokens: # graph example
+  FIRST: "a"
+  MID: $<$FIRST>
+  <>: BAD$MID
+
+grammar:
+  example: pass
+
+code:
+  example: pass
