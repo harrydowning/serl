@@ -34,7 +34,7 @@ def get_token_graph(repl_tokens: dict[str, str]) -> list[tuple[str, str]]:
             for i, split in enumerate(splits):
                 if re.search(token_ref, split):
                     edges.add((token_ref, token_def))
-                    splits[i] = re.split(token_ref, split)
+                splits[i] = re.split(token_ref, split)
             splits = [s for split in splits for s in split]
     return list(edges)
 
