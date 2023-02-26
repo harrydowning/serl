@@ -44,8 +44,8 @@ exp_tokens = {
     'rows': r'(([\w ]+) \| text(?:, ([\w ]+))* \n)+'
 }
 
-def test_get_sorted_tokens():
-    actual = list(utils.get_sorted_tokens(tokens).keys())
+def test_get_sorted_map():
+    actual = list(utils.get_sorted_map(tokens).keys())
     expected = ['text', 'list', 'rows', 'row', '*']
     assert actual == expected
 
@@ -72,12 +72,14 @@ def test_token_expansion():
     # ensure order is also preserved
     assert list(actual.keys()) == list(expected.keys())
 
-token_map = {
-    '<': 'TOKEN0',
-    '>': 'TOKEN1',
-    'foo': 'TOKEN2',
-    'foos': 'TOKEN3',
-    'bar': 'TOKEN4'
+symbol_map = {
+    '<': 'TERM0',
+    '>': 'TERM1',
+    'foo': 'TERM2',
+    'foos': 'TERM3',
+    'bar': 'TERM4',
+    'MAIN': 'NONTERM0',
+    'OTHER': 'NONTERM1'
 }
 
 grammar = {
@@ -90,23 +92,23 @@ grammar = {
 }
 
 norm_grammar = {
-    'MAIN': ['TOKEN0 TOKEN2 TOKEN1 OTHER TOKEN0 TOKEN3 TOKEN1',
-              'TOKEN4 OTHER'],
-    'OTHER': ['TOKEN0 TOKEN1']
+    'NONTERM0': ['TERM0 TERM2 TERM1 NONTERM1 TERM0 TERM3 TERM1',
+                 'TERM4 NONTERM1'],
+    'NONTERM1': ['TERM0 TERM1']
 }
 
 undef_norm_grammar = {
-    'MAIN': ['TOKEN0 TOKEN2 TOKEN1 OTHER + ANOTHER TOKEN0 TOKEN3 TOKEN1',
-              'TOKEN4 OTHER'], 
-    'OTHER': ['TOKEN0 TOKEN1']
+    'NONTERM0': ['TERM0 TERM2 TERM1 NONTERM1 + ANOTHER TERM0 TERM3 TERM1',
+                 'TERM4 NONTERM1'], 
+    'NONTERM1': ['TERM0 TERM1']
 }
 
 def test_normalise_grammar():
-    actual = utils.normalise_grammar(token_map, grammar)
+    actual = utils.normalise_grammar(symbol_map, grammar)
     expected = norm_grammar
     assert actual == expected
 
 def test_undefined_symbol():
-    actual = utils.get_undefined_symbols(token_map, undef_norm_grammar)
+    actual = utils.get_undefined_symbols(symbol_map, undef_norm_grammar)
     expected = ['+', 'ANOTHER']
     assert sorted(actual) == sorted(expected)

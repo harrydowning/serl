@@ -11,7 +11,7 @@ def expand(rule: str, symbol_map: list[tuple[str, str]], pad = 0):
     return repl.join([expand(s, symbol_map[1:], pad) 
                       for s in re.split(symbol, rule)])
 
-def get_sorted_tokens(tokens: dict[str, str]) -> dict[str, str]:
+def get_sorted_map(tokens: dict[str, str]) -> dict[str, str]:
     sorted_tokens = {}
     for key in sorted(tokens, key=len, reverse=True):
         sorted_tokens[key] = tokens[key]
@@ -26,7 +26,7 @@ def get_repl_tokens(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     return repl_tokens
 
 def get_token_graph(repl_tokens: dict[str, str]) -> list[tuple[str, str]]:
-    sorted_repl_tokens = get_sorted_tokens(repl_tokens)
+    sorted_repl_tokens = get_sorted_map(repl_tokens)
     edges = set()
     for token_def in repl_tokens:
         splits = [repl_tokens[token_def]]
@@ -41,7 +41,7 @@ def get_token_graph(repl_tokens: dict[str, str]) -> list[tuple[str, str]]:
 def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
     exp_repl_tokens = repl_tokens.copy()
     for exp_tok in exp_order:
-        sorted_repl_tokens = list(get_sorted_tokens(exp_repl_tokens).items())
+        sorted_repl_tokens = list(get_sorted_map(exp_repl_tokens).items())
         exp_repl_tokens[exp_tok] = expand(exp_repl_tokens[exp_tok], 
                                           sorted_repl_tokens)
     return exp_repl_tokens
@@ -74,7 +74,7 @@ def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
 
 def normalise_grammar(symbol_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
-    sorted_map = list(get_sorted_tokens(symbol_map).items())
+    sorted_map = list(get_sorted_map(symbol_map).items())
     norm_grammar = {}
     for nt in grammar:
         if type(grammar[nt]) == str:
