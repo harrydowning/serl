@@ -70,14 +70,9 @@ def requirements(req_file: str, reqs: str) -> None:
     if reqs == '':
         logger.warning('No requirements specified.')
     
-    if os.path.exists(req_file):
-        question = f'File \'{req_file}\' alread exists, overwrite?'
-        overwrite = logger.confirm(question)
-        if not overwrite:
-            exit(0)
-    
     with open(req_file, 'w') as file:
         file.write(reqs)
+    
     exit(0)
 
 def link(args):
@@ -138,7 +133,14 @@ def default(args):
     grammar = config['grammar']
     token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
-    # TODO want to combine to 'symbol_map'
+    common_keys = set(token_map.keys()).intersection(grammar_map.keys())
+    if not common_keys:
+        s = "\', \'"
+        logger.error(f'Grammar rules \'{s.join(common_keys)}\' are already '
+                     f'defined as tokens')
+    
+    symbol_map = token_map | grammar_map
+    # TODO change to use symbol map from this point
     grammar = utils.normalise_grammar(token_map, grammar)
 
     # TODO improve

@@ -31,6 +31,7 @@ def build_parser(tokens: list[str], token_map: dict[str, str],
             g[f'p_{nt}_{i}'] = get_prod_function((nt, rule), flipped_token_map)
 
     filename = os.path.join(os.getcwd(), 'test.txt') # TODO temp
+    file_logger = logger.get_file_logger(filename, flipped_token_map)
     return yacc.yacc(debug=logger.debug_mode, write_tables=False,
-                     debuglog=logger.get_file_logger(filename), 
+                     debuglog=file_logger, 
                      errorlog=logger)

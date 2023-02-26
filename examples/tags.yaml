@@ -25,6 +25,20 @@ tokens:
   alpha: (\w+)
   literal: ([\w\t ]+)
 
+# constructors: # (tags/directive/pragma/sdt)
+#   list: | # python
+#     p[0] = [*p[1], (*p[2:])] 
+#   list: p[0] = [*p[1], (*p[2:])]
+# Could the above have additional side affects e.g., add to a symbol table (global and local)?
+
+# headings: !list
+#   - headings | text
+#   - "| text"
+# Would be equivalent to 
+# headings:
+#   - !list headings | text
+#   - !list "| text"
+
 grammar:
   data:
     - tags
