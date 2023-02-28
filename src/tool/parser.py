@@ -9,10 +9,10 @@ def get_prod_function(prod: tuple[str, str],
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = {
+        p[0] = (prod[0], {
             flipped_token_map[symbol]: [p[i] for i in idxs] 
             for symbol, idxs in groups.items()
-        }
+        })
     
     f.__doc__ = f'{prod[0]} : {prod[1]}'
     return f

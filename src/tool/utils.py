@@ -1,5 +1,4 @@
 import re
-from tool.constants import DEFAULT_REF
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], f = lambda x: x, pad = 0):
     if symbol_map == []:

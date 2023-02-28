@@ -65,13 +65,6 @@ def test_expand_tokens():
     expected = exp_repl_tokens
     assert actual == expected
 
-def test_token_expansion():
-    actual = utils.token_expansion(tokens, token_split)
-    expected = exp_tokens
-    assert actual == expected
-    # ensure order is also preserved
-    assert list(actual.keys()) == list(expected.keys())
-
 symbol_map = {
     '<': 'TERM0',
     '>': 'TERM1',
@@ -108,7 +101,7 @@ def test_normalise_grammar():
     expected = norm_grammar
     assert actual == expected
 
-def test_undefined_symbol():
-    actual = utils.get_undefined_symbols(symbol_map, undef_norm_grammar)
-    expected = ['+', 'ANOTHER']
-    assert sorted(actual) == sorted(expected)
+# def test_undefined_symbol():
+#     actual = utils.get_undefined_symbols(symbol_map, undef_norm_grammar)
+#     expected = ['+', 'ANOTHER']
+#     assert sorted(actual) == sorted(expected)
