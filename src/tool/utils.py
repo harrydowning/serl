@@ -82,21 +82,3 @@ def recurse_tags(obj, tag=None, remove=False):
     else:
         return obj if tag == None or remove else TaggedData(tag, obj) 
 
-# def get_undefined_symbols(token_map: dict[str, str], 
-#                           norm_grammar: dict[str, list[str]]) -> list[str]:
-#     nonterms, terms = list(norm_grammar.keys()), list(token_map.values())
-#     symbols = sorted(nonterms + terms, key=len, reverse=True)
-#     rules = [rule for rules in norm_grammar.values() for rule in rules]
-#     undefined = []
-#     for rule in rules:
-#         for symbol in symbols:
-#             rule = re.sub(fr'\b{symbol}\b', '', rule)
-#         undefined += rule.strip().split(' ')
-#     return [symbol for symbol in undefined if symbol != '' ]
-
-# def check_undefined(token_map: dict[str, str], 
-#                     norm_grammar: dict[str, list[str]]):
-#     undefined = get_undefined_symbols(token_map, norm_grammar)
-#     if len(undefined) > 0:
-#         undef_list = ', '.join(f'\'{symbol}\'' for symbol in undefined)
-#         logger.error(f'Undefined symbols used in grammar: {undef_list}.')

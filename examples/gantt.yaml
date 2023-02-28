@@ -12,17 +12,17 @@ usage: |
 
 meta:
   tokens:
-    ref: \$
+    regex: true
 
 tokens:
   text: ([\w ]+)
-  title: text 
   -----: ---+
   "|": \|
   ===: ([ ]* =+)
   "<": <
   ">": ">"
-  "*": "$text \\* text"
+  headings: |
+    (?:\| text)+
 
 # precedence:
 #   - !nonassoc < > # list of space seperated tokens
@@ -36,9 +36,6 @@ grammar:
     headings
     rows
     -----
-  headings:
-    - headings | text
-    - "| text"
   rows:
     - rows row
     - row

@@ -1,5 +1,6 @@
 import os, itertools
 import tool.logger as logger
+from tool.config import TaggedData
 import ply.yacc as yacc
 
 def get_prod_function(prod: tuple[str, str], 
@@ -21,9 +22,12 @@ def p_error(p):
     print("Syntax error in input!") # TODO appropriate response
 
 def build_parser(tokens: list[str], token_map: dict[str, str],
-                 grammar: dict[str, list[str]]):
+                 grammar: dict[str, list[str]],
+                 precedence: list[TaggedData]):
     g = globals()
     g['tokens'] = tokens
+    g['precedence'] = tuple((tag, *tokens.split(' ')) 
+                            for tag, tokens in precedence)
 
     flipped_token_map = {v: k for k, v in token_map.items()}
     for nt in grammar:

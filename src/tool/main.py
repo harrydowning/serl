@@ -173,10 +173,11 @@ def default(args):
     print(tokens_in_grammar)
     # tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
     # token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
-    # utils.check_undefined(token_map, grammar) TODO remove
 
-    # lexer = build_lexer(tokens, token_map, ignore_tok)
-    # parser = build_parser(list(token_map.values()), token_map, grammar)
+    # lexer = build_lexer(tokens, token_map, ignore_tok, 
+    #                     meta_tokens.get('regex', False))
+    # parser = build_parser(list(token_map.values()), token_map, grammar, 
+    #                       config.get('precedence', []))
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)

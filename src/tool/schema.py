@@ -10,6 +10,9 @@ meta = {
             'properties': {
                 'ref': {
                     'type': ['string', 'boolean']
+                },
+                'regex': {
+                    'type': 'boolean'
                 }
             }
         }
