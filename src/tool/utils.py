@@ -1,4 +1,5 @@
 import re
+from tool.config import TaggedData
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], f = lambda x: x, pad = 0):
     if symbol_map == []:
@@ -70,6 +71,16 @@ def get_tokens_in_grammar(token_map: dict[str, str],
                 used.add(token)
     return [token for token, token_name in token_map.items() 
             if token_name in used]
+
+def recurse_tags(obj, tag=None, remove=False):
+    if type(obj) == dict:
+        return {k: recurse_tags(v, tag, remove) for k, v in obj.items()}
+    elif type(obj) == list:
+        return [recurse_tags(v, tag, remove) for v in obj]
+    elif type(obj) == TaggedData:
+        return recurse_tags(obj[1], obj[0], remove)
+    else:
+        return obj if tag == None or remove else TaggedData(tag, obj) 
 
 # def get_undefined_symbols(token_map: dict[str, str], 
 #                           norm_grammar: dict[str, list[str]]) -> list[str]:

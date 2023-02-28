@@ -1,2 +1,2 @@
 pip install .
-pytest -s tests
+pytest -s -v tests

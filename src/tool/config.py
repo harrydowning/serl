@@ -5,6 +5,10 @@ import tool.logger as logger
 from tool.constants import SYSTEM_CONFIG_DIR
 from tool.schema import validate
 
+class TaggedData(tuple):
+    def __new__(cls, tag: str, value):
+        return super(TaggedData, cls).__new__(cls, (tag, value))
+
 def tagger(loader: yaml.Loader, tag_suffix, node):
     match type(node):
         case yaml.nodes.ScalarNode:
@@ -13,7 +17,7 @@ def tagger(loader: yaml.Loader, tag_suffix, node):
             val = loader.construct_mapping(node)
         case yaml.nodes.SequenceNode:
             val = loader.construct_sequence(node)
-    return (tag_suffix, val)
+    return TaggedData(tag_suffix, val)
 
 yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
 

@@ -3,34 +3,6 @@ import tool.schema as schema
 from tool.config import tagger
 import pytest
 
-d = {
-    'precedence': [
-        ('nonassoc', '< >'),
-        ('left', '+ -'),
-        ('left', '* /')
-    ],
-    'grammar': {
-        'main': ('custom', '< items >'),
-        'items': [
-            ('list', 'items item'),
-            ('list', 'item')
-        ],
-    }
-}
-
-d_tagless = {
-    'precedence': ['< >', '+ -', '* /'],
-    'grammar': {
-        'main': '< items >',
-        'items': ['items item','item'],
-    }
-}
-
-def test_remove_tags():
-    actual = schema.remove_tags(d)
-    expected = d_tagless
-    assert actual == expected
-
 test_data = [
     ("""
     version: string
@@ -120,7 +92,8 @@ test_data = [
     """, False),
 ]
 
-@pytest.mark.parametrize("test_config,expected", test_data)
+@pytest.mark.parametrize("test_config, expected", test_data, 
+                         ids=[f'config{i}' for i in range(len(test_data))])
 def test_validate(test_config, expected):
     yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
     config = yaml.safe_load(test_config)

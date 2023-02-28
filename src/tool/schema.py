@@ -1,4 +1,5 @@
 from typing import Tuple
+import tool.utils as utils
 import jsonschema
 
 meta = {
@@ -68,18 +69,8 @@ config_schema = {
     'required': ['tokens', 'grammar', 'code']
 }
 
-def remove_tags(obj):
-    if type(obj) == dict:
-        return {k: remove_tags(v) for k, v in obj.items()}
-    elif type(obj) == list:
-        return [remove_tags(v) for v in obj]
-    elif type(obj) == tuple and len(obj) == 2:
-        return obj[1]
-    else:
-        return obj    
-
 def validate(config: dict) -> Tuple[bool, str]:
-    config = remove_tags(config)
+    config = utils.recurse_tags(config, remove=True)
     try:
         jsonschema.validate(config, config_schema)
     except jsonschema.exceptions.ValidationError as ve:
