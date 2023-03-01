@@ -52,7 +52,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
             lex.re = regex
         else:
             logger.error(f'Use of \'regex\' package requires \'CPython\' '
-                         f'implementation. Current implementation'
+                         f'implementation. Current implementation: '
                          f'\'{implementation}\'.')
     
     return lex.lex()

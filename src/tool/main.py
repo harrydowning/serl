@@ -154,8 +154,10 @@ def default(args):
                     f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
         tokens = token_expansion(tokens, ref.split('token'))
     
-    logger.group('TOKENS', [f'{token}: \'{pattern}\'' 
-                            for token, pattern in tokens.items()])
+    logger.info('===== TOKENS =====')
+    for token, pattern in tokens.items():
+        logger.info(f'{token}: \'{pattern.strip()}\'')
+    logger.info('===== TOKENS =====')
 
     grammar = config['grammar']
     token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
@@ -170,14 +172,14 @@ def default(args):
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    print(tokens_in_grammar)
-    # tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
-    # token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
+    tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
+    token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
+    symbol_map = token_map | grammar_map
 
-    # lexer = build_lexer(tokens, token_map, ignore_tok, 
-    #                     meta_tokens.get('regex', False))
-    # parser = build_parser(list(token_map.values()), token_map, grammar, 
-    #                       config.get('precedence', []))
+    lexer = build_lexer(tokens, token_map, ignore_tok, 
+                        meta_tokens.get('regex', False))
+    parser = build_parser(list(token_map.values()), symbol_map, grammar, 
+                          config.get('precedence', []))
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)
