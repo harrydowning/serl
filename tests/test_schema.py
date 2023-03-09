@@ -67,6 +67,14 @@ test_data = [
         rule: string
     """, True),
     ("""
+    tokens:
+        token: string
+    grammar:
+        rule: !tag string
+    commands:
+        rule: string
+    """, True),
+    ("""
     version: string
     usage: string
     grammar:

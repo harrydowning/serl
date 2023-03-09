@@ -63,13 +63,26 @@ config_schema = {
             },
         },
         'code': {
-            'type': 'object'
+            'type': 'object',
+            'patternProperties': {
+                '^.*$': {'type': 'string'} # TODO depends
+            },
+        },
+        'commands': {
+            'type': 'object',
+            'patternProperties': {
+                '^.*$': {'type': 'string'} # TODO depends
+            },
         },
         'requirements': {
             'type': 'string'
         }
     },
-    'required': ['tokens', 'grammar', 'code']
+    'anyOf': [
+        {'required': ['tokens', 'grammar', 'code']},
+        {'required': ['tokens', 'grammar', 'commands']},
+    ]
+    
 }
 
 def validate(config: dict) -> Tuple[bool, str]:

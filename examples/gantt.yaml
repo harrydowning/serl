@@ -46,10 +46,11 @@ grammar:
     - <text>
     - <>
 
-code: # python
-  gantt: |
-    pass
-  heading:
+code:
+  gantt: | # python
+
+commands:
+  gantt: cmd -o ...
 
 requirements: PyLaTex==1.4.1
 

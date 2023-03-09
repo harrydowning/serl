@@ -7,7 +7,7 @@ strict_mode = False
 logging.basicConfig(format='%(levelname)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
-class LoggerWrapper():
+class LoggingWrapper():
     def __init__(self, repl_map = {}, log = logging) -> None:
         self.repl_map = repl_map
         self.log = log
@@ -66,9 +66,9 @@ def get_file_logger(filename: str, repl_map = {}):
     file_handler = logging.FileHandler(filename, mode='w')
     file_logger.addHandler(file_handler)
     file_logger.propagate = False
-    return LoggerWrapper(repl_map, file_logger)
+    return LoggingWrapper(repl_map, file_logger)
 
-logger = LoggerWrapper()
+logger = LoggingWrapper()
 
 def info(msg, *args):
     logger.info(msg, *args)

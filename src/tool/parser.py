@@ -38,4 +38,4 @@ def build_parser(tokens: list[str], symbol_map: dict[str, str],
     file_logger = logger.get_file_logger(filename, sorted_flipped_map)
     return yacc.yacc(debug=logger.debug_mode, write_tables=False,
                      debuglog=file_logger, 
-                     errorlog=logger.LoggerWrapper(sorted_flipped_map))
+                     errorlog=logger.LoggingWrapper(sorted_flipped_map))
