@@ -12,6 +12,7 @@ def get_prod_function(prod: tuple[str, str], flipped_map: dict[str, str]):
     def f(p):
         p[0] = (prod[0], {
             flipped_map[symbol]: [p[i] for i in idxs] 
+            if len(idxs) > 1 else p[idxs[0]]
             for symbol, idxs in groups.items()
         })
     
