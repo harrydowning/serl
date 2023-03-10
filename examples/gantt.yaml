@@ -13,24 +13,31 @@ usage: |
 meta:
   tokens:
     regex: true
+    ignore: " d"
+    comment: "\\#.*"
+  grammar:
+    permissive: true
 
 tokens:
   text: ([\w ]+)
+  headings: (?:\| text)+
   -----: ---+
   "|": \|
   ===: ([ ]* =+)
   "<": <
   ">": ">"
-  headings: |
-    (?:\| text)+
 
-# precedence:
-#   - !nonassoc < > # list of space seperated tokens
-#   - !left + -
-#   - !left / *
+precedence:
+  - !nonassoc text ----- # list of space seperated tokens
+  # - !left unused
+  # - !left / *
+
+constructor:
+  rows:
+    - |
 
 grammar:
-  gantt: |
+  gantt: | 
     text
     -----
     headings
@@ -47,9 +54,13 @@ grammar:
     - <>
 
 code:
+  start: !before | #python
+    pass
+  after: !after | # python
+    pass
   gantt: | # python
 
-commands:
+command:
   gantt: cmd -o ...
 
 requirements: PyLaTex==1.4.1

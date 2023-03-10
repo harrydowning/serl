@@ -26,4 +26,4 @@ Usage:
 {OPTIONS}
 """
 
-DEFAULT_REF = r'^token(?!$)| token'
+DEFAULT_REF = r'^token(?!$)|(?<= )token'

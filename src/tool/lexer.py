@@ -32,7 +32,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], 
-                ignore: str, using_regex: bool):
+                ignore: str, comment: str|None, using_regex: bool):
     g = globals()
     g['tokens'] = () # TODO ('DEFAULT',)
 
@@ -46,6 +46,8 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
     # Lower precedence than user rules
     g['t_newline'] = newline
     g['t_ignore'] = ignore
+    if comment:
+        g['t_ignore_comment'] = comment
     
     if using_regex:
         if using_cpython:

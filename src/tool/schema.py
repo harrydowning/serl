@@ -13,6 +13,12 @@ meta = {
                 },
                 'regex': {
                     'type': 'boolean'
+                },
+                'ignore': {
+                    'type': 'string'
+                },
+                'comment': {
+                    'type': 'string'
                 }
             }
         }

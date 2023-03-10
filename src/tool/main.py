@@ -144,7 +144,9 @@ def default(args):
     meta_tokens = meta.get('tokens', {})
 
     tokens = config['tokens']
-    ignore_tok = tokens.pop('_ignore', ' \t') # Special token, not expanded
+    ignore = meta_tokens.get('ignore', ' \t')
+    comment = meta_tokens.get('comment', None)
+    using_regex = meta_tokens.get('regex', False)
     
     ref = meta_tokens.get('ref', DEFAULT_REF)
     if ref != False:
@@ -159,6 +161,7 @@ def default(args):
         logger.info(f'{token}: \'{pattern.strip()}\'')
     logger.info('===== TOKENS =====')
 
+    precedence = config.get('precedence', [])
     grammar = config['grammar']
     token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
@@ -176,10 +179,9 @@ def default(args):
     token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     symbol_map = token_map | grammar_map
 
-    lexer = build_lexer(tokens, token_map, ignore_tok, 
-                        meta_tokens.get('regex', False))
+    lexer = build_lexer(tokens, token_map, ignore, comment, using_regex)
     parser = build_parser(list(token_map.values()), symbol_map, grammar, 
-                          config.get('precedence', []))
+                          precedence)
     # ast = parser.parse(src, lexer=lexer)
     # code = config['code']
     # execute(ast, code)

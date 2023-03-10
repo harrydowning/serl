@@ -20,14 +20,29 @@ def get_prod_function(prod: tuple[str, str], flipped_map: dict[str, str]):
     return f
 
 def p_error(p):
-    print("Syntax error in input!") # TODO appropriate response
+    if p != None:
+        logger.error('Parsing error, reach end of file.')
+    else:
+        tok = p.value[0][0] if type(p.value[0]) == list else p.value[0]
+        logger.error(f'Parsing error with token \'{tok}\' on line {p.lineno}')
 
-def build_parser(tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]],
-                 precedence: list[TaggedData]):
+def build_parser(_tokens: list[str], symbol_map: dict[str, str],
+                 grammar: dict[str, list[str]], _precedence: list[TaggedData]):
     g = globals()
-    g['tokens'] = tokens
-    g['precedence'] = [(tag, *tokens.split(' ')) for tag, tokens in precedence]
+    g['tokens'] = _tokens
+    
+    precedence = []
+    for tag, tok_str_list in _precedence:
+        toks = []
+        for t in re.split(r'\s+', tok_str_list):
+            if symbol_map.get(t, None) != None:
+                toks.append(symbol_map[t])
+            else:
+                logger.warning(f'precedence specified for token not used in '
+                               f'grammar: \'{t}\'')
+        if len(toks) > 0:
+            precedence.append((tag, *toks))
+    g['precedence'] = precedence
 
     flipped_map = {v: k for k, v in symbol_map.items()}
     for nt in grammar:
