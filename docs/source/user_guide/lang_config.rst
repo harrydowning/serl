@@ -4,7 +4,7 @@ Language Configuration
 Intro
 
 .. note ::
-  A note
+  A note on verbose regex
 
 Version
 -------
