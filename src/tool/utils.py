@@ -44,16 +44,14 @@ def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
                                           sorted_repl_tokens)
     return exp_repl_tokens
 
+def normalise_dict(d: dict) -> dict[str, list[str]]:
+    return {k:v if type(v) == list else [v] for k,v in d.items()}
+
 def normalise_grammar(symbol_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
     sorted_map = list(get_sorted_map(symbol_map).items())
     norm_grammar = {}
-    for nt in grammar:
-        if type(grammar[nt]) == str:
-            rules = [grammar[nt]]
-        else:
-            rules = grammar[nt].copy()
-        
+    for nt, rules in normalise_dict(grammar).items():       
         for i, rule in enumerate(rules):
             rules[i] = re.sub(r'\s+', ' ', expand(rule, sorted_map, re.escape, pad = 1)).strip()
         norm_grammar[symbol_map[nt]] = rules
@@ -81,4 +79,16 @@ def recurse_tags(obj, tag=None, remove=False):
         return recurse_tags(obj[1], obj[0], remove)
     else:
         return obj if tag == None or remove else TaggedData(tag, obj) 
+
+def get_dups(d1: dict[str, list[str]], 
+             d2: dict[str, list[str]]) -> list[tuple[str, int]]:
+    dups = []
+    for k, v1 in d1.items():
+        v2 = d2.get(k, None)
+        if v2:
+            l = min(len(v1), len(v2))
+            v1, v2 = v1[:l], v2[:l]
+            dups += [(k, i) for i in range(l) 
+                     if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
+    return dups
 

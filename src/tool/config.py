@@ -1,4 +1,4 @@
-import os, re
+import os, sys, re
 import yaml
 import requests
 import tool.logger as logger
@@ -25,8 +25,10 @@ yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
 def get_system_config(language: str) -> dict:
     home = os.path.expanduser('~')
     directory = os.path.join(home, SYSTEM_CONFIG_DIR)
-    config = {}
+    # Allow Python files with functionality to be shared across languages
+    sys.path.append(directory)
     
+    config = {}
     for filename in os.listdir(directory):
         file_lang = file.split(".")[0]
         file_path = os.path.join(directory, filename)

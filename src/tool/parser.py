@@ -4,27 +4,27 @@ import tool.utils as utils
 from tool.config import TaggedData
 import ply.yacc as yacc
 
-def get_prod_function(prod: tuple[str, str], flipped_map: dict[str, str]):
-    symbols = prod[1].split(' ')
+def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
+    symbols = prod[2].split(' ')
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = (prod[0], {
+        p[0] = (flipped_map(prod[0]), prod[1], {
             flipped_map[symbol]: [p[i] for i in idxs] 
             if len(idxs) > 1 else p[idxs[0]]
             for symbol, idxs in groups.items()
         })
     
-    f.__doc__ = f'{prod[0]} : {prod[1]}'
+    f.__doc__ = f'{prod[0]} : {prod[2]}'
     return f
 
 def p_error(p):
     if p != None:
-        logger.error('Parsing error, reach end of file.')
+        logger.error('Parsing error: Reached end of file.')
     else:
         tok = p.value[0][0] if type(p.value[0]) == list else p.value[0]
-        logger.error(f'Parsing error with token \'{tok}\' on line {p.lineno}')
+        logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
 def build_parser(_tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[TaggedData]):
@@ -47,7 +47,7 @@ def build_parser(_tokens: list[str], symbol_map: dict[str, str],
     flipped_map = {v: k for k, v in symbol_map.items()}
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
-            g[f'p_{nt}_{i}'] = get_prod_function((nt, rule), flipped_map)
+            g[f'p_{nt}_{i}'] = get_prod_function((nt, i, rule), flipped_map)
 
     sorted_flipped_map = utils.get_sorted_map(flipped_map)
     filename = os.path.join(os.getcwd(), 'test.txt') # TODO temp

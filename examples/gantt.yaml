@@ -4,6 +4,7 @@ usage: |
   
   Usage:
     gantt [options] [<input>]
+    gantt [-v|--verbose] [-o] <input>
 
   Options:
     -h --help     Show this screen.
@@ -17,6 +18,8 @@ meta:
     comment: "\\#.*"
   grammar:
     permissive: true
+  commands:
+    prefix: gantt # prefix for environment variable
 
 tokens:
   text: ([\w ]+)
@@ -32,7 +35,7 @@ precedence:
   # - !left unused
   # - !left / *
 
-constructor:
+constructors:
   rows:
     - |
 
@@ -59,8 +62,13 @@ code:
   after: !after | # python
     pass
   gantt: | # python
+    pass
+  row:
+    -
+    - | # python
+      pass
 
-command:
+commands:
   gantt: cmd -o ...
 
 requirements: PyLaTex==1.4.1

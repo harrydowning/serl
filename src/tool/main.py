@@ -1,4 +1,5 @@
-import sys, os, fileinput
+import sys, os, fileinput, subprocess
+from typing import Any
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -113,7 +114,7 @@ def link(args):
     try:
         os.symlink(src, dst)
     except Exception as e:
-        logger.error(e)
+        logger.error(f'Symbolic link error: {e}')
 
 def default(args):
     language = args['<language>']
@@ -132,7 +133,11 @@ def default(args):
     if usage != None:
         language_args = docopt(usage, argv=inputs, version=version)
         # Requirement: Must specify single <input> in usage to be file parsed.
-        src_input = language_args['<input>']
+        src_input = language_args.get('<input>', None)
+        if not(type(src_input) == str or type(src_input) == None):
+            logger.error('File to be parsed must be specified in usage pattern' 
+                         ' as \'<input>\' (file path), \'[<input>]\' '
+                         '(file path or stdin) or nothing (stdin).')
     else:
         src_input = next(iter(inputs), None) # First element if it exists
     
@@ -167,7 +172,7 @@ def default(args):
     grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
     if common_keys:
-        s = "\', \'"
+        s = '\', \''
         logger.error(f'Grammar identifiers \'{s.join(common_keys)}\' already '
                      f'used in tokens')
     
@@ -183,10 +188,23 @@ def default(args):
     parser = build_parser(list(token_map.values()), symbol_map, grammar, 
                           precedence)
     # ast = parser.parse(src, lexer=lexer)
-    # code = config['code']
-    # execute(ast, code)
+    code = utils.normalise_dict(config.get('code', {}))
+    commands = utils.normalise_dict(config.get('commands', {}))
+    dups = utils.get_dups(code, commands)
+    if len(dups) > 0:
+        logger.error(f'Functionality defined in both \'code\' and \'command\' '
+                     f'for {", ".join(dups)}')
+    #execute(ast, code, commands)
 
-def execute(ast, code: dict):
+Node = tuple[str, int, 'Node']
+def execute(ast: Node, code: dict[str, str], commands: dict[str, str]):
+    # command = [] # e.g., ['imstr', '-s', '0.2', '0.jpg']
+    # env = os.environ.copy() # TODO add global and node local variables
+    # cp = subprocess.run(command, capture_output=True, text=True, shell=True)
+    # if cp.returncode == 0:
+    #     data = cp.stdout
+    # else:
+    #     err = cp.stderr
     pass # TODO language execution
 
 def get_args() -> dict:

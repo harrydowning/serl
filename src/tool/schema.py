@@ -21,6 +21,22 @@ meta = {
                     'type': 'string'
                 }
             }
+        },
+        'grammar': {
+            'type': 'object',
+            'properties': {
+                'permissive': {
+                    'type': 'boolean'
+                }
+            }
+        },
+        'commands': {
+            'type': 'object',
+            'properties': {
+                'prefix': {
+                    'type': 'string'
+                }
+            }
         }
     }
 }
@@ -71,13 +87,23 @@ config_schema = {
         'code': {
             'type': 'object',
             'patternProperties': {
-                '^.*$': {'type': 'string'} # TODO depends
+                '^.*$': {
+                    'type': ['string', 'array'],
+                    'items': {
+                        'type': ['string', 'null']
+                    }
+                }
             },
         },
         'commands': {
             'type': 'object',
             'patternProperties': {
-                '^.*$': {'type': 'string'} # TODO depends
+                '^.*$': {
+                    'type': ['string', 'array'],
+                    'items': {
+                        'type': ['string', 'null']
+                    }
+                }
             },
         },
         'requirements': {
