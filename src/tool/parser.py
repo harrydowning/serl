@@ -4,17 +4,25 @@ import tool.utils as utils
 from tool.config import TaggedData
 import ply.yacc as yacc
 
+class AST(tuple):
+    def __new__(cls, name: str, pos: int, value, has_custom_value: bool):
+        return super(AST, cls).__new__(cls, (name, pos, value))
+    
+    def __init__(self, name: str, pos: int, value, has_custom_value: bool) -> None:
+        super().__init__()
+        self.has_custom_value = has_custom_value
+
 def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
     symbols = prod[2].split(' ')
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = (flipped_map(prod[0]), prod[1], {
+        p[0] = AST(flipped_map(prod[0]), prod[1], {
             flipped_map[symbol]: [p[i] for i in idxs] 
             if len(idxs) > 1 else p[idxs[0]]
             for symbol, idxs in groups.items()
-        })
+        }, False)
     
     f.__doc__ = f'{prod[0]} : {prod[2]}'
     return f

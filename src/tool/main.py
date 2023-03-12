@@ -3,7 +3,7 @@ from typing import Any
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
-from tool.parser import build_parser
+from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
@@ -62,14 +62,6 @@ from tool.config import get_config
 
 #     _result = code['result']
 #     exec(_result, env)
-
-# class AST(tuple):
-#     def __init__(self, name: str, pos: int, value, is_nonterm: bool) -> None:
-#         self.name = name
-#         self.pos = pos
-#         self.value = value
-#     def __new__(cls, tag: str, value):
-#         return super(AST, cls).__new__(cls, (tag, value))
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
@@ -206,21 +198,35 @@ def default(args):
     #get_execute_func(ast, code, commands, global_env)()
     # TODO run !after in global scope
 
-def get_execute_func(ast: tuple[str, int, dict], code: dict[str, list[str]], 
+def get_execute_func(ast: AST, code: dict[str, list[str]], 
                      commands: dict[str, list[str]], global_env: dict):
     name, i, value = ast
     def execute(**local_env):
+        # Make sure the function can only be called once
+        nonlocal execute
+        execute = lambda **local_env: None
+
         cd = utils.safe_get(code, name, i)
         cm = utils.safe_get(commands, name, i)
         if cd:
-            # TODO how to distinguish between terminals and nonterminals # TODO how will I traverse with different constructors
-            local_env = {k: get_execute_func(v, code, commands, global_env) for k,v in value.items()} 
+            # TODO what if some nodes are skipped but then lower ones have code or commands. Possible: traverse whole tree first replacing 'traversable' nodes with their respective functions
+            if ast.has_custom_value:
+                local_env |= {'_': value}
+            else:
+                # TODO how to make custom values traversable e.g., list
+                local_env |= {
+                    '_': {
+                        k: get_execute_func(v, code, commands, global_env) 
+                        if isinstance(v, AST) else v for k, v in value.items()
+                    }
+                }
             exec(cd, global_env, local_env)
-            _return = global_env.get('_return', None)
-            return _return
+            _ = local_env.get('_', None)
+            return _
         elif cm:
             env = {} # TODO global and local vars + how to invoke code/command of child nonterminals
-            cp = subprocess.run(cm, capture_output=True, text=True, shell=True, env=env)
+            cp = subprocess.run(cm, capture_output=True, text=True, 
+                                shell=True, env=env)
             if cp.returncode == 0:
                 data = cp.stdout
             else:
