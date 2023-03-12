@@ -63,6 +63,14 @@ from tool.config import get_config
 #     _result = code['result']
 #     exec(_result, env)
 
+# class AST(tuple):
+#     def __init__(self, name: str, pos: int, value, is_nonterm: bool) -> None:
+#         self.name = name
+#         self.pos = pos
+#         self.value = value
+#     def __new__(cls, tag: str, value):
+#         return super(AST, cls).__new__(cls, (tag, value))
+
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
     token_graph = nx.DiGraph(utils.get_token_graph(repl_tokens))
@@ -194,18 +202,32 @@ def default(args):
     if len(dups) > 0:
         logger.error(f'Functionality defined in both \'code\' and \'command\' '
                      f'for {", ".join(dups)}')
-    #execute(ast, code, commands)
+    # TODO run !before in global scope
+    #get_execute_func(ast, code, commands, global_env)()
+    # TODO run !after in global scope
 
-Node = tuple[str, int, 'Node']
-def execute(ast: Node, code: dict[str, str], commands: dict[str, str]):
-    # command = [] # e.g., ['imstr', '-s', '0.2', '0.jpg']
-    # env = os.environ.copy() # TODO add global and node local variables
-    # cp = subprocess.run(command, capture_output=True, text=True, shell=True)
-    # if cp.returncode == 0:
-    #     data = cp.stdout
-    # else:
-    #     err = cp.stderr
-    pass # TODO language execution
+def get_execute_func(ast: tuple[str, int, dict], code: dict[str, list[str]], 
+                     commands: dict[str, list[str]], global_env: dict):
+    name, i, value = ast
+    def execute(**local_env):
+        cd = utils.safe_get(code, name, i)
+        cm = utils.safe_get(commands, name, i)
+        if cd:
+            # TODO how to distinguish between terminals and nonterminals # TODO how will I traverse with different constructors
+            local_env = {k: get_execute_func(v, code, commands, global_env) for k,v in value.items()} 
+            exec(cd, global_env, local_env)
+            _return = global_env.get('_return', None)
+            return _return
+        elif cm:
+            env = {} # TODO global and local vars + how to invoke code/command of child nonterminals
+            cp = subprocess.run(cm, capture_output=True, text=True, shell=True, env=env)
+            if cp.returncode == 0:
+                data = cp.stdout
+            else:
+                err = cp.stderr
+        else:
+            return value
+    return execute
 
 def get_args() -> dict:
     version = f'{NAME} {VERSION}'

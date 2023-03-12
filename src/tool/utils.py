@@ -5,6 +5,7 @@ def expand(rule: str, symbol_map: list[tuple[str, str]], f = lambda x: x, pad = 
     if symbol_map == []:
         return rule
     symbol, repl = symbol_map[0]
+    # TODO symbol_map = [t for t in symbol_map[1:] if re.search(f(t[0]), rule)]
     repl = f'{" " * pad}{repl}{" " * pad}'
     return repl.join([expand(s, symbol_map[1:], f, pad) 
                       for s in re.split(f(symbol), rule)])
@@ -92,3 +93,8 @@ def get_dups(d1: dict[str, list[str]],
                      if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
     return dups
 
+def safe_get(d: dict[str, list[str]], k: str, i: int) -> str | None:
+    v = d.get(k, None)
+    if v and len(v) > i:
+        return v[i]
+    return None
