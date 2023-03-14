@@ -98,3 +98,9 @@ def safe_get(d: dict[str, list[str]], k: str, i: int) -> str | None:
     if v and len(v) > i:
         return v[i]
     return None
+
+class Grammar():
+    pass
+
+class Functionality():
+    pass

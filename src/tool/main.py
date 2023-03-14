@@ -224,7 +224,7 @@ def get_execute_func(ast: AST, code: dict[str, list[str]],
             _ = local_env.get('_', None)
             return _
         elif cm:
-            env = {} # TODO global and local vars + how to invoke code/command of child nonterminals
+            env = os.environ.copy() | {} # TODO global and local vars TODO how to invoke code/command of child nonterminals
             cp = subprocess.run(cm, capture_output=True, text=True, 
                                 shell=True, env=env)
             if cp.returncode == 0:
