@@ -1,14 +1,15 @@
 import re
+from typing import Callable
 from tool.config import TaggedData
 
-def expand(rule: str, symbol_map: list[tuple[str, str]], f = lambda x: x, pad = 0):
+def expand(rule: str, symbol_map: list[tuple[str, str]], 
+           symbol_f: Callable[[str], str] = lambda x: x, 
+           repl_f: Callable[[str], str] = lambda x: x):
     if symbol_map == []:
         return rule
     symbol, repl = symbol_map[0]
-    # TODO symbol_map = [t for t in symbol_map[1:] if re.search(f(t[0]), rule)]
-    repl = f'{" " * pad}{repl}{" " * pad}'
-    return repl.join([expand(s, symbol_map[1:], f, pad) 
-                      for s in re.split(f(symbol), rule)])
+    return repl_f(repl).join([expand(s, symbol_map[1:], symbol_f, repl_f) 
+                             for s in re.split(symbol_f(symbol), rule)])
 
 def get_sorted_map(tokens: dict[str, str]) -> dict[str, str]:
     sorted_tokens = {}
@@ -54,7 +55,8 @@ def normalise_grammar(symbol_map: dict[str, str],
     norm_grammar = {}
     for nt, rules in normalise_dict(grammar).items():       
         for i, rule in enumerate(rules):
-            rules[i] = re.sub(r'\s+', ' ', expand(rule, sorted_map, re.escape, pad = 1)).strip()
+            exp_rule = expand(rule, sorted_map, re.escape, lambda x: f' {x} ')
+            rules[i] = re.sub(r'\s+', ' ', exp_rule).strip()
         norm_grammar[symbol_map[nt]] = rules
     return norm_grammar
 
@@ -98,9 +100,3 @@ def safe_get(d: dict[str, list[str]], k: str, i: int) -> str | None:
     if v and len(v) > i:
         return v[i]
     return None
-
-class Grammar():
-    pass
-
-class Functionality():
-    pass

@@ -9,59 +9,27 @@ import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
 from tool.config import get_config
 
-# def default_old(args):
-#     language = args['<language>'] # Also check 0th arg for symlink
-#     src = args['<input>']
-#     strict_mode = args['--strict']
-#     debug_mode = args['--debug']
+# class Grammar():
+#     pass
 
-#     # system_config = get_system_config(SYSTEM_CONFIG_FILE)
-#     # path_config = get_path_config(args['--config'])
+# class Functionality():
+#     def __init__(self, code: dict, commands: dict) -> None:
+#         self.code = utils.normalise_dict(code)
+#         self.commands = utils.normalise_dict(commands)
+#         self.functionality = 
+    
+#     def _get(self, d: dict, name: str, pos: int) -> str | None:
+#         v = d.get(name, None)
+#         if v and len(v) > pos:
+#             return v[pos]
+#         return None
 
-#     local_config = {} #utils.get_local_config(LOCAL_CONFIG_FILE)[language]
-#     rules = utils.get_sorted_rules(local_config['rules'])
-#     tokens = local_config['tokens']
+#     def get(self, name: str, pos: int) -> str | None:
+#         return (self._get(self.code, name, pos) or
+#                 self._get(self.commands, name, pos))
 
-#     rule_graph = nx.DiGraph(utils.get_rule_graph(rules))
-#     cycles = list(nx.simple_cycles(rule_graph))
-
-#     if cycles:
-#         cycle_nodes = {node for cycle in cycles for node in cycle}
-#         rule_graph.remove_nodes_from(cycle_nodes)
-
-#         for cycle in cycles:
-#             msg = (f"Cyclic reference in rules: '{', '.join(cycle)}'."
-#                     " Rules will not be expanded. This is most likely not" 
-#                     " indended, please check rules.")
-#             # logger.warning(msg, strict_mode)
-
-#     rule_order = list(nx.topological_sort(rule_graph))
-#     rules = utils.expand_rules(rule_order, rules)
-
-#     syntax = utils.expand_patterns(tokens, rules)
-#     lexer = build_lexer(syntax, args['--debug'])
-
-#     with open(src) as file:
-#         src_str = file.read()
-#         # TODO: inline_config 
-
-#     code = local_config['code'] # make keys upper to match tokens
-#     env = {
-#         'src': src
-#     }
-#     _setup = code['setup']
-#     exec(_setup, env)
-
-#     lexer.input(src_str)
-#     # logger.info(' ==== TOKENS FOLLOW ====', debug_mode)
-#     for token in lexer:
-#         # logger.info(token, debug_mode)
-#         env['captures'] = token.value
-#         _token_code = code[token.type.lower()]
-#         exec(_token_code, env)
-
-#     _result = code['result']
-#     exec(_result, env)
+# class Language():
+#     pass
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
@@ -168,8 +136,8 @@ def default(args):
 
     precedence = config.get('precedence', [])
     grammar = config['grammar']
-    token_map = {k: f'TERM{i}' for i, k, in enumerate(tokens.keys())}
-    grammar_map = {k: f'NONTERM{i}' for i, k in enumerate(grammar.keys())}
+    token_map = {k: f'TERMINAL{i}' for i, k, in enumerate(tokens.keys())}
+    grammar_map = {k: f'NONTERMINAL{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
     if common_keys:
         s = '\', \''
