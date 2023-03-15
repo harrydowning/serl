@@ -1,4 +1,5 @@
 import sys, os, fileinput, subprocess
+from collections import UserDict
 from typing import Any
 from docopt import docopt
 import networkx as nx
@@ -9,27 +10,54 @@ import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
 from tool.config import get_config
 
-# class Grammar():
-#     pass
-
-# class Functionality():
-#     def __init__(self, code: dict, commands: dict) -> None:
-#         self.code = utils.normalise_dict(code)
-#         self.commands = utils.normalise_dict(commands)
-#         self.functionality = 
+# class BiDict(UserDict):  
+#     def __setitem__(self, key, item) -> None:
+#         if self.__contains__(key):
+#             self.pop(key)
+#         if self.__contains__(item):
+#             self.pop(item)
+#         super().__setitem__(key, item)
+#         super().__setitem__(item, key)
     
-#     def _get(self, d: dict, name: str, pos: int) -> str | None:
-#         v = d.get(name, None)
-#         if v and len(v) > pos:
-#             return v[pos]
-#         return None
+#     def __delitem__(self, key) -> None:
+#         item = self.get(key)
+#         super().__delitem__(key)
+#         if key != item:
+#             super().__delitem__(item)
 
-#     def get(self, name: str, pos: int) -> str | None:
-#         return (self._get(self.code, name, pos) or
-#                 self._get(self.commands, name, pos))
+class NormalisedDict(UserDict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.data = {
+            k:v if isinstance(v, list) else [v] 
+            for k,v in self.data.items()
+        }
+
+class Functionality():
+    def __init__(self, code: dict, commands: dict) -> None:
+        self.code = NormalisedDict(code)
+        self.commands = NormalisedDict(commands)
+        dups = utils.get_dups(self.code, self.commands)
+        if len(dups) > 0:
+            msg = 'Functionality defined in both \'code\' and \'command\' for '
+            msg += f'{", ".join(dups)} (\'code\' will take precedence).'
+            logger.warning(msg)
+
+    def _get(self, d: NormalisedDict, name: str, pos: int) -> str | None:
+        v = d.get(name, None)
+        if v and len(v) > pos:
+            return v[pos]
+        return None
+
+    def get_code(self, name: str, pos: int) -> str | None:
+        return self._get(self.code, name, pos)
+
+    def get_command(self, name: str, pos: int) -> str | None:
+        return self._get(self.commands, name, pos)
 
 # class Language():
-#     pass
+#     def __init__(self, grammar: Grammar, functionality: Functionality) -> None:
+#         pass
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
@@ -102,7 +130,7 @@ def default(args):
         language_args = docopt(usage, argv=inputs, version=version)
         # Requirement: Must specify single <input> in usage to be file parsed.
         src_input = language_args.get('<input>', None)
-        if not(type(src_input) == str or type(src_input) == None):
+        if not(isinstance(src_input, str) or src_input == None):
             logger.error('File to be parsed must be specified in usage pattern' 
                          ' as \'<input>\' (file path), \'[<input>]\' '
                          '(file path or stdin) or nothing (stdin).')
@@ -156,51 +184,45 @@ def default(args):
     parser = build_parser(list(token_map.values()), symbol_map, grammar, 
                           precedence)
     # ast = parser.parse(src, lexer=lexer)
-    code = utils.normalise_dict(config.get('code', {}))
-    commands = utils.normalise_dict(config.get('commands', {}))
-    dups = utils.get_dups(code, commands)
-    if len(dups) > 0:
-        logger.error(f'Functionality defined in both \'code\' and \'command\' '
-                     f'for {", ".join(dups)}')
+    code = config.get('code', {})
+    commands = config.get('commands', {})
+    functionality = Functionality(code, commands)
     # TODO run !before in global scope
-    #get_execute_func(ast, code, commands, global_env)()
+    #get_execute_func(ast, functionality, global_env)()
     # TODO run !after in global scope
 
-def get_execute_func(ast: AST, code: dict[str, list[str]], 
-                     commands: dict[str, list[str]], global_env: dict):
+def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
+    # TODO what about traversable custom values e.g., list
+    if ast.has_custom_value:
+        env = {name: value}
+    else:
+        env = {k: get_execute_func(v, functionality, global_env) 
+                if isinstance(v, AST) else v for k, v in value.items()}
+    
+    active = True
     def execute(**local_env):
         # Make sure the function can only be called once
-        nonlocal execute
-        execute = lambda **local_env: None
+        nonlocal active
+        if not active:
+            return None
+        active = False
 
-        cd = utils.safe_get(code, name, i)
-        cm = utils.safe_get(commands, name, i)
+        cd = functionality.get_code(name, i)
+        cm = functionality.get_command(name, i)
         if cd:
-            # TODO what if some nodes are skipped but then lower ones have code or commands. Possible: traverse whole tree first replacing 'traversable' nodes with their respective functions
-            if ast.has_custom_value:
-                local_env |= {'_': value}
-            else:
-                # TODO how to make custom values traversable e.g., list
-                local_env |= {
-                    '_': {
-                        k: get_execute_func(v, code, commands, global_env) 
-                        if isinstance(v, AST) else v for k, v in value.items()
-                    }
-                }
+            local_env |= env
             exec(cd, global_env, local_env)
             _ = local_env.get('_', None)
             return _
         elif cm:
-            env = os.environ.copy() | {} # TODO global and local vars TODO how to invoke code/command of child nonterminals
-            cp = subprocess.run(cm, capture_output=True, text=True, 
-                                shell=True, env=env)
-            if cp.returncode == 0:
-                data = cp.stdout
-            else:
-                err = cp.stderr
+            # TODO global and local vars TODO how to invoke code/command of child nonterminals
+            env = os.environ.copy() | {}
+            # TODO should stout/err be shown if run at root nonterminal?
+            return subprocess.run(cm, capture_output=True, text=True, 
+                                  shell=True, env=env)
         else:
-            return value
+            return env
     return execute
 
 def get_args() -> dict:

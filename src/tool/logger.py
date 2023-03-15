@@ -8,7 +8,7 @@ logging.basicConfig(format='%(levelname)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
 class LoggingWrapper():
-    def __init__(self, repl_map = {}, log = logging) -> None:
+    def __init__(self, repl_map: dict = {}, log = logging) -> None:
         self.repl_map = repl_map
         self.log = log
     

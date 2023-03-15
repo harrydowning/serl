@@ -74,11 +74,11 @@ def get_tokens_in_grammar(token_map: dict[str, str],
             if token_name in used]
 
 def recurse_tags(obj, tag=None, remove=False):
-    if type(obj) == dict:
+    if isinstance(obj, dict):
         return {k: recurse_tags(v, tag, remove) for k, v in obj.items()}
-    elif type(obj) == list:
+    elif isinstance(obj, list):
         return [recurse_tags(v, tag, remove) for v in obj]
-    elif type(obj) == TaggedData:
+    elif isinstance(obj, TaggedData):
         return recurse_tags(obj[1], obj[0], remove)
     else:
         return obj if tag == None or remove else TaggedData(tag, obj) 
@@ -94,9 +94,3 @@ def get_dups(d1: dict[str, list[str]],
             dups += [(k, i) for i in range(l) 
                      if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
     return dups
-
-def safe_get(d: dict[str, list[str]], k: str, i: int) -> str | None:
-    v = d.get(k, None)
-    if v and len(v) > i:
-        return v[i]
-    return None
