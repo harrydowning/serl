@@ -6,7 +6,7 @@ import platform
 implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'
 
-def get_pattern_function(pattern, using_regex):
+def get_pattern_function(token, pattern, using_regex):
     def f(t):
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
@@ -21,6 +21,7 @@ def get_pattern_function(pattern, using_regex):
         return t
     
     f.__doc__ = pattern
+    f.__name__ = token
     return f
 
 def newline(t):
@@ -40,14 +41,15 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
         token_name = token_map[token]
 
         g['tokens'] = (*g['tokens'], token_name)
-        g[f't_{token_name}'] = get_pattern_function(pattern, using_regex)
+        g[f't_{token_name}'] = get_pattern_function(token, pattern, using_regex)
 
     # TODO g['t_DEFAULT'] = r'.'
     # Lower precedence than user rules
     g['t_newline'] = newline
     g['t_ignore'] = ignore
+    comment_rule = 't_ignore_comment'
     if comment:
-        g['t_ignore_comment'] = comment
+        g[comment_rule] = comment
     
     if using_regex:
         if using_cpython:
@@ -57,4 +59,5 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
                          f'implementation. Current implementation: '
                          f'\'{implementation}\'.')
     
-    return lex.lex()
+    errorlog = logger.LoggingWrapper({comment_rule: 'comment'}, ply_repl=True)
+    return lex.lex(errorlog=errorlog)

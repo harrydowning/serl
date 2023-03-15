@@ -52,14 +52,15 @@ def build_parser(_tokens: list[str], symbol_map: dict[str, str],
             precedence.append((tag, *toks))
     g['precedence'] = precedence
 
-    flipped_map = {v: k for k, v in symbol_map.items()}
+    flipped_map = utils.flip_map(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
             g[f'p_{nt}_{i}'] = get_prod_function((nt, i, rule), flipped_map)
 
     sorted_flipped_map = utils.get_sorted_map(flipped_map)
     filename = os.path.join(os.getcwd(), 'test.txt') # TODO temp
-    file_logger = logger.get_file_logger(filename, sorted_flipped_map)
+
+    debuglog = logger.get_file_logger(filename, sorted_flipped_map)
+    errorlog = logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
     return yacc.yacc(debug=logger.debug_mode, write_tables=False,
-                     debuglog=file_logger, 
-                     errorlog=logger.LoggingWrapper(sorted_flipped_map))
+                     debuglog=debuglog, errorlog=errorlog)

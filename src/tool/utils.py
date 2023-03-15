@@ -94,3 +94,6 @@ def get_dups(d1: dict[str, list[str]],
             dups += [(k, i) for i in range(l) 
                      if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
     return dups
+
+def flip_map(d: dict) -> dict:
+    return {v: k for k, v in d.items()}

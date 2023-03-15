@@ -40,7 +40,7 @@ class Functionality():
         dups = utils.get_dups(self.code, self.commands)
         if len(dups) > 0:
             msg = 'Functionality defined in both \'code\' and \'command\' for '
-            msg += f'{", ".join(dups)} (\'code\' will take precedence).'
+            msg += f'{", ".join(map(str, dups))}, \'code\' will take precedence.'
             logger.warning(msg)
 
     def _get(self, d: NormalisedDict, name: str, pos: int) -> str | None:
