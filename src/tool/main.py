@@ -180,9 +180,12 @@ def default(args):
     token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     symbol_map = token_map | grammar_map
 
+    # For the case where a symbmolic link hasn't been used
+    language = os.path.basename(language).split('.')[0]
+
     lexer = build_lexer(tokens, token_map, ignore, comment, using_regex)
-    parser = build_parser(list(token_map.values()), symbol_map, grammar, 
-                          precedence)
+    parser = build_parser(language, list(token_map.values()), symbol_map, 
+                          grammar, precedence)
     # ast = parser.parse(src, lexer=lexer)
     code = config.get('code', {})
     commands = config.get('commands', {})
@@ -193,12 +196,8 @@ def default(args):
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
-    # TODO what about traversable custom values e.g., list
-    if ast.has_custom_value:
-        env = {name: value}
-    else:
-        env = {k: get_execute_func(v, functionality, global_env) 
-                if isinstance(v, AST) else v for k, v in value.items()}
+    env = {k: get_execute_func(v, functionality, global_env) 
+           if isinstance(v, AST) else v for k, v in value.items()}
     
     active = True
     def execute(**local_env):

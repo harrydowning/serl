@@ -5,12 +5,8 @@ from tool.config import TaggedData
 import ply.yacc as yacc
 
 class AST(tuple):
-    def __new__(cls, name: str, pos: int, value, has_custom_value: bool):
+    def __new__(cls, name: str, pos: int, value):
         return super(AST, cls).__new__(cls, (name, pos, value))
-    
-    def __init__(self, name: str, pos: int, value, has_custom_value: bool) -> None:
-        super().__init__()
-        self.has_custom_value = has_custom_value
 
 def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
     symbols = prod[2].split(' ')
@@ -22,7 +18,7 @@ def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
             flipped_map[symbol]: [p[i] for i in idxs] 
             if len(idxs) > 1 else p[idxs[0]]
             for symbol, idxs in groups.items()
-        }, False)
+        })
     
     f.__doc__ = f'{prod[0]} : {prod[2]}'
     return f
@@ -34,7 +30,7 @@ def p_error(p):
         tok = p.value[0][0] if isinstance(p.value[0], list) else p.value[0]
         logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
-def build_parser(_tokens: list[str], symbol_map: dict[str, str],
+def build_parser(language: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[TaggedData]):
     g = globals()
     g['tokens'] = _tokens
@@ -62,5 +58,5 @@ def build_parser(_tokens: list[str], symbol_map: dict[str, str],
 
     debuglog = logger.get_file_logger(filename, sorted_flipped_map)
     errorlog = logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
-    return yacc.yacc(debug=logger.debug_mode, write_tables=False,
-                     debuglog=debuglog, errorlog=errorlog)
+    return yacc.yacc(debug=logger.debug_mode, write_tables=True, 
+                     tabmodule=language, debuglog=debuglog, errorlog=errorlog)
