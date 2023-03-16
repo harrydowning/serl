@@ -70,9 +70,6 @@ config_schema = {
                 'type': 'string'
             }
         },
-        'constructors': {
-            'type': 'object'
-        },
         'grammar': {
             'type': 'object',
             'patternProperties': {
