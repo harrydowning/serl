@@ -31,12 +31,19 @@ def p_error(p):
         logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
 def build_parser(language: str, _tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]], _precedence: list[TaggedData]):
+                 grammar: dict[str, list[str]], _precedence: list):
     g = globals()
     g['tokens'] = _tokens
     
     precedence = []
-    for tag, tok_str_list in _precedence:
+    for p in _precedence:
+        if type(p) != TaggedData:
+            logger.warning(f'Precedence rule \'{p}\' ignored as it has no '
+                           f'associativity tag. Use \'!left\', \'!right\', or '
+                           f'\'!nonassoc\'.')
+            continue
+        
+        tag, tok_str_list = p
         toks = []
         for t in re.split(r'\s+', tok_str_list):
             if symbol_map.get(t, None) != None:

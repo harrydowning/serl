@@ -38,7 +38,7 @@ from tool.config import get_config, TaggedData
 class Functionality():
     def __init__(self, code: dict, commands: dict) -> None:
         tagged = {v[0]: v[1] for k, v in code.items() if type(v) == TaggedData}
-        code = {k: v for k,v in code.item() if type(v) != TaggedData}
+        code = {k: v for k,v in code.items() if type(v) != TaggedData}
 
         self.tagged = utils.normalise_dict(tagged)
         self.code = utils.normalise_dict(code)

@@ -23,6 +23,7 @@ tokens:
 
 precedence:
   - !nonassoc text ----- # list of space seperated tokens
+  - text ===
   # - !left unused
   # - !left / *
 
