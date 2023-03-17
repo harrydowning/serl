@@ -204,7 +204,8 @@ def default(args):
 
     global_env = {
         '__name__': language,
-        'args': language_args
+        'args': language_args,
+        #'ast': ast
     }
     before = functionality.get_tagged('before')
     if before:
@@ -220,8 +221,14 @@ def default(args):
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
-    env = {k: get_execute_func(v, functionality, global_env) 
-           if isinstance(v, AST) else v for k, v in value.items()}
+    env = {}
+    for k, v in value.items():
+        if isinstance(v, list):
+            env[k] = [get_execute_func(e, functionality, global_env) 
+                      if isinstance(e, AST) else e for e in v]
+        else:
+            exec_func = get_execute_func(v, functionality, global_env)
+            env[k] = exec_func if isinstance(v, AST) else v
     
     active = True
     def execute(**local_env):
@@ -243,7 +250,7 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             env = os.environ.copy() | {}
             # TODO should stout/err be shown if run at root nonterminal?
             return subprocess.run(cm, capture_output=True, text=True, 
-                                  shell=True, env=env)
+                                  shell=True, env=env, check=True).stdout
         else:
             return env
     return execute

@@ -1,13 +1,15 @@
                   Part III Project
 --------------------------------------------------------------
-               | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May
-Background     |========
-Prototype      |      =========
-Interim Report |         ====== <Interim Handin>
-1st Iteration  |               ========
-2nd Iteration  |                       ========
-Testing        |                          =====
-Tool Examples  |                             ======
-Documentation  |                                ===
-Final Report   |                                ========= <Final Handin>
-
+                | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May
+Background      |=========
+Prototype       |      =========
+Interim Report  |             === <Interim Handin>
+Development     |                      ==============
+  YAML ext.     |                      ===
+  Read The Docs |                         ===
+  Tool          |                            ========
+Testing         |                            ========
+Documentation   |                                    ===
+Tool Examples   |                                    ======
+Final Report    |                                    ====== <Final Handin>
+--------------------------------------------------------------

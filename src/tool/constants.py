@@ -15,6 +15,7 @@ CLI = f"""{NAME}
 
 Usage:
   {NAME} link <language> [<dir>]
+  {NAME} (get|delete) <language>
   {NAME} [options] <language> [<input>]...
 {OPTIONS}
 """

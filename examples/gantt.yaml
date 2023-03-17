@@ -19,13 +19,7 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
-  nl: \n
-
-precedence:
-  - !nonassoc text ----- # list of space seperated tokens
-  - text ===
-  # - !left unused
-  # - !left / *
+  \n: \n
 
 grammar:
   gantt: | 
@@ -35,26 +29,26 @@ grammar:
     rows
     -----
   rows:
-    - row nl
+    - row \n
       rows
     - row
   row: 
     - text | ===
-    - text | === milestone
-  milestone:
-    - <text>
-    - <>
+    - text | === <>
+    - text | === <text>
 
 code:
-  start: !before | #python
+  init: !before | # py
     pass
-  after: !after | # python
+  result: !after | # py
     pass
-  gantt: | # python
+  
+  gantt: | # py
     pass
+  rows: _ = [row()] + rows()
   row:
     -
-    - | # python
+    - | # py
       pass
 
 commands:
@@ -68,7 +62,7 @@ meta:
     comment: "\\#.*"
   grammar:
     permissive: true
-    sync: nl
+    sync: \n
   commands:
     prefix: gantt # prefix for environment variable
 

@@ -14,7 +14,9 @@ tokens: # graph example
   <>: BAD$MID
 
 grammar:
-  example: pass
+  example1: [this can't start]
+  example2: |
+    [this can start]
 
 code:
   example: pass
