@@ -47,6 +47,7 @@ def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
     return exp_repl_tokens
 
 def normalise_dict(d: dict) -> dict[str, list[str]]:
+    d = recurse_tags(d, remove=True)
     return {k:v if type(v) == list else [v] for k,v in d.items()}
 
 def normalise_grammar(symbol_map: dict[str, str],

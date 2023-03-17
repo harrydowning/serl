@@ -11,16 +11,6 @@ usage: |
     -v --version  Show version.
     --pdf         Output as pdf.
 
-meta:
-  tokens:
-    regex: true
-    ignore: " d"
-    comment: "\\#.*"
-  grammar:
-    permissive: true
-  commands:
-    prefix: gantt # prefix for environment variable
-
 tokens:
   text: ([\w ]+)
   headings: (?:\| text)+
@@ -29,15 +19,12 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
+  nl: \n
 
 precedence:
   - !nonassoc text ----- # list of space seperated tokens
   # - !left unused
   # - !left / *
-
-constructors:
-  rows:
-    - |
 
 grammar:
   gantt: | 
@@ -47,7 +34,8 @@ grammar:
     rows
     -----
   rows:
-    - rows row
+    - row nl
+      rows
     - row
   row: 
     - text | ===
@@ -72,6 +60,16 @@ commands:
   gantt: cmd -o ...
 
 requirements: PyLaTex==1.4.1
+
+meta:
+  tokens:
+    regex: true
+    comment: "\\#.*"
+  grammar:
+    permissive: true
+    sync: nl
+  commands:
+    prefix: gantt # prefix for environment variable
 
 # code:
 #   setup: | # python

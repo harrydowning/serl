@@ -8,7 +8,7 @@ from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
-from tool.config import get_config
+from tool.config import get_config, TaggedData
 
 # class BiDict(UserDict):  
 #     def __setitem__(self, key, item) -> None:
@@ -25,29 +25,40 @@ from tool.config import get_config
 #         if key != item:
 #             super().__delitem__(item)
 
-class NormalisedDict(UserDict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.data = {
-            k:v if isinstance(v, list) else [v] 
-            for k,v in self.data.items()
-        }
+# TODO updates break the normalised so should this really be its own class
+# if it only does this at the start
+# class NormalisedDict(UserDict):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.data = {
+#             k:v if isinstance(v, list) else [v] 
+#             for k,v in self.data.items()
+#         }
 
 class Functionality():
     def __init__(self, code: dict, commands: dict) -> None:
-        self.code = NormalisedDict(code)
-        self.commands = NormalisedDict(commands)
+        tagged = {v[0]: v[1] for k, v in code.items() if type(v) == TaggedData}
+        code = {k: v for k,v in code.item() if type(v) != TaggedData}
+
+        self.tagged = utils.normalise_dict(tagged)
+        self.code = utils.normalise_dict(code)
+        self.commands = utils.normalise_dict(commands)
+
         dups = utils.get_dups(self.code, self.commands)
         if len(dups) > 0:
-            msg = 'Functionality defined in both \'code\' and \'command\' for '
-            msg += f'{", ".join(map(str, dups))}, \'code\' will take precedence.'
+            msg = (f'Functionality defined in both \'code\' and \'command\' '
+                   f'for {", ".join(map(str, dups))}, \'code\' will take '
+                   f'precedence.')
             logger.warning(msg)
 
-    def _get(self, d: NormalisedDict, name: str, pos: int) -> str | None:
+    def _get(self, d: dict, name: str, pos: int) -> str | None:
         v = d.get(name, None)
         if v and len(v) > pos:
             return v[pos]
         return None
+
+    def get_tagged(self, tag: str) -> str | None:
+        return self.tagged.get(tag, None)
 
     def get_code(self, name: str, pos: int) -> str | None:
         return self._get(self.code, name, pos)
@@ -56,7 +67,7 @@ class Functionality():
         return self._get(self.commands, name, pos)
 
 # class Language():
-#     def __init__(self, grammar: Grammar, functionality: Functionality) -> None:
+#     def __init__(self, grammar: Grammar, functionality: Functionality):
 #         pass
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
@@ -190,9 +201,22 @@ def default(args):
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands)
-    # TODO run !before in global scope
+
+    global_env = {
+        '__name__': language,
+        'args': language_args
+    }
+    before = functionality.get_tagged('before')
+    if before:
+        before = [cd for cd in before if cd != None]
+        for cd in before: exec(cd, global_env)
+    
     #get_execute_func(ast, functionality, global_env)()
-    # TODO run !after in global scope
+    
+    after = functionality.get_tagged('after')
+    if after:
+        after = [cd for cd in after if cd != None]
+        for cd in after: exec(cd, global_env)
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
