@@ -40,13 +40,8 @@ grammar:
     - text | === <>
     - text | === <text>
 
-precedence:
-  - left  + -
-  - right  * /
-  - nonassoc  < >
-
 code:
-  init: !before | # py
+  init: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
     from pylatex.utils import NoEscape
@@ -94,7 +89,8 @@ code:
     - _ = get_bar(text[1], vars()['==='])
     - _ = get_bar(text[1], vars()['==='], '')
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
-  result: !after | # py
+  
+  result: | # py
     pass
 
 requirements: PyLaTex==1.4.1

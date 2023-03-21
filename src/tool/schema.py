@@ -1,5 +1,4 @@
 from typing import Tuple
-import tool.utils as utils
 import jsonschema
 
 meta = {
@@ -115,7 +114,6 @@ config_schema = {
 }
 
 def validate(config: dict) -> Tuple[bool, str]:
-    config = utils.recurse_tags(config, remove=True)
     try:
         jsonschema.validate(config, config_schema)
     except jsonschema.exceptions.ValidationError as ve:

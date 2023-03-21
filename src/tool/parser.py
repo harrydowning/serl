@@ -1,7 +1,6 @@
 import os, itertools, re
 import tool.logger as logger
 import tool.utils as utils
-from tool.config import TaggedData
 import ply.yacc as yacc
 
 class AST(tuple):
@@ -31,26 +30,15 @@ def p_error(p):
         logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]], _precedence: list):
+                 grammar: dict[str, list[str]], _precedence: list[str]):
     g = globals()
     g['tokens'] = _tokens
     
     precedence = []
-    for p in _precedence:
-        if type(p) != TaggedData:
-            logger.warning(f'Precedence rule \'{p}\' ignored as it has no '
-                           f'associativity tag. Use \'!left\', \'!right\', or '
-                           f'\'!nonassoc\'.')
-            continue
-        
-        tag, tok_str_list = p
-        toks = []
-        for t in re.split(r'\s+', tok_str_list):
-            if symbol_map.get(t, None) != None:
-                toks.append(symbol_map[t])
-            else:
-                logger.warning(f'precedence specified for token not used in '
-                               f'grammar: \'{t}\'')
+    for rule in _precedence:
+        split = re.split(r'\s+', rule.strip())
+        tag = split.pop(0)
+        toks = [symbol_map[tok] for tok in split if symbol_map.get(tok, None)]
         if len(toks) > 0:
             precedence.append((tag, *toks))
     g['precedence'] = precedence

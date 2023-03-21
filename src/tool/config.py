@@ -4,23 +4,12 @@ import requests
 import tool.logger as logger
 from tool.constants import SYSTEM_CONFIG_DIR
 from tool.schema import validate
-from tool.utils import TaggedData
-
-def tagger(loader: yaml.Loader, tag_suffix, node):
-    match type(node):
-        case yaml.nodes.ScalarNode:
-            val = loader.construct_scalar(node)
-        case yaml.nodes.MappingNode:
-            val = loader.construct_mapping(node)
-        case yaml.nodes.SequenceNode:
-            val = loader.construct_sequence(node)
-    return TaggedData(tag_suffix, val)
-
-yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
 
 def get_home_dir() -> str:
     home = os.path.expanduser('~')
-    return os.path.join(home, SYSTEM_CONFIG_DIR)
+    home_dir = os.path.join(home, SYSTEM_CONFIG_DIR)
+    os.makedirs(home_dir, exist_ok=True)
+    return home_dir
 
 def get_system_config_text(language: str) -> str | None:
     home_dir = get_home_dir()

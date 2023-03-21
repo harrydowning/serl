@@ -14,6 +14,7 @@ Usage
 
 Tokens
 ------
+Token names shouldn't contain whitespace.
 
 Grammar
 -------

@@ -4,7 +4,6 @@ import networkx as nx
 from tool.lexer import build_lexer
 from tool.parser import build_parser, AST
 import tool.utils as utils
-from tool.utils import TaggedData
 import tool.logger as logger
 from tool.config import get_config, get_home_dir, get_config_text
 from tool.constants import (
@@ -38,13 +37,15 @@ from tool.constants import (
 #         }
 
 class Functionality():
-    def __init__(self, code: dict, commands: dict) -> None:
-        tagged = {v[0]: v[1] for k, v in code.items() if type(v) == TaggedData}
-        code = {k: v for k,v in code.items() if type(v) != TaggedData}
-
-        self.tagged = utils.normalise_dict(tagged)
+    def __init__(self, code: dict, commands: dict, grammar_map: dict):
         self.code = utils.normalise_dict(code)
         self.commands = utils.normalise_dict(commands)
+
+        items = self.code.items()
+        before = next(iter(items), None)
+        after = next(reversed(items), None)
+        self.before = before[1] if not before[0] in grammar_map else None
+        self.after = after[1] if not after[0] in grammar_map else None
 
         dups = utils.get_dups(self.code, self.commands)
         if len(dups) > 0:
@@ -58,9 +59,6 @@ class Functionality():
         if v and len(v) > pos:
             return v[pos]
         return None
-
-    def get_tagged(self, tag: str) -> str | None:
-        return self.tagged.get(tag, None)
 
     def get_code(self, name: str, pos: int) -> str | None:
         return self._get(self.code, name, pos)
@@ -198,29 +196,28 @@ def run(args):
     #         break      # No more input
     #     print(tok)
 
-    ast = parser.parse(src, lexer=lexer)
-    print(ast)
+    # ast = parser.parse(src, lexer=lexer)
+    # print(ast)
     code = config.get('code', {})
     commands = config.get('commands', {})
-    functionality = Functionality(code, commands)
+    functionality = Functionality(code, commands, grammar_map)
 
     global_env = {
         '__name__': lang_name,
         'args': language_args,
         #'ast': ast
     }
-    before = functionality.get_tagged('before')
-    if before:
-        before = [cd for cd in before if cd != None]
+
+    if functionality.before:
+        before = [cd for cd in functionality.before if cd != None]
         for cd in before: 
             exec(cd, global_env)
     
     #get_execute_func(ast, functionality, global_env)()
     
     # TODO  pass result of execution to after (or stdout if no after supplied)
-    after = functionality.get_tagged('after')
-    if after:
-        after = [cd for cd in after if cd != None]
+    if functionality.after:
+        after = [cd for cd in functionality.after if cd != None]
         for cd in after: 
             exec(cd, global_env)
 

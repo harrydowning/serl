@@ -1,20 +1,6 @@
 import re, os
 from typing import Callable
 
-class TaggedData(tuple):
-    def __new__(cls, tag: str, value):
-        return super(TaggedData, cls).__new__(cls, (tag, value))
-
-def recurse_tags(obj, tag=None, remove=False):
-    if isinstance(obj, dict):
-        return {k: recurse_tags(v, tag, remove) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [recurse_tags(v, tag, remove) for v in obj]
-    elif isinstance(obj, TaggedData):
-        return recurse_tags(obj[1], obj[0], remove)
-    else:
-        return obj if tag == None or remove else TaggedData(tag, obj) 
-
 def expand(rule: str, symbol_map: list[tuple[str, str]], 
            symbol_f: Callable[[str], str] = lambda x: x, 
            repl_f: Callable[[str], str] = lambda x: x):
@@ -60,7 +46,6 @@ def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
     return exp_repl_tokens
 
 def normalise_dict(d: dict) -> dict[str, list[str]]:
-    d = recurse_tags(d, remove=True)
     return {k:v if type(v) == list else [v] for k,v in d.items()}
 
 def normalise_grammar(symbol_map: dict[str, str],
