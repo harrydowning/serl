@@ -1,14 +1,16 @@
 import sys, os, fileinput, subprocess
-from collections import UserDict
-from typing import Any
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
 from tool.parser import build_parser, AST
 import tool.utils as utils
+from tool.utils import TaggedData
 import tool.logger as logger
-from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
-from tool.config import get_config, install, uninstall, TaggedData, LanguageName
+from tool.config import get_config, get_home_dir, get_config_text
+from tool.constants import (
+    CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF
+)
+
 
 # class BiDict(UserDict):  
 #     def __setitem__(self, key, item) -> None:
@@ -108,20 +110,20 @@ def requirements(req_file: str, reqs: str) -> None:
 
 def link(args):
     # TODO Check <language> exists in .tool and not a path?
-    language = args['<language>'].lang_name()
+    lang_name = utils.lang_name(args['<language>'])
     dir = args['<dir>'] or os.getcwd()
     
     src = extension(sys.argv[0])
-    dst = extension(os.path.join(dir, f'{language}'))
+    dst = extension(os.path.join(dir, f'{lang_name}'))
     
     try:
         os.symlink(src, dst)
     except Exception as e:
         logger.error(f'Symbolic link error: {e}')
 
-def default(args):
+def run(args):
     language = args['<language>']
-    lang_name = language.lang_name()
+    lang_name = utils.lang_name(language)
     config = get_config(language)
 
     req_file = args['--requirements']
@@ -191,7 +193,15 @@ def default(args):
     lexer = build_lexer(tokens, token_map, ignore, comment, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
                           grammar, precedence)
-    # ast = parser.parse(src, lexer=lexer)
+    # lexer.input(src)
+    # while True:
+    #     tok = lexer.token()
+    #     if not tok: 
+    #         break      # No more input
+    #     print(tok)
+
+    ast = parser.parse(src, lexer=lexer)
+    print(ast)
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands)
@@ -252,31 +262,68 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             return env
     return execute
 
-def get_args() -> dict:
-    version = f'{NAME} {VERSION}'
-    command = extension(sys.argv[0]) # TODO is the extension(...) needed?
-    if os.path.islink(command):
-        # Stop initial args acting on the tool and not the language
-        if not '--' in sys.argv:
-            sys.argv.insert(1, '--')
-        args = docopt(SYMLINK_CLI, version=version, options_first=True)
-        args['<language>'] = LanguageName(command).lang_name()
-    else:
-        args = docopt(CLI, version=version, options_first=True)
-        args['<language>'] = LanguageName(args['<language>'])
+def install(args):
+    language = args['<language>']
+    alias = args['<alias>'] or utils.lang_name(language)
+    upgrade = args['--upgrade']
+    
+    config_text = get_config_text(language)
+    home_dir = get_home_dir()
+    filename = os.path.join(home_dir, f'{alias}.yaml')
+    
+    if os.path.isfile(filename) and not upgrade:
+        logger.error(f'Language \'{alias}\' already exists.')
+    
+    with open(filename, 'w') as file:
+        file.write(config_text)
+    print(f'Successfully installed {alias}.')
+
+def uninstall(args: dict):
+    language = args['<language>']
+    lang_name = utils.lang_name(language)
+    home_dir = get_home_dir()
+    for filename in os.listdir(home_dir):
+        file_lang = filename.split('.')[0]
+        file_path = os.path.join(home_dir, filename)
+
+        if filename == language or file_lang == language:
+            os.remove(file_path)
+            print(f'Successfully uninstalled {lang_name}.')
+            return
+    logger.warning(f'Skipping, {lang_name} not already installed.')
+
+def get_symlink_args(command, version) -> dict:
+    # Stop initial args acting on the tool and not the language
+    if not '--' in sys.argv:
+        sys.argv.insert(1, '--')
+    
+    args = docopt(SYMLINK_CLI, version=version, options_first=True)
+    args['<language>'] = utils.base_name(command)
+    args['run'] = True
+    return args
+
+def get_args(version):
+    args = docopt(CLI, version=version, options_first=True)
+    command = args['<command>']
+    cli_command = CLI_COMMANDS.get(command, None)
+    
+    if command == 'help' or cli_command == None:
+        print(CLI)
+        exit(0)
+
+    args |= docopt(cli_command, argv=args['<args>'], version=version, options_first=True)
     return args
 
 def main():
-    args = get_args()
+    version = f'{NAME} {VERSION}'
+    command = extension(sys.argv[0])
+    
+    if os.path.islink(command):
+        args = get_symlink_args(command, version)
+    else:
+        args = get_args(version)
+
     logger.debug_mode = args.get('--debug', False)
     logger.strict_mode = args.get('--strict', False)
 
-    if args.get('link', False):
-        link(args)
-    elif args.get('install', False):
-        install(args['<language>'], args['<alias>'])
-    elif args.get('uninstall', False):
-        uninstall(args['<language>'])
-    else:
-        default(args)
-
+    globals()[args['<command>']](args)

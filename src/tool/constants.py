@@ -2,31 +2,85 @@ NAME = 'tool'
 VERSION = '0.0.1'
 SYSTEM_CONFIG_DIR = f'.{NAME}'
 
-OPTIONS = f"""
-Options:
-  -h --help               Show this screen.
-  -v --version            Show version.
-  -r --requirements=FILE  Create pip requirements file.
-  --debug                 Run in debug mode, logging runtime information.
-  --strict                Run in strict mode, stopping evaluation on warnings.
-"""
+OPTIONS = """Options:
+    -h, --help     Show this screen.
+    -V, --version  Show version.
+    -v, --verbose  Provide more ouput.
+    --strict       Run in strict mode, stopping execution on warnings."""
 
 CLI = f"""{NAME}
 
 Usage:
-  {NAME} link <language> [<dir>]
-  {NAME} install <language> [as <alias>]
-  {NAME} uninstall <language>
-  {NAME} [options] <language> [<input>]...
+    {NAME} [options] <command> [<args>...]
+
+Commands:
+    link       Create a language symbolic link.
+    install    install language to {SYSTEM_CONFIG_DIR}.
+    uninstall  Uninstall language from {SYSTEM_CONFIG_DIR}.
+    run        Execute language.
+    help       Show this screen.
+
+{OPTIONS}
+"""
+
+CLI_LINK = f"""{NAME}
+
+Usage:
+    link [options] <language> [<dir>]
+
+{OPTIONS}
+"""
+
+CLI_INSTALL = f"""{NAME}
+
+Usage:
+    install [options] <language> [as <alias>]
+
+Install Options:
+    -U, --upgrade  Override installed language if present.
+
+{OPTIONS}
+"""
+
+CLI_UNINSTALL = f"""{NAME}
+
+Usage:
+    uninstall [options] <language>
+
+{OPTIONS}
+"""
+
+RUN_OPTIONS = f"""Run Options:
+    -r, --requirements <file>  Create pip requirements file.
+    --debug <file>             Create parser state debug file.
+"""
+
+CLI_RUN = f"""{NAME}
+
+Usage:
+    run [options] <language> [<args>...]
+
+{RUN_OPTIONS}
+
 {OPTIONS}
 """
 
 SYMLINK_CLI = f"""{NAME}
 
 Usage:
-  {NAME} [[options] --] [<input>]...
+    (language) [[options] --] [<args>...]
+
+{RUN_OPTIONS}
+
 {OPTIONS}
 """
+
+CLI_COMMANDS = {
+    'link': CLI_LINK,
+    'install': CLI_INSTALL,
+    'uninstall': CLI_UNINSTALL,
+    'run': CLI_RUN
+}
 
 DEFAULT_REF = r'^token(?!$)|(?<= )token'
 

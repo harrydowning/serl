@@ -14,7 +14,7 @@ def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = AST(flipped_map(prod[0]), prod[1], {
+        p[0] = AST(flipped_map[prod[0]], prod[1], {
             flipped_map[symbol]: [p[i] for i in idxs] 
             if len(idxs) > 1 else p[idxs[0]]
             for symbol, idxs in groups.items()
@@ -30,7 +30,7 @@ def p_error(p):
         tok = p.value[0][0] if isinstance(p.value[0], list) else p.value[0]
         logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
-def build_parser(language: str, _tokens: list[str], symbol_map: dict[str, str],
+def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list):
     g = globals()
     g['tokens'] = _tokens
@@ -65,5 +65,7 @@ def build_parser(language: str, _tokens: list[str], symbol_map: dict[str, str],
 
     debuglog = logger.get_file_logger(filename, sorted_flipped_map)
     errorlog = logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
-    return yacc.yacc(debug=logger.debug_mode, write_tables=True, 
-                     tabmodule=language, debuglog=debuglog, errorlog=errorlog)
+    parser = yacc.yacc(debuglog=debuglog, errorlog=errorlog, write_tables=True, 
+                       tabmodule=f'tabmodule_{lang_name}', debug=logger.debug_mode)
+    g['parser'] = parser
+    return parser

@@ -5,7 +5,7 @@ Background      |=========
 Prototype       |      =========
 Interim Report  |             === <Interim Handin>
 Development     |                      ==============
-  YAML ext.     |                      ===
+  YAML ext      |                      ===
   Read The Docs |                         ===
   Tool          |                            ========
 Testing         |                            ========

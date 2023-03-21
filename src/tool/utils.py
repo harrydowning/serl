@@ -1,6 +1,19 @@
-import re
+import re, os
 from typing import Callable
-from tool.config import TaggedData
+
+class TaggedData(tuple):
+    def __new__(cls, tag: str, value):
+        return super(TaggedData, cls).__new__(cls, (tag, value))
+
+def recurse_tags(obj, tag=None, remove=False):
+    if isinstance(obj, dict):
+        return {k: recurse_tags(v, tag, remove) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [recurse_tags(v, tag, remove) for v in obj]
+    elif isinstance(obj, TaggedData):
+        return recurse_tags(obj[1], obj[0], remove)
+    else:
+        return obj if tag == None or remove else TaggedData(tag, obj) 
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], 
            symbol_f: Callable[[str], str] = lambda x: x, 
@@ -74,16 +87,6 @@ def get_tokens_in_grammar(token_map: dict[str, str],
     return [token for token, token_name in token_map.items() 
             if token_name in used]
 
-def recurse_tags(obj, tag=None, remove=False):
-    if isinstance(obj, dict):
-        return {k: recurse_tags(v, tag, remove) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [recurse_tags(v, tag, remove) for v in obj]
-    elif isinstance(obj, TaggedData):
-        return recurse_tags(obj[1], obj[0], remove)
-    else:
-        return obj if tag == None or remove else TaggedData(tag, obj) 
-
 def get_dups(d1: dict[str, list[str]], 
              d2: dict[str, list[str]]) -> list[tuple[str, int]]:
     dups = []
@@ -98,3 +101,6 @@ def get_dups(d1: dict[str, list[str]],
 
 def flip_map(d: dict) -> dict:
     return {v: k for k, v in d.items()}
+
+def lang_name(language: str):
+    return os.path.basename(language).split('.')[0]

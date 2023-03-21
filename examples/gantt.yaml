@@ -20,7 +20,6 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
-  \n: \n
 
 grammar:
   gantt: | 
@@ -33,7 +32,7 @@ grammar:
     - headings | text
     - "| text"
   rows:
-    - row \n
+    - row
       rows
     - row
   row: 
