@@ -8,7 +8,7 @@ from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
 from tool.constants import CLI, SYMLINK_CLI, NAME, VERSION, DEFAULT_REF
-from tool.config import get_config, TaggedData
+from tool.config import get_config, install, uninstall, TaggedData, LanguageName
 
 # class BiDict(UserDict):  
 #     def __setitem__(self, key, item) -> None:
@@ -66,10 +66,6 @@ class Functionality():
     def get_command(self, name: str, pos: int) -> str | None:
         return self._get(self.commands, name, pos)
 
-# class Language():
-#     def __init__(self, grammar: Grammar, functionality: Functionality):
-#         pass
-
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
     token_graph = nx.DiGraph(utils.get_token_graph(repl_tokens))
@@ -112,7 +108,7 @@ def requirements(req_file: str, reqs: str) -> None:
 
 def link(args):
     # TODO Check <language> exists in .tool and not a path?
-    language = args['<language>'].split('.')[0]
+    language = args['<language>'].lang_name()
     dir = args['<dir>'] or os.getcwd()
     
     src = extension(sys.argv[0])
@@ -125,6 +121,7 @@ def link(args):
 
 def default(args):
     language = args['<language>']
+    lang_name = language.lang_name()
     config = get_config(language)
 
     req_file = args['--requirements']
@@ -191,11 +188,8 @@ def default(args):
     token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     symbol_map = token_map | grammar_map
 
-    # For the case where a symbmolic link hasn't been used
-    language = os.path.basename(language).split('.')[0]
-
     lexer = build_lexer(tokens, token_map, ignore, comment, using_regex)
-    parser = build_parser(language, list(token_map.values()), symbol_map, 
+    parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
                           grammar, precedence)
     # ast = parser.parse(src, lexer=lexer)
     code = config.get('code', {})
@@ -203,21 +197,24 @@ def default(args):
     functionality = Functionality(code, commands)
 
     global_env = {
-        '__name__': language,
+        '__name__': lang_name,
         'args': language_args,
         #'ast': ast
     }
     before = functionality.get_tagged('before')
     if before:
         before = [cd for cd in before if cd != None]
-        for cd in before: exec(cd, global_env)
+        for cd in before: 
+            exec(cd, global_env)
     
     #get_execute_func(ast, functionality, global_env)()
     
+    # TODO  pass result of execution to after (or stdout if no after supplied)
     after = functionality.get_tagged('after')
     if after:
         after = [cd for cd in after if cd != None]
-        for cd in after: exec(cd, global_env)
+        for cd in after: 
+            exec(cd, global_env)
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
@@ -257,16 +254,16 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
 
 def get_args() -> dict:
     version = f'{NAME} {VERSION}'
-    command = extension(sys.argv[0])
+    command = extension(sys.argv[0]) # TODO is the extension(...) needed?
     if os.path.islink(command):
         # Stop initial args acting on the tool and not the language
         if not '--' in sys.argv:
             sys.argv.insert(1, '--')
         args = docopt(SYMLINK_CLI, version=version, options_first=True)
-        base = os.path.basename(command)
-        args['<language>'] = base.split('.')[0]
+        args['<language>'] = LanguageName(command).lang_name()
     else:
         args = docopt(CLI, version=version, options_first=True)
+        args['<language>'] = LanguageName(args['<language>'])
     return args
 
 def main():
@@ -276,6 +273,10 @@ def main():
 
     if args.get('link', False):
         link(args)
+    elif args.get('install', False):
+        install(args['<language>'], args['<alias>'])
+    elif args.get('uninstall', False):
+        uninstall(args['<language>'])
     else:
         default(args)
 

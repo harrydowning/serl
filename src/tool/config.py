@@ -21,42 +21,44 @@ def tagger(loader: yaml.Loader, tag_suffix, node):
 
 yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
 
-# TODO add error handling for yaml.safe_load
-def get_system_config(language: str) -> dict:
+class LanguageName(str):
+    def lang_name(self):
+        return os.path.basename(self).split('.')[0]
+
+def get_home_dir() -> str:
     home = os.path.expanduser('~')
-    directory = os.path.join(home, SYSTEM_CONFIG_DIR)
+    return os.path.join(home, SYSTEM_CONFIG_DIR)
+
+def get_system_config_text(language: LanguageName) -> str | None:
+    home_dir = get_home_dir()
     # Allow Python files with functionality to be shared across languages
-    sys.path.append(directory)
+    sys.path.append(home_dir)
     
-    config = {}
-    for filename in os.listdir(directory):
-        file_lang = file.split(".")[0]
-        file_path = os.path.join(directory, filename)
+    for filename in os.listdir(home_dir):
+        file_lang = filename.split('.')[0]
+        file_path = os.path.join(home_dir, filename)
 
         if filename == language or file_lang == language:
             with open(file_path) as file:
-                config = yaml.safe_load(file)
-            break
+                return file.read()
+    return None
 
-    return config
-
-def get_file_config(file_path: str) -> dict:
+def get_file_config_text(language: LanguageName) -> str | None:
     try:
-        with open(file_path) as file:
-            config = yaml.safe_load(file)
+        with open(language) as file:
+            return file.read()
     except FileNotFoundError:
-        config = {}
-    return config
+        return None
 
-def get_url_config(url: str) -> dict:
+def get_url_config_text(url: str) -> str | None:
     r = requests.get(url)
     r.raise_for_status()
-    return yaml.safe_load(r.text)
+    return r.text
 
-def get_config(language: str) -> dict:
+def get_config_text(language: LanguageName) -> str | None:
     if re.match(r'https?://.*', language):
         try:
-            config = get_url_config(language)
+            config_text = get_url_config_text(language)
         except requests.exceptions.ConnectionError as ce:
             logger.error(ce)
         except requests.exceptions.HTTPError as httpe:
@@ -65,13 +67,44 @@ def get_config(language: str) -> dict:
             logger.error(rqe)
     else:
         # File config has higher precedence than system
-        config = get_file_config(language) or get_system_config(language)
-        if config == {}:
+        config_text = get_file_config_text(language) or get_system_config_text(language)
+        if config_text == None:
             logger.error(f"Could not find system or file config for " 
                          f"\'{language}\'.")
+    return config_text
+
+def get_config(language: LanguageName) -> dict:
+    config_text = get_config_text(language)
+    config = yaml.safe_load(config_text)
 
     valid, error = validate(config)
     if valid:
         return config
     else:
         logger.error(f'Validation error in config \'{language}\'. {error}')
+
+def install(language: LanguageName, alias: str | None):
+    alias = alias or language.lang_name()
+    config_text = get_config_text(language)
+    home_dir = get_home_dir()
+    filename = os.path.join(home_dir, f'{alias}.yaml')
+    
+    if os.path.isfile(filename):
+        logger.error(f'Language \'{alias}\' already exists.')
+    
+    with open(filename, 'w') as file:
+        file.write(config_text)
+    print(f'Successfully installed {alias}.')
+
+def uninstall(language: LanguageName):
+    lang_name = language.lang_name()
+    home_dir = get_home_dir()
+    for filename in os.listdir(home_dir):
+        file_lang = filename.split('.')[0]
+        file_path = os.path.join(home_dir, filename)
+
+        if filename == language or file_lang == language:
+            os.remove(file_path)
+            print(f'Successfully uninstalled {lang_name}.')
+            return
+    logger.warning(f'Skipping, {lang_name} not already installed.')

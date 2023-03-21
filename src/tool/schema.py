@@ -25,6 +25,9 @@ meta = {
         'grammar': {
             'type': 'object',
             'properties': {
+                'sync': {
+                    'type': 'string'
+                },
                 'permissive': {
                     'type': 'boolean'
                 }

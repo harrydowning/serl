@@ -15,7 +15,8 @@ CLI = f"""{NAME}
 
 Usage:
   {NAME} link <language> [<dir>]
-  {NAME} (get|delete) <language>
+  {NAME} install <language> [as <alias>]
+  {NAME} uninstall <language>
   {NAME} [options] <language> [<input>]...
 {OPTIONS}
 """
