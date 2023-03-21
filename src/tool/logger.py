@@ -2,8 +2,8 @@ import logging
 import re
 from tool.constants import PLY_ERR_MSG
 
-debug_mode = False
-strict_mode = False
+verbose = False
+strict = False
 
 logging.basicConfig(format='%(levelname)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
@@ -57,7 +57,7 @@ class LoggingWrapper():
 
     def info(self, msg, *args):
         msg = self._repl(msg, args)
-        if debug_mode:
+        if verbose:
             self.logger.info(msg)
 
     def debug(self, msg, *args):
@@ -66,7 +66,7 @@ class LoggingWrapper():
     def warning(self, msg, *args):
         msg = self._repl(msg, args)
         self.logger.warning(msg)
-        if strict_mode:
+        if strict:
             exit(1)
 
     def error(self, msg, *args):

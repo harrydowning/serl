@@ -3,7 +3,7 @@ usage: |
   gantt
   
   Usage:
-    gantt [options] [<input>]
+    gantt [options] [<src>]
 
   Options:
     -h --help          Show this screen.
@@ -39,6 +39,11 @@ grammar:
     - text | ===
     - text | === <>
     - text | === <text>
+
+precedence:
+  - left  + -
+  - right  * /
+  - nonassoc  < >
 
 code:
   init: !before | # py
@@ -95,6 +100,8 @@ code:
 requirements: PyLaTex==1.4.1
 
 meta:
+  tokens:
+    ref: null
   grammar:
     permissive: true
     sync: \n

@@ -15,23 +15,21 @@ Usage:
 
 Commands:
     link       Create a language symbolic link.
-    install    install language to {SYSTEM_CONFIG_DIR}.
-    uninstall  Uninstall language from {SYSTEM_CONFIG_DIR}.
+    install    install language to {SYSTEM_CONFIG_DIR} in home directory.
+    uninstall  Uninstall language from {SYSTEM_CONFIG_DIR} in home directory.
     run        Execute language.
-    help       Show this screen.
+    help       Show command help screen. If non specified show this screen.
 
-{OPTIONS}
-"""
+{OPTIONS}"""
 
-CLI_LINK = f"""{NAME}
+CLI_LINK = f"""{NAME} link
 
 Usage:
     link [options] <language> [<dir>]
 
-{OPTIONS}
-"""
+{OPTIONS}"""
 
-CLI_INSTALL = f"""{NAME}
+CLI_INSTALL = f"""{NAME} install
 
 Usage:
     install [options] <language> [as <alias>]
@@ -39,31 +37,27 @@ Usage:
 Install Options:
     -U, --upgrade  Override installed language if present.
 
-{OPTIONS}
-"""
+{OPTIONS}"""
 
-CLI_UNINSTALL = f"""{NAME}
+CLI_UNINSTALL = f"""{NAME} uninstall
 
 Usage:
     uninstall [options] <language>
 
-{OPTIONS}
-"""
+{OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements <file>  Create pip requirements file.
-    --debug <file>             Create parser state debug file.
-"""
+    --debug <file>             Create parser state debug file."""
 
-CLI_RUN = f"""{NAME}
+CLI_RUN = f"""{NAME} run
 
 Usage:
     run [options] <language> [<args>...]
 
 {RUN_OPTIONS}
 
-{OPTIONS}
-"""
+{OPTIONS}"""
 
 SYMLINK_CLI = f"""{NAME}
 
@@ -72,14 +66,19 @@ Usage:
 
 {RUN_OPTIONS}
 
-{OPTIONS}
-"""
+{OPTIONS}"""
+
+CLI_HELP = f"""{NAME} help
+
+Usage:
+    help [<command>]"""
 
 CLI_COMMANDS = {
     'link': CLI_LINK,
     'install': CLI_INSTALL,
     'uninstall': CLI_UNINSTALL,
-    'run': CLI_RUN
+    'run': CLI_RUN,
+    'help': CLI_HELP
 }
 
 DEFAULT_REF = r'^token(?!$)|(?<= )token'

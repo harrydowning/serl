@@ -9,16 +9,13 @@ meta = {
             'type': 'object',
             'properties': {
                 'ref': {
-                    'type': ['string', 'boolean']
+                    'type': ['string', 'null']
                 },
                 'regex': {
                     'type': 'boolean'
                 },
                 'ignore': {
-                    'type': 'string'
-                },
-                'comment': {
-                    'type': 'string'
+                    'type': ['string', 'null']
                 }
             }
         },

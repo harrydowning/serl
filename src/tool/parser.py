@@ -8,7 +8,7 @@ class AST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(AST, cls).__new__(cls, (name, pos, value))
 
-def get_prod_function(prod: tuple[str, int, str], flipped_map: dict[str, str]):
+def get_prod_func(prod: tuple[str, int, str], flipped_map: dict[str, str]):
     symbols = prod[2].split(' ')
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
@@ -58,7 +58,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     flipped_map = utils.flip_map(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
-            g[f'p_{nt}_{i}'] = get_prod_function((nt, i, rule), flipped_map)
+            g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_map)
 
     sorted_flipped_map = utils.get_sorted_map(flipped_map)
     filename = os.path.join(os.getcwd(), 'test.txt') # TODO temp
@@ -66,6 +66,6 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     debuglog = logger.get_file_logger(filename, sorted_flipped_map)
     errorlog = logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
     parser = yacc.yacc(debuglog=debuglog, errorlog=errorlog, write_tables=True, 
-                       tabmodule=f'tabmodule_{lang_name}', debug=logger.debug_mode)
+                       tabmodule=f'tabmodule_{lang_name}', debug=logger.verbose)
     g['parser'] = parser
     return parser

@@ -29,13 +29,19 @@ def newline(t):
     t.lexer.lineno += len(t.value)
 
 def t_error(t):
-    print(f"Illegal character '{t.value[0]}'")
-    t.lexer.skip(1)
+    logger.warning(f'Illegal character \'{t.value[0]}\' on line '
+                   f'{t.lexer.lineno}.')
 
-def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], 
-                ignore: str, comment: str|None, using_regex: bool):
+def get_ignore_func(pattern):
+    def f(t): pass
+    f.__name__ = 'ignore'
+    f.__doc__ = pattern
+    return f
+
+def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
+                using_regex: bool):
     g = globals()
-    g['tokens'] = () # TODO ('DEFAULT',)
+    g['tokens'] = ()
 
     for token, pattern in _tokens.items():
         token_name = token_map[token]
@@ -46,10 +52,8 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
     # TODO g['t_DEFAULT'] = r'.'
     # Lower precedence than user rules
     g['t_newline'] = newline
-    g['t_ignore'] = ignore
-    comment_rule = 't_ignore_comment'
-    if comment:
-        g[comment_rule] = comment
+    if ignore != None:
+        g['t_ignore_func'] = get_ignore_func(ignore)
     
     if using_regex:
         if using_cpython:
@@ -59,5 +63,5 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str],
                          f'implementation. Current implementation: '
                          f'\'{implementation}\'.')
     
-    errorlog = logger.LoggingWrapper({comment_rule: 'comment'}, ply_repl=True)
+    errorlog = logger.LoggingWrapper(ply_repl=True)
     return lex.lex(errorlog=errorlog)

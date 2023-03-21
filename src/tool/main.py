@@ -133,16 +133,15 @@ def run(args):
     version = config.get('version', None)
     usage = config.get('usage', None)
     
-    inputs = args['<input>']
+    inputs = args['<args>']
 
     # User language docopt
     if usage != None:
         language_args = docopt(usage, argv=inputs, version=version)
-        # Requirement: Must specify single <input> in usage to be file parsed.
-        src_input = language_args.get('<input>', None)
+        src_input = language_args.get('<src>', None)
         if not(isinstance(src_input, str) or src_input == None):
             logger.error('File to be parsed must be specified in usage pattern' 
-                         ' as \'<input>\' (file path), \'[<input>]\' '
+                         ' as \'<src>\' (file path), \'[<src>]\' '
                          '(file path or stdin) or nothing (stdin).')
     else:
         src_input = next(iter(inputs), None) # First element if it exists
@@ -155,12 +154,11 @@ def run(args):
     meta_tokens = meta.get('tokens', {})
 
     tokens = config['tokens']
-    ignore = meta_tokens.get('ignore', ' \t')
-    comment = meta_tokens.get('comment', None)
-    using_regex = meta_tokens.get('regex', False)
-    
     ref = meta_tokens.get('ref', DEFAULT_REF)
-    if ref != False:
+    using_regex = meta_tokens.get('regex', False)
+    ignore = meta_tokens.get('ignore', '.')
+    
+    if ref != None:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
         logger.info(f'Performing token expansion with \'ref\' pattern '
@@ -190,7 +188,7 @@ def run(args):
     token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
     symbol_map = token_map | grammar_map
 
-    lexer = build_lexer(tokens, token_map, ignore, comment, using_regex)
+    lexer = build_lexer(tokens, token_map, ignore, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
                           grammar, precedence)
     # lexer.input(src)
@@ -292,38 +290,44 @@ def uninstall(args: dict):
             return
     logger.warning(f'Skipping, {lang_name} not already installed.')
 
-def get_symlink_args(command, version) -> dict:
+def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language
     if not '--' in sys.argv:
         sys.argv.insert(1, '--')
     
     args = docopt(SYMLINK_CLI, version=version, options_first=True)
-    args['<language>'] = utils.base_name(command)
-    args['run'] = True
-    return args
+    args['<language>'] = utils.lang_name(filename)
+    base_args = args | {'<command>': 'run'}
+    return base_args, args
 
 def get_args(version):
-    args = docopt(CLI, version=version, options_first=True)
-    command = args['<command>']
+    base_args = docopt(CLI, version=version, options_first=True)
+    command = base_args['<command>']
+    argv = base_args['<args>']
     cli_command = CLI_COMMANDS.get(command, None)
     
-    if command == 'help' or cli_command == None:
+    if cli_command == None:
         print(CLI)
         exit(0)
 
-    args |= docopt(cli_command, argv=args['<args>'], version=version, options_first=True)
-    return args
+    args =  docopt(cli_command, argv=argv, version=version, options_first=True)
+    
+    if command == 'help':
+        print(CLI_COMMANDS.get(args['<command>'], CLI))
+        exit(0)
+    
+    return base_args, args
 
 def main():
     version = f'{NAME} {VERSION}'
-    command = extension(sys.argv[0])
-    
-    if os.path.islink(command):
-        args = get_symlink_args(command, version)
+    filename = extension(sys.argv[0])
+
+    if os.path.islink(filename):
+        base_args, args = get_symlink_args(filename, version)
     else:
-        args = get_args(version)
+        base_args, args = get_args(version)
 
-    logger.debug_mode = args.get('--debug', False)
-    logger.strict_mode = args.get('--strict', False)
+    logger.verbose = base_args['--verbose'] or args['--verbose']
+    logger.strict = base_args['--strict'] or args['--strict']
 
-    globals()[args['<command>']](args)
+    globals()[base_args['<command>']](args)
