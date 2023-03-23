@@ -50,11 +50,11 @@ def normalise_dict(d: dict) -> dict[str, list[str]]:
 
 def normalise_grammar(symbol_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
-    sorted_map = list(get_sorted_map(symbol_map).items())
+    sorted_symbol_map = list(get_sorted_map(symbol_map).items())
     norm_grammar = {}
     for nt, rules in normalise_dict(grammar).items():       
         for i, rule in enumerate(rules):
-            exp_rule = expand(rule, sorted_map, re.escape, lambda x: f' {x} ')
+            exp_rule = expand(rule, sorted_symbol_map, re.escape, lambda x: f' {x} ')
             rules[i] = re.sub(r'\s+', ' ', exp_rule).strip()
         norm_grammar[symbol_map[nt]] = rules
     return norm_grammar

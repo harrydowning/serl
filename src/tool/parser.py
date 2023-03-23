@@ -7,17 +7,19 @@ class AST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(AST, cls).__new__(cls, (name, pos, value))
 
-def get_prod_func(prod: tuple[str, int, str], flipped_map: dict[str, str]):
+def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
     symbols = prod[2].split(' ')
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = AST(flipped_map[prod[0]], prod[1], {
-            flipped_map[symbol]: [p[i] for i in idxs] 
-            if len(idxs) > 1 else p[idxs[0]]
-            for symbol, idxs in groups.items()
-        })
+        p[0] = AST(
+            flipped_symbol_map[prod[0]], 
+            prod[1], 
+            {flipped_symbol_map[symbol]: [p[i] for i in idxs] 
+             if len(idxs) > 1 else p[idxs[0]]
+             for symbol, idxs in groups.items()}
+        )
     
     f.__doc__ = f'{prod[0]} : {prod[2]}'
     return f
@@ -44,26 +46,26 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             precedence.append((tag, *toks))
     g['precedence'] = precedence
 
-    flipped_map = utils.flip_map(symbol_map)
+    flipped_symbol_map = utils.flip_map(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
-            g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_map)
+            g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
 
-    sorted_flipped_map = utils.get_sorted_map(flipped_map)
+    sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)
     debug = bool(debug_file)
     tabmodule = f'tabmodule_{lang_name}'
 
     options = {
         'debug': debug,
         'tabmodule': tabmodule,
-        'errorlog': logger.LoggingWrapper(repl_map=sorted_flipped_map, 
+        'errorlog': logger.LoggingWrapper(repl_map=sorted_flipped_symbol_map, 
                                           ply_repl=True)
     }
 
     # Remove tables file (tabmodule) to regenerate debug file
     if debug:
         debuglog = logger.get_file_logger(debug_file, verbose=debug,
-                                          repl_map=sorted_flipped_map)
+                                          repl_map=sorted_flipped_symbol_map)
         options['debuglog'] = debuglog
         package_dir = pathlib.Path(__file__).parent.resolve()
         try:

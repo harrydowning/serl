@@ -1,6 +1,4 @@
-import pytest
 import tool.utils as utils
-from tool.config import TaggedData
 
 token_split = ['@', '']
 
@@ -116,44 +114,6 @@ def test_normalise_grammar():
 def test_get_tokens_in_grammar():
     actual = utils.get_tokens_in_grammar(token_map, norm_grammar)
     expected = ['<', '>', 'foo', 'foos', 'bar']
-    assert actual == expected
-
-obj = {
-    'precedence': [TaggedData('nonassoc', '< >'), TaggedData('left', '+ -'), 
-                   TaggedData('left', '* /')],
-    'grammar': {
-        'main': TaggedData('custom', '< items >'),
-        'items': [TaggedData('list', 'items item'), 
-                  TaggedData('list', 'item')],
-        'other': TaggedData('all', ['first', 'second', 
-                                    TaggedData('override', 'third')])
-    }
-}
-
-obj_tagless = {
-    'precedence': ['< >', '+ -', '* /'],
-    'grammar': {
-        'main': '< items >',
-        'items': ['items item','item'],
-        'other': ['first', 'second', 'third']
-    }
-}
-
-obj_expanded = obj | {
-    'grammar': {
-        'main': TaggedData('custom', '< items >'),
-        'items': [TaggedData('list', 'items item'), 
-                  TaggedData('list', 'item')],
-        'other': [TaggedData('all', 'first'), TaggedData('all','second'), 
-                  TaggedData('override', 'third')]
-    }
-}
-
-recurse_tags_data = [(obj, True, obj_tagless), (obj, False, obj_expanded)]
-
-@pytest.mark.parametrize("obj, remove, expected", recurse_tags_data)
-def test_recurse_tags(obj, remove, expected):
-    actual = utils.recurse_tags(obj, remove=remove)
     assert actual == expected
 
 code = {

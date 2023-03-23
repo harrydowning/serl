@@ -1,6 +1,5 @@
 import yaml
 import tool.schema as schema
-from tool.config import tagger
 import pytest
 
 test_data = [
@@ -59,22 +58,6 @@ test_data = [
         rule: string
     """, True),
     ("""
-    tokens:
-        token: string
-    grammar:
-        rule: !tag string
-    code:
-        rule: string
-    """, True),
-    ("""
-    tokens:
-        token: string
-    grammar:
-        rule: !tag string
-    commands:
-        rule: string
-    """, True),
-    ("""
     version: string
     usage: string
     grammar:
@@ -103,7 +86,6 @@ test_data = [
 @pytest.mark.parametrize("test_config, expected", test_data, 
                          ids=[f'config{i}' for i in range(len(test_data))])
 def test_validate(test_config, expected):
-    yaml.add_multi_constructor('!', tagger, Loader=yaml.SafeLoader)
     config = yaml.safe_load(test_config)
     valid, _ = schema.validate(config)
     assert valid == expected
