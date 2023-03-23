@@ -74,12 +74,12 @@ class LoggingWrapper():
         self.logger.error(msg)
         exit(1)
 
-def get_file_logger(filename: str, repl_map = {}):
+def get_file_logger(filename: str, *args, **kwargs):
     file_logger = logging.getLogger('file')
     file_handler = logging.FileHandler(filename, mode='w', delay=True)
     file_logger.addHandler(file_handler)
     file_logger.propagate = False
-    return LoggingWrapper(repl_map, file_logger)
+    return LoggingWrapper(*args, logger=file_logger, **kwargs)
 
 logger = LoggingWrapper()
 

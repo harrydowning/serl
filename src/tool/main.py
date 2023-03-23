@@ -5,7 +5,9 @@ from tool.lexer import build_lexer
 from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
-from tool.config import get_config, get_home_dir, get_config_text
+from tool.config import (
+    get_config, get_home_dir, get_config_text, system_config_exists
+)
 from tool.constants import (
     CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF
 )
@@ -107,13 +109,15 @@ def requirements(req_file: str, reqs: str) -> None:
     exit(0)
 
 def link(args):
-    # TODO Check <language> exists in .tool and not a path?
     lang_name = utils.lang_name(args['<language>'])
-    dir = args['<dir>'] or os.getcwd()
+    dir = args['<dir>'] or ''
     
     src = extension(sys.argv[0])
     dst = extension(os.path.join(dir, f'{lang_name}'))
-    
+
+    if not system_config_exists(lang_name):
+        logger.warning(f'No system config for language \'{lang_name}\'')
+
     try:
         os.symlink(src, dst)
     except Exception as e:
@@ -188,7 +192,7 @@ def run(args):
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
-                          grammar, precedence)
+                          grammar, precedence, args['--debug'])
     # lexer.input(src)
     # while True:
     #     tok = lexer.token()
@@ -210,16 +214,16 @@ def run(args):
 
     if functionality.before:
         before = [cd for cd in functionality.before if cd != None]
-        for cd in before: 
-            exec(cd, global_env)
+        # for cd in before: 
+        #     exec(cd, global_env)
     
     #get_execute_func(ast, functionality, global_env)()
     
     # TODO  pass result of execution to after (or stdout if no after supplied)
     if functionality.after:
         after = [cd for cd in functionality.after if cd != None]
-        for cd in after: 
-            exec(cd, global_env)
+        # for cd in after: 
+        #     exec(cd, global_env)
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast

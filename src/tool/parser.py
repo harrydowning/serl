@@ -1,4 +1,4 @@
-import os, itertools, re
+import itertools, re, pathlib, os
 import tool.logger as logger
 import tool.utils as utils
 import ply.yacc as yacc
@@ -30,7 +30,8 @@ def p_error(p):
         logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]], _precedence: list[str]):
+                 grammar: dict[str, list[str]], _precedence: list[str],
+                 debug_file: str | None):
     g = globals()
     g['tokens'] = _tokens
     
@@ -49,11 +50,25 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_map)
 
     sorted_flipped_map = utils.get_sorted_map(flipped_map)
-    filename = os.path.join(os.getcwd(), 'test.txt') # TODO temp
+    debug = bool(debug_file)
+    tabmodule = f'tabmodule_{lang_name}'
 
-    debuglog = logger.get_file_logger(filename, sorted_flipped_map)
-    errorlog = logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
-    parser = yacc.yacc(debuglog=debuglog, errorlog=errorlog, write_tables=True, 
-                       tabmodule=f'tabmodule_{lang_name}', debug=logger.verbose)
+    options = {
+        'debug': debug,
+        'tabmodule': tabmodule,
+        'errorlog': logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
+    }
+
+    # Remove tables file (tabmodule) to regenerate debug file
+    if debug:
+        options['debuglog'] = logger.get_file_logger(debug_file, 
+                                                     sorted_flipped_map)
+        package_dir = pathlib.Path(__file__).parent.resolve()
+        try:
+            os.remove(f'{os.path.join(package_dir, tabmodule)}.py')
+        except OSError:
+            pass
+
+    parser = yacc.yacc(**options)
     g['parser'] = parser
     return parser

@@ -11,6 +11,11 @@ def get_home_dir() -> str:
     os.makedirs(home_dir, exist_ok=True)
     return home_dir
 
+def system_config_exists(language: str):
+    home_dir = get_home_dir()
+    listdir = os.listdir(home_dir)
+    return language in listdir or language in map(lambda x: x.split('.')[0], listdir)
+
 def get_system_config_text(language: str) -> str | None:
     home_dir = get_home_dir()
     # Allow Python files with functionality to be shared across languages
