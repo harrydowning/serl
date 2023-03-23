@@ -9,9 +9,12 @@ logging.basicConfig(format='%(levelname)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
 class LoggingWrapper():
-    def __init__(self, repl_map: dict = {}, logger = logging, ply_repl=False):
-        self.repl_map = repl_map
+    def __init__(self, logger = logging, *, verbose=None, strict=None, 
+                 repl_map={}, ply_repl=False):
         self.logger = logger
+        self.verbose = verbose
+        self.strict = strict
+        self.repl_map = repl_map
         self.ply_repl = ply_repl
     
     def _repl(self, msg, args):
@@ -57,7 +60,7 @@ class LoggingWrapper():
 
     def info(self, msg, *args):
         msg = self._repl(msg, args)
-        if verbose:
+        if (self.verbose if self.verbose != None else verbose):
             self.logger.info(msg)
 
     def debug(self, msg, *args):
@@ -66,7 +69,7 @@ class LoggingWrapper():
     def warning(self, msg, *args):
         msg = self._repl(msg, args)
         self.logger.warning(msg)
-        if strict:
+        if (self.strict if self.strict != None else strict):
             exit(1)
 
     def error(self, msg, *args):
@@ -74,12 +77,12 @@ class LoggingWrapper():
         self.logger.error(msg)
         exit(1)
 
-def get_file_logger(filename: str, *args, **kwargs):
+def get_file_logger(filename: str, **kwargs):
     file_logger = logging.getLogger('file')
     file_handler = logging.FileHandler(filename, mode='w', delay=True)
     file_logger.addHandler(file_handler)
     file_logger.propagate = False
-    return LoggingWrapper(*args, logger=file_logger, **kwargs)
+    return LoggingWrapper(file_logger, **kwargs)
 
 logger = LoggingWrapper()
 

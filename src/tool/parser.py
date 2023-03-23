@@ -56,13 +56,15 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     options = {
         'debug': debug,
         'tabmodule': tabmodule,
-        'errorlog': logger.LoggingWrapper(sorted_flipped_map, ply_repl=True)
+        'errorlog': logger.LoggingWrapper(repl_map=sorted_flipped_map, 
+                                          ply_repl=True)
     }
 
     # Remove tables file (tabmodule) to regenerate debug file
     if debug:
-        options['debuglog'] = logger.get_file_logger(debug_file, 
-                                                     sorted_flipped_map)
+        debuglog = logger.get_file_logger(debug_file, verbose=debug,
+                                          repl_map=sorted_flipped_map)
+        options['debuglog'] = debuglog
         package_dir = pathlib.Path(__file__).parent.resolve()
         try:
             os.remove(f'{os.path.join(package_dir, tabmodule)}.py')
