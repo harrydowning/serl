@@ -6,6 +6,9 @@
 Welcome to Tool's documentation!
 ================================
 
+.. note ::
+  some note about this being the tools beta and its interface could change
+
 .. toctree::
   :caption: Home
   :hidden:

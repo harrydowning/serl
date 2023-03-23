@@ -60,7 +60,8 @@ class LoggingWrapper():
 
     def info(self, msg, *args):
         msg = self._repl(msg, args)
-        if (self.verbose if self.verbose != None else verbose):
+        should_show = self.verbose if self.verbose != None else verbose
+        if should_show:
             self.logger.info(msg)
 
     def debug(self, msg, *args):
@@ -69,13 +70,15 @@ class LoggingWrapper():
     def warning(self, msg, *args):
         msg = self._repl(msg, args)
         self.logger.warning(msg)
-        if (self.strict if self.strict != None else strict):
+        should_exit = self.strict if self.strict != None else strict
+        if should_exit:
             exit(1)
 
-    def error(self, msg, *args):
+    def error(self, msg, *args, should_exit=True):
         msg = self._repl(msg, args)
         self.logger.error(msg)
-        exit(1)
+        if should_exit:
+            exit(1)
 
 def get_file_logger(filename: str, **kwargs):
     file_logger = logging.getLogger('file')

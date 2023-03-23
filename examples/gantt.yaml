@@ -13,6 +13,12 @@ usage: |
     --doc              Create as full document.
     --pdf              Output as pdf.
 
+meta:
+  tokens:
+    ref: null
+  grammar:
+    permissive: true
+
 tokens:
   text: ([\w ]+)
   -----: ---+
@@ -20,6 +26,8 @@ tokens:
   ===: ([ ]* =+)
   "<": <
   ">": ">"
+
+sync: text ===
 
 grammar:
   gantt: | 
@@ -41,7 +49,7 @@ grammar:
     - text | === <text>
 
 code:
-  init: | # py
+  main: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
     from pylatex.utils import NoEscape
@@ -56,6 +64,8 @@ code:
     
     def get_bar(text, bar, milestone=None):
       return (text, bar.find('='), len(bar), milestone)
+    
+    _ = gantt()
   
   gantt: | # py
     headings, rows = headings(), rows()
@@ -89,18 +99,17 @@ code:
     - _ = get_bar(text[1], vars()['==='])
     - _ = get_bar(text[1], vars()['==='], '')
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
-  
-  result: | # py
-    pass
+
+types:
+  text: Token.Literal.String
+  ===: Token.Literal
+  "<": Token.Punctuation
+  ">": Token.Punctuation
+
+style:
+  Token.Literal.String: 
 
 requirements: PyLaTex==1.4.1
-
-meta:
-  tokens:
-    ref: null
-  grammar:
-    permissive: true
-    sync: \n
 
 # code:
 #   setup: | # python

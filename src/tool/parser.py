@@ -33,7 +33,7 @@ def p_error(p):
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[str],
-                 debug_file: str | None):
+                 debug_file: str | None, sync: str, permissive: bool):
     g = globals()
     g['tokens'] = _tokens
     

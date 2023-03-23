@@ -9,7 +9,7 @@ from tool.config import (
     get_config, get_home_dir, get_config_text, system_config_exists
 )
 from tool.constants import (
-    CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF
+    CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF, RETURN_VAR
 )
 
 
@@ -44,10 +44,8 @@ class Functionality():
         self.commands = utils.normalise_dict(commands)
 
         items = self.code.items()
-        before = next(iter(items), None)
-        after = next(reversed(items), None)
-        self.before = before[1] if not before[0] in grammar_map else None
-        self.after = after[1] if not after[0] in grammar_map else None
+        name, cd = next(iter(items), None)
+        self.main = cd if not name in grammar_map else None
 
         dups = utils.get_dups(self.code, self.commands)
         if len(dups) > 0:
@@ -136,6 +134,7 @@ def run(args):
     usage = config.get('usage', None)
     
     inputs = args['<args>']
+    debug_file = args['--debug']
 
     # User language docopt
     if usage != None:
@@ -173,7 +172,10 @@ def run(args):
     logger.info('===== TOKENS =====')
 
     precedence = config.get('precedence', [])
+    sync = config.get('sync', [])
     grammar = config['grammar']
+    permissive = meta.get('permissive', True)
+
     token_map = {k: f'TERMINAL{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERMINAL{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
@@ -192,7 +194,7 @@ def run(args):
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
-                          grammar, precedence, args['--debug'])
+                          grammar, precedence, debug_file, sync, permissive)
     # lexer.input(src)
     # while True:
     #     tok = lexer.token()
@@ -201,29 +203,27 @@ def run(args):
     #     print(tok)
 
     # ast = parser.parse(src, lexer=lexer)
-    # print(ast)
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
 
-    global_env = {
-        '__name__': lang_name,
-        'args': language_args,
-        #'ast': ast
-    }
+    # root_execute = get_execute_func(ast, functionality, global_env)
+    # global_env = {
+    #     '__name__': lang_name,
+    #     'args': language_args,
+    #     ast[0]: root_execute
+    # }
 
-    if functionality.before:
-        before = [cd for cd in functionality.before if cd != None]
-        # for cd in before: 
-        #     exec(cd, global_env)
+    # if functionality.main:
+    #     main = [cd for cd in functionality.main if cd != None]
+    #     for cd in main: 
+    #         exec(cd, global_env)
+    # else:
+    #     global_env[RETURN_VAR] = root_execute()
     
-    #get_execute_func(ast, functionality, global_env)()
-    
-    # TODO  pass result of execution to after (or stdout if no after supplied)
-    if functionality.after:
-        after = [cd for cd in functionality.after if cd != None]
-        # for cd in after: 
-        #     exec(cd, global_env)
+    # result = global_env.get(RETURN_VAR, None)
+    # if result:
+    #     print(result, end='')
 
 def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
     name, i, value = ast
@@ -249,8 +249,7 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
         if cd:
             local_env |= env
             exec(cd, global_env, local_env)
-            _ = local_env.get('_', None)
-            return _
+            return local_env.get(RETURN_VAR, None)
         elif cm:
             # TODO global and local vars TODO how to invoke code/command of child nonterminals
             env = os.environ.copy() | {}

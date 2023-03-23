@@ -21,9 +21,6 @@ meta = {
         'grammar': {
             'type': 'object',
             'properties': {
-                'sync': {
-                    'type': 'string'
-                },
                 'permissive': {
                     'type': 'boolean'
                 }
@@ -68,6 +65,9 @@ config_schema = {
             'items': {
                 'type': 'string'
             }
+        },
+        'sync': {
+            'type': 'string'
         },
         'grammar': {
             'type': 'object',
