@@ -1,7 +1,7 @@
-NAME = 'tool'
+NAME = __package__
 VERSION = '0.0.1'
-SYSTEM_CONFIG_DIR = f'.{NAME}'
 
+SYSTEM_CONFIG_DIR = f'.{NAME}'
 OPTIONS = """Options:
     -h, --help     Show this screen.
     -V, --version  Show version.
@@ -48,7 +48,8 @@ Usage:
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements <file>  Create pip requirements file.
-    --debug <file>             Create parser state debug file."""
+    --debug <file>             Create parser state debug file.
+    --highlight <format>       Highlight <src> file in the specified format."""
 
 CLI_RUN = f"""{NAME} run
 
