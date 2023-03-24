@@ -107,7 +107,7 @@ tokentypes:
   ">": Punctuation
 
 styles:
-  Literal.String: green
+  Punctuation: "#eb3434"
 
 requirements: PyLaTex==1.4.1
 

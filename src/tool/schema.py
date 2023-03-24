@@ -97,7 +97,7 @@ config_schema = {
                 }
             },
         },
-        'tokentypes': {
+        'tokentypes': { # TODO might rename
             'type': 'object',
             'patternProperties': {
                 '^.*$': {

@@ -6,12 +6,10 @@ from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
 from tool.highlight import get_pygments_output
-from tool.config import (
-    get_config, get_home_dir, get_config_text, system_config_exists
-)
-from tool.constants import (
-    CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF, RETURN_VAR
-)
+from tool.config import get_config, get_home_dir, get_config_text, \
+    system_config_exists
+from tool.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
+    DEFAULT_REF, RETURN_VAR
 
 class Functionality():
     def __init__(self, code: dict, commands: dict, grammar_map: dict):
