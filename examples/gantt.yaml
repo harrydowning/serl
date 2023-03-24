@@ -100,14 +100,15 @@ code:
     - _ = get_bar(text[1], vars()['==='], '')
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
 
-types:
+tokentypes:
   text: Token.Literal.String
   ===: Token.Literal
   "<": Token.Punctuation
   ">": Token.Punctuation
 
 style:
-  Token.Literal.String: 
+  Token.Literal.String: '#888'
+  Token.Whitespace: 
 
 requirements: PyLaTex==1.4.1
 

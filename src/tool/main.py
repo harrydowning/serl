@@ -12,32 +12,6 @@ from tool.constants import (
     CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, DEFAULT_REF, RETURN_VAR
 )
 
-
-# class BiDict(UserDict):  
-#     def __setitem__(self, key, item) -> None:
-#         if self.__contains__(key):
-#             self.pop(key)
-#         if self.__contains__(item):
-#             self.pop(item)
-#         super().__setitem__(key, item)
-#         super().__setitem__(item, key)
-    
-#     def __delitem__(self, key) -> None:
-#         item = self.get(key)
-#         super().__delitem__(key)
-#         if key != item:
-#             super().__delitem__(item)
-
-# TODO updates break the normalised so should this really be its own class
-# if it only does this at the start
-# class NormalisedDict(UserDict):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.data = {
-#             k:v if isinstance(v, list) else [v] 
-#             for k,v in self.data.items()
-#         }
-
 class Functionality():
     def __init__(self, code: dict, commands: dict, grammar_map: dict):
         self.code = utils.normalise_dict(code)
@@ -188,9 +162,12 @@ def run(args):
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    tokens = {k: v for k, v in tokens.items() if k in tokens_in_grammar}
-    token_map = {k: v for k, v in token_map.items() if k in tokens_in_grammar}
+    tokens = utils.filter_dict_keys(tokens, tokens_in_grammar)
+    token_map = utils.filter_dict_keys(token_map, tokens_in_grammar)
     symbol_map = token_map | grammar_map
+
+    # if args['--highlight']:
+    #     highlight()
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
@@ -251,9 +228,8 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             exec(cd, global_env, local_env)
             return local_env.get(RETURN_VAR, None)
         elif cm:
-            # TODO global and local vars TODO how to invoke code/command of child nonterminals
+            # TODO add global and local vars to env TODO how to invoke code/command of child nonterminals
             env = os.environ.copy() | {}
-            # TODO should stout/err be shown if run at root nonterminal?
             return subprocess.run(cm, capture_output=True, text=True, 
                                   shell=True, env=env, check=True).stdout
         else:
@@ -270,11 +246,12 @@ def install(args):
     filename = os.path.join(home_dir, f'{alias}.yaml')
     
     if os.path.isfile(filename) and not upgrade:
-        logger.error(f'Language \'{alias}\' already exists.')
+        logger.error(f'Language \'{alias}\' already exists. '
+                     f'Use -U or --upgrade to override.')
     
     with open(filename, 'w') as file:
         file.write(config_text)
-    print(f'Successfully installed {alias}.')
+    print(f'Successfully installed \'{alias}\'.')
 
 def uninstall(args: dict):
     language = args['<language>']
@@ -286,9 +263,9 @@ def uninstall(args: dict):
 
         if filename == language or file_lang == language:
             os.remove(file_path)
-            print(f'Successfully uninstalled {lang_name}.')
+            print(f'Successfully uninstalled \'{lang_name}\'.')
             return
-    logger.warning(f'Skipping, {lang_name} not already installed.')
+    logger.warning(f'Skipping, \'{lang_name}\' not already installed.')
 
 def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language

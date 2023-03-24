@@ -50,7 +50,13 @@ Usage:
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements <file>  Create pip requirements file.
-    --debug <file>             Create parser state debug file."""
+    --debug <file>             Create parser state debug file.
+
+    -H, --highlight            Create highlighted version of <src>.
+    -f, --format <format>      Highlight format [default: html].
+    -s, --style <style>        Highlight style [default: default]
+    --nowrap                   Don't wrap tokens in highlighted output.
+    --linenos                  Display line number in highlighted output."""
 
 CLI_RUN = f"""{NAME} run
 

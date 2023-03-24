@@ -46,7 +46,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             precedence.append((tag, *toks))
     g['precedence'] = precedence
 
-    flipped_symbol_map = utils.flip_map(symbol_map)
+    flipped_symbol_map = utils.flip_dict(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)

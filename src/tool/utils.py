@@ -84,8 +84,11 @@ def get_dups(d1: dict[str, list[str]],
                      if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
     return dups
 
-def flip_map(d: dict) -> dict:
+def flip_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}
 
 def lang_name(language: str):
     return os.path.basename(language).split('.')[0]
+
+def filter_dict_keys(d: dict, l: list[str]):
+    return {k: v for k, v in d.items() if k in l}
