@@ -49,14 +49,13 @@ Usage:
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements <file>  Create pip requirements file.
-    --debug <file>             Create parser state debug file.
-
-    -H, --highlight            Create highlighted version of <src>.
-    -f, --format <format>      Highlight format [default: html].
-    -s, --style <style>        Highlight style [default: default]
-    --nowrap                   Don't wrap tokens in highlighted output.
-    --linenos                  Display line number in highlighted output."""
+    -r, --requirements=FILE  Create pip requirements file.
+    --debug=FILE             Create parser state debug file.
+    -H, --highlight=FILE     Create highlighted version of <src> in the format
+                             of the file extension.
+    -s, --style=STYLE        Highlight style.
+    --nowrap                 Don't wrap tokens in highlighted output.
+    --linenos                Display line number in highlighted output."""
 
 CLI_RUN = f"""{NAME} run
 

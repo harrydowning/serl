@@ -5,6 +5,7 @@ from tool.lexer import build_lexer
 from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
+from tool.highlight import get_pygments_output
 from tool.config import (
     get_config, get_home_dir, get_config_text, system_config_exists
 )
@@ -71,13 +72,30 @@ def extension(file: str) -> str:
         file += '.exe'
     return file
 
-def requirements(req_file: str, reqs: str) -> None:
+def requirements(args: dict, reqs: str):
+    filename = args['--requirements']
     if reqs == '':
         logger.warning('No requirements specified.')
     
-    with open(req_file, 'w') as file:
+    with open(filename, 'w') as file:
         file.write(reqs)
-    
+    exit(0)
+
+def highlight(args: dict, src: str, tokens: dict, ignore: str, 
+              tokentypes: dict, user_styles: dict):
+    filename = args['--highlight']
+    style_name = args['--style'] or 'default'
+    format = filename.split('.')[-1] or 'html'
+    format_options = {
+        'nowrap': args['--nowrap'],
+        'linenos': args['--linenos']
+    }
+
+    highlighted_src = get_pygments_output(src, tokens, ignore, tokentypes, 
+                                         user_styles, style_name, format, 
+                                         format_options)
+    with open(filename, 'w') as file:
+        file.write(highlighted_src)
     exit(0)
 
 def link(args):
@@ -100,9 +118,8 @@ def run(args):
     lang_name = utils.lang_name(language)
     config = get_config(language)
 
-    req_file = args['--requirements']
-    if req_file:
-        requirements(req_file, config.get('requirements', ''))
+    if args['--requirements']:
+        requirements(args, config.get('requirements', ''))
 
     version = config.get('version', None)
     usage = config.get('usage', None)
@@ -166,8 +183,10 @@ def run(args):
     token_map = utils.filter_dict_keys(token_map, tokens_in_grammar)
     symbol_map = token_map | grammar_map
 
-    # if args['--highlight']:
-    #     highlight()
+    if args['--highlight']:
+        tokentypes = config.get('tokentypes', {})
+        user_styles = config.get('styles', {})
+        highlight(args, src, tokens, ignore, tokentypes, user_styles)
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 

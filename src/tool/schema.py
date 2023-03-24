@@ -49,11 +49,6 @@ config_schema = {
         },
         'tokens': {
             'type': 'object',
-            'properties': {
-                '_ignore': {
-                    'type': 'string'
-                }
-            },
             'patternProperties': {
                 '^.*$': {
                     'type': 'string',
@@ -99,6 +94,22 @@ config_schema = {
                     'items': {
                         'type': ['string', 'null']
                     }
+                }
+            },
+        },
+        'tokentypes': {
+            'type': 'object',
+            'patternProperties': {
+                '^.*$': {
+                    'type': 'string',
+                }
+            },
+        },
+        'styles': {
+            'type': 'object',
+            'patternProperties': {
+                '^.*$': {
+                    'type': 'string',
                 }
             },
         },
