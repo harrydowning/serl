@@ -69,7 +69,7 @@ Usage:
 SYMLINK_CLI = f"""{NAME}
 
 Usage:
-    (language) [[options] --] [<args>...]
+    (language) [options] -- [<args>...]
 
 {RUN_OPTIONS}
 

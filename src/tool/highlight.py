@@ -9,12 +9,13 @@ from pygments.formatters import get_formatter_by_name
 from pygments.styles import get_style_by_name
 
 def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
+    tokentypes = {t: ttype.title() for t, ttype in tokentypes.items()}
     class PygmentsLexer(RegexLexer):
         flags = re.VERBOSE
 
         tokens = {
             'root': [
-                (pattern, string_to_tokentype(tokentypes.get(name.title(), Generic))) 
+                (pattern, string_to_tokentype(tokentypes.get(name, Generic))) 
                 for name, pattern in _tokens.items()
             ] + [
                 (r'\s', Whitespace),
@@ -30,8 +31,8 @@ def get_pygments_output(src: str, tokens: dict[str, str], ignore: str,
     lexer = get_pygments_lexer(tokens, ignore, tokentypes)
     try:
         style = get_style_by_name(style_name)
-        for tokentype, user_style in user_styles:
-            style.styles[tokentype] = user_style
+        for tokentype, user_style in user_styles.items():
+            style.styles[string_to_tokentype(tokentype)] = user_style
     except ClassNotFound:
         logger.error(f'No Pygment style found for \'{style_name}\'.')
     

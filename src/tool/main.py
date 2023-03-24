@@ -85,7 +85,7 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
               tokentypes: dict, user_styles: dict):
     filename = args['--highlight']
     style_name = args['--style'] or 'default'
-    format = filename.split('.')[-1] or 'html'
+    format = filename.split('.')[-1]
     format_options = {
         'nowrap': args['--nowrap'],
         'linenos': args['--linenos']

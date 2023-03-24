@@ -74,5 +74,9 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             pass
 
     parser = yacc.yacc(**options)
+    
+    if debug:
+        exit(0)
+
     g['parser'] = parser
     return parser

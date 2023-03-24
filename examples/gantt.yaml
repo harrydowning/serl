@@ -102,13 +102,12 @@ code:
 
 tokentypes:
   text: Literal.String
-  ===: Token.Literal
-  "<": Token.Punctuation
-  ">": Token.Punctuation
+  ===: Literal
+  "<": Punctuation
+  ">": Punctuation
 
-# styles:
-#   Token.Literal.String: '#888'
-#   Token.Whitespace: 
+styles:
+  Literal.String: green
 
 requirements: PyLaTex==1.4.1
 

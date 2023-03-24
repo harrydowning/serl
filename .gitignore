@@ -8,3 +8,4 @@ dist/
 
 working/
 notes.txt
+*.exe
