@@ -1,4 +1,4 @@
-import sys, os, fileinput, subprocess, pathlib, re
+import sys, os, fileinput, subprocess, pathlib, re, venv
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -6,8 +6,8 @@ from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
 from tool.highlight import get_pygments_output
-from tool.config import get_config, get_home_dir, get_config_text, \
-    system_config_exists
+from tool.config import get_config, get_config_dir, get_config_env_dir, \
+    get_config_text, system_config_exists, system_config_languages
 from tool.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
     DEFAULT_REF, RETURN_VAR
 
@@ -78,8 +78,8 @@ def requirements(req: str | None):
     try:
         subprocess.check_call([sys.executable, '-m', 'pip', '--no-color',
                                'install', '-qqq', *reqs])
-    except subprocess.CalledProcessError:
-        exit(1)
+    except subprocess.CalledProcessError as e:
+        exit(e.returncode)
 
 def highlight(args: dict, src: str, tokens: dict, ignore: str, 
               tokentypes: dict, user_styles: dict):
@@ -125,6 +125,13 @@ def run(args):
     language = args['<language>']
     lang_name = utils.lang_name(language)
     config = get_config(language)
+
+    # env = config.get('environment', None)
+    # if env:
+    #     config_env_dir = get_config_env_dir()
+    #     env_name = os.path.join(config_env_dir, f'venv-{env}')
+    #     venv.create(env_name, with_pip=True)
+    #     context = venv.EnvBuilder().ensure_directories(env_name)
 
     if args['--requirements']:
         requirements(config.get('requirements', None))
@@ -211,7 +218,6 @@ def run(args):
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
 
-    exec('import pylatex; print(pylatex)')
     # root_execute = get_execute_func(ast, functionality, global_env)
     # global_env = {
     #     '__name__': lang_name,
@@ -270,8 +276,8 @@ def install(args):
     upgrade = args['--upgrade']
     
     config_text = get_config_text(language)
-    home_dir = get_home_dir()
-    filename = os.path.join(home_dir, f'{alias}.yaml')
+    config_dir = get_config_dir()
+    filename = os.path.join(config_dir, f'{alias}.yaml')
     
     if os.path.isfile(filename) and not upgrade:
         logger.error(f'Language \'{alias}\' already exists. '
@@ -284,10 +290,10 @@ def install(args):
 def uninstall(args: dict):
     language = args['<language>']
     lang_name = utils.lang_name(language)
-    home_dir = get_home_dir()
-    for filename in os.listdir(home_dir):
+    config_dir = get_config_dir()
+    for filename in system_config_languages():
         file_lang = filename.split('.')[0]
-        file_path = os.path.join(home_dir, filename)
+        file_path = os.path.join(config_dir, filename)
 
         if filename == language or file_lang == language:
             os.remove(file_path)

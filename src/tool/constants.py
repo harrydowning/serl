@@ -2,6 +2,7 @@ NAME = __package__
 VERSION = '0.0.1'
 
 SYSTEM_CONFIG_DIR = f'.{NAME}'
+SYSTEM_CONFIG_ENV_DIR = 'environments'
 RETURN_VAR = '_'
 
 OPTIONS = """Options:
@@ -49,7 +50,7 @@ Usage:
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements        Download pip requirements.
+    -r, --requirements        Install pip requirements.
     --debug=FILE              Create parser state debug file.
     -H, --highlight=FILE      Create highlighted version of <src> in the format
                               of the extension of FILE.

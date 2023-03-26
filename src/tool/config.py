@@ -2,28 +2,33 @@ import os, sys, re
 import yaml
 import requests
 import tool.logger as logger
-from tool.constants import SYSTEM_CONFIG_DIR
+from tool.constants import SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_ENV_DIR
 from tool.schema import validate
 
-def get_home_dir() -> str:
+def get_config_dir(path=[]) -> str:
     home = os.path.expanduser('~')
-    home_dir = os.path.join(home, SYSTEM_CONFIG_DIR)
-    os.makedirs(home_dir, exist_ok=True)
-    return home_dir
+    config_dir = os.path.join(home, SYSTEM_CONFIG_DIR, *path)
+    os.makedirs(config_dir, exist_ok=True)
+    return config_dir
+
+def get_config_env_dir() -> str:
+    return get_config_dir([SYSTEM_CONFIG_ENV_DIR])
+
+def system_config_languages() -> list[str]:
+    config_dir = get_config_dir()
+    return [filename for filename in os.listdir(config_dir) 
+            if not os.path.isdir(os.path.join(config_dir, filename))]
 
 def system_config_exists(language: str):
-    home_dir = get_home_dir()
-    listdir = os.listdir(home_dir)
-    return language in listdir or language in map(lambda x: x.split('.')[0], listdir)
+    langs = system_config_languages()
+    return language in langs or language in map(lambda x: x.split('.')[0], langs)
 
 def get_system_config_text(language: str) -> str | None:
-    home_dir = get_home_dir()
-    # Allow Python files with functionality to be shared across languages
-    sys.path.append(home_dir)
+    config_dir = get_config_dir()
     
-    for filename in os.listdir(home_dir):
+    for filename in system_config_languages():
         file_lang = filename.split('.')[0]
-        file_path = os.path.join(home_dir, filename)
+        file_path = os.path.join(config_dir, filename)
 
         if filename == language or file_lang == language:
             with open(file_path) as file:

@@ -109,8 +109,9 @@ code:
 styles:
   Punctuation: "#eb3434"
 
+environment: gantt
 requirements: | # pip
-  PyLaTex==1.4.1 numpy
+  PyLaTex==1.4.1
 
 # code:
 #   setup: | # python
