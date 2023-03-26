@@ -100,11 +100,11 @@ code:
     - _ = get_bar(text[1], vars()['==='], '')
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
 
-tokentypes:
-  text: Literal.String
-  ===: Literal
-  "<": Punctuation
-  ">": Punctuation
+# tokentypes:
+#   text: Literal.String
+#   ===: Literal
+#   "<": Punctuation
+#   ">": Punctuation
 
 styles:
   Punctuation: "#eb3434"

@@ -20,7 +20,7 @@ Commands:
     install    install language to {SYSTEM_CONFIG_DIR} in home directory.
     uninstall  Uninstall language from {SYSTEM_CONFIG_DIR} in home directory.
     run        Execute language.
-    help       Show command help screen. If non specified show this screen.
+    help       Show help for commands.
 
 {OPTIONS}"""
 
@@ -49,13 +49,13 @@ Usage:
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements=FILE  Create pip requirements file.
-    --debug=FILE             Create parser state debug file.
-    -H, --highlight=FILE     Create highlighted version of <src> in the format
-                             of the file extension.
-    -s, --style=STYLE        Highlight style.
-    --nowrap                 Don't wrap tokens in highlighted output.
-    --linenos                Display line number in highlighted output."""
+    -r, --requirements=FILE   Create pip requirements file.
+    --debug=FILE              Create parser state debug file.
+    -H, --highlight=FILE      Create highlighted version of <src> in the format
+                              of the extension of FILE.
+    -S, --style=STYLE         Highlight style.
+    -F, --format=FORMAT       Override file extension format.
+    --format-options=OPTIONS  Options supplied to formatter."""
 
 CLI_RUN = f"""{NAME} run
 
@@ -70,6 +70,9 @@ SYMLINK_CLI = f"""{NAME}
 
 Usage:
     (language) [options] -- [<args>...]
+
+Symlink Options:
+    --where  Show symbolic link src location.
 
 {RUN_OPTIONS}
 

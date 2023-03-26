@@ -1,4 +1,4 @@
-import sys, os, fileinput, subprocess
+import sys, os, fileinput, subprocess, pathlib
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -71,6 +71,7 @@ def extension(file: str) -> str:
     return file
 
 def requirements(args: dict, reqs: str):
+    # TODO subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-qqq',  *req])
     filename = args['--requirements']
     if reqs == '':
         logger.warning('No requirements specified.')
@@ -83,16 +84,24 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
               tokentypes: dict, user_styles: dict):
     filename = args['--highlight']
     style_name = args['--style'] or 'default'
-    format = filename.split('.')[-1]
+    format = args['--format'] or filename.split('.')[-1]
+    format_options_str = re.sub(r'\s', '', args['--format-options'] or '') 
     format_options = {
-        'nowrap': args['--nowrap'],
-        'linenos': args['--linenos']
+        name: eval(value)
+        for option in args['--format-options'].split(',')
+        for name, value in option.split('=')
     }
 
     highlighted_src = get_pygments_output(src, tokens, ignore, tokentypes, 
                                          user_styles, style_name, format, 
                                          format_options)
-    with open(filename, 'w') as file:
+    
+    if type(highlighted_src) == bytes:
+        mode = 'wb'
+    else:
+        mode = 'w'
+
+    with open(filename, mode) as file:
         file.write(highlighted_src)
     exit(0)
 
@@ -290,6 +299,11 @@ def get_symlink_args(filename, version) -> dict:
         sys.argv.insert(1, '--')
     
     args = docopt(SYMLINK_CLI, version=version, options_first=True)
+
+    if args['--where']:
+        print(pathlib.Path(filename).resolve())
+        exit(0)
+
     args['<language>'] = utils.lang_name(filename)
     base_args = args | {'<command>': 'run'}
     return base_args, args

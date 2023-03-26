@@ -4,7 +4,7 @@ import pygments
 from pygments.style import Style, StyleMeta
 from pygments.util import ClassNotFound
 from pygments.lexer import RegexLexer
-from pygments.token import string_to_tokentype, Generic, Comment, Whitespace
+from pygments.token import string_to_tokentype, Text, Comment, Whitespace
 from pygments.formatters import get_formatter_by_name
 from pygments.styles import get_style_by_name
 
@@ -15,7 +15,7 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
 
         tokens = {
             'root': [
-                (pattern, string_to_tokentype(tokentypes.get(name, Generic))) 
+                (pattern, string_to_tokentype(tokentypes.get(name, Text))) 
                 for name, pattern in _tokens.items()
             ] + [
                 (r'\s', Whitespace), # TODO may not need
@@ -25,31 +25,18 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
     return PygmentsLexer()
 
 def get_pygments_style(style: StyleMeta, user_styles: dict[str, str]):
-    class PygmentsStyle(Style):
-        background_color = style.background_color
-        highlight_color = style.highlight_color
-        
-        line_number_special_color = style.line_number_special_color
-        line_number_special_background_color = \
-            style.line_number_special_background_color
-        
-        line_number_color = style.line_number_color
-        line_number_background_color = style.line_number_background_color
-        web_style_gallery_exclude = style.web_style_gallery_exclude
+    attrs = {
+        attr: getattr(style, attr) 
+        for attr in dir(style) 
+        if not attr.startswith('_')
+    }
 
-
-        styles = style.styles | {
-            string_to_tokentype(tokentype.title()): user_style
-            for tokentype, user_style in user_styles.items()
-        }
-    # for attr in dir(style):
-    #     if not attr.startswith('_'):
-    #         setattr(PygmentsStyle, attr, getattr(style, attr))
-    
-    # PygmentsStyle.styles |= {
-    #         string_to_tokentype(tokentype.title()): user_style
-    #         for tokentype, user_style in user_styles.items()
-    # }
+    attrs['styles'] = attrs.get('styles', {}) | {
+        string_to_tokentype(tokentype.title()): user_style
+        for tokentype, user_style in user_styles.items()
+    }
+    # Create class with type(...) to allow dynamic creation of attrs
+    PygmentsStyle = type('PygmentsStyle', (Style,), attrs)
     return PygmentsStyle
 
 def get_pygments_output(src: str, tokens: dict[str, str], ignore: str, 
