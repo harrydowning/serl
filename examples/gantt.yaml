@@ -109,7 +109,8 @@ code:
 styles:
   Punctuation: "#eb3434"
 
-requirements: PyLaTex==1.4.1
+requirements: | # pip
+  PyLaTex==1.4.1 numpy
 
 # code:
 #   setup: | # python

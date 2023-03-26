@@ -1,4 +1,4 @@
-import sys, os, fileinput, subprocess, pathlib
+import sys, os, fileinput, subprocess, pathlib, re
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -70,15 +70,16 @@ def extension(file: str) -> str:
         file += '.exe'
     return file
 
-def requirements(args: dict, reqs: str):
-    # TODO subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-qqq',  *req])
-    filename = args['--requirements']
-    if reqs == '':
+def requirements(req: str | None):
+    if req == None:
         logger.warning('No requirements specified.')
-    
-    with open(filename, 'w') as file:
-        file.write(reqs)
-    exit(0)
+        return
+    reqs = re.split(r'\n', req.strip())
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', '--no-color',
+                               'install', '-qqq', *reqs])
+    except subprocess.CalledProcessError:
+        exit(1)
 
 def highlight(args: dict, src: str, tokens: dict, ignore: str, 
               tokentypes: dict, user_styles: dict):
@@ -126,7 +127,7 @@ def run(args):
     config = get_config(language)
 
     if args['--requirements']:
-        requirements(args, config.get('requirements', ''))
+        requirements(config.get('requirements', None))
 
     version = config.get('version', None)
     usage = config.get('usage', None)
@@ -210,6 +211,7 @@ def run(args):
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
 
+    exec('import pylatex; print(pylatex)')
     # root_execute = get_execute_func(ast, functionality, global_env)
     # global_env = {
     #     '__name__': lang_name,

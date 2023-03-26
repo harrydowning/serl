@@ -49,7 +49,7 @@ Usage:
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements=FILE   Create pip requirements file.
+    -r, --requirements        Download pip requirements.
     --debug=FILE              Create parser state debug file.
     -H, --highlight=FILE      Create highlighted version of <src> in the format
                               of the extension of FILE.
