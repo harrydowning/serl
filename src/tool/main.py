@@ -162,8 +162,8 @@ def run_command(args):
         src_input = language_args.get('<src>', None)
         if not(isinstance(src_input, str) or src_input == None):
             logger.error('File to be parsed must be specified in usage pattern' 
-                         ' as \'<src>\' (file path), \'[<src>]\' '
-                         '(file path or stdin) or nothing (stdin).')
+                         ' as \'<src>\' (filepath), \'[<src>]\' '
+                         '(filepath or stdin) or nothing (stdin).')
     else:
         src_input = next(iter(inputs), None) # First element if it exists
     
