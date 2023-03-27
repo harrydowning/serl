@@ -26,11 +26,14 @@ Language version shown with :code:`--version` if usage pattern specified.
 Command line usage pattern specified with the `Docopt <http://docopt.org/>`_ language.
 This will be run with :code:`options_first=False` and so options can occur in any order around positional arguments.
 
-The only reserved identifier is the positional argument :code:`<src>`, which is used to locate the language input file:
+The only reserved identifier is the positional argument :code:`<src>`, which is used to locate the language input file.
+It can be used in a usage pattern in the following ways:
 
-- Using :code:`[<src>]` means input will be read from the file :code:`<src>` or from ``stdin`` if the positional argument is not provided.
-- Using :code:`<src>` means input will only be read from the file :code:`<src>` .
-- Not using :code:`<src>` at all means input is always read from ``stdin``.
+- Using :code:`[<src>]`, meaning input will be read from the file :code:`<src>` or from ``stdin`` if the positional argument is not provided.
+- Using :code:`<src>`, meaning input will only be read from the file :code:`<src>`.
+- Not at all, meaning input is always read from ``stdin``.
+
+
 
 :Example:
 
