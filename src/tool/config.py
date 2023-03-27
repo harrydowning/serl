@@ -1,4 +1,4 @@
-import os, sys, re
+import os, re
 import yaml
 import requests
 import tool.logger as logger
@@ -20,24 +20,12 @@ def system_config_languages() -> list[str]:
             if not os.path.isdir(os.path.join(config_dir, filename))]
 
 def system_config_exists(language: str):
-    langs = system_config_languages()
-    return language in langs or language in map(lambda x: x.split('.')[0], langs)
+    return language in system_config_languages()
 
-def get_system_config_text(language: str) -> str | None:
-    config_dir = get_config_dir()
-    
-    for filename in system_config_languages():
-        file_lang = filename.split('.')[0]
-        file_path = os.path.join(config_dir, filename)
-
-        if filename == language or file_lang == language:
-            with open(file_path) as file:
-                return file.read()
-    return None
-
-def get_file_config_text(language: str) -> str | None:
+def get_file_config_text(language: str, prefix: str ='') -> str | None:
+    path = os.path.join(prefix, language)
     try:
-        with open(language) as file:
+        with open(path) as file:
             return file.read()
     except FileNotFoundError:
         return None
@@ -59,7 +47,8 @@ def get_config_text(language: str) -> str | None:
             logger.error(rqe)
     else:
         # File config has higher precedence than system
-        config_text = get_file_config_text(language) or get_system_config_text(language)
+        config_text = get_file_config_text(language) or \
+            get_file_config_text(language, get_config_dir())
         if config_text == None:
             logger.error(f"Could not find system or file config for " 
                          f"\'{language}\'.")

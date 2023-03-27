@@ -20,6 +20,7 @@ Commands:
     link       Create a language symbolic link.
     install    install language to {SYSTEM_CONFIG_DIR} in home directory.
     uninstall  Uninstall language from {SYSTEM_CONFIG_DIR} in home directory.
+    list       list installed languages.
     run        Execute language.
     help       Show help for commands.
 
@@ -35,7 +36,7 @@ Usage:
 CLI_INSTALL = f"""{NAME} install
 
 Usage:
-    install [options] <language> [as <alias>]
+    install [options] <language> [(as <alias>)]
 
 Install Options:
     -U, --upgrade  Override installed language if present.
@@ -45,9 +46,14 @@ Install Options:
 CLI_UNINSTALL = f"""{NAME} uninstall
 
 Usage:
-    uninstall [options] <language>
+    uninstall [options] [<language>...]
 
 {OPTIONS}"""
+
+CLI_LIST = f"""{NAME} list
+
+Usage:
+    list"""
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements        Install pip requirements.
@@ -88,6 +94,7 @@ CLI_COMMANDS = {
     'link': CLI_LINK,
     'install': CLI_INSTALL,
     'uninstall': CLI_UNINSTALL,
+    'list': CLI_LIST,
     'run': CLI_RUN,
     'help': CLI_HELP
 }

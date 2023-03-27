@@ -6,6 +6,8 @@ Intro
 .. note ::
   A note on verbose regex
 
+specify that manually created environments should be with builtin venv
+
 Version
 -------
 

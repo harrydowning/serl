@@ -109,24 +109,25 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
         file.write(highlighted_src)
     exit(0)
 
-def link(args):
-    lang_name = utils.lang_name(args['<language>'])
+def link_command(args):
+    language = args['<language>']
     dir = args['<dir>'] or ''
     
     src = extension(sys.argv[0])
-    dst = extension(os.path.join(dir, f'{lang_name}'))
+    dst = extension(os.path.join(dir, language))
 
-    if not system_config_exists(lang_name):
-        logger.warning(f'No system config for language \'{lang_name}\'')
+    if not system_config_exists(language):
+        logger.warning(f'No system config for language \'{language}\'')
 
     try:
         os.symlink(src, dst)
+        print(f'Successfully linked \'{language}\'.')
     except Exception as e:
         logger.error(f'Symbolic link error: {e}')
 
-def run(args):
+def run_command(args):
     language = args['<language>']
-    lang_name = utils.lang_name(language)
+    lang_name = utils.get_language_name(language)
     config = get_config(language)
 
     env = config.get('environment', None)
@@ -288,14 +289,14 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             return env
     return execute
 
-def install(args):
+def install_command(args):
     language = args['<language>']
-    alias = args['<alias>'] or utils.lang_name(language)
+    alias = args['<alias>'] or utils.get_language_name(language)
     upgrade = args['--upgrade']
     
     config_text = get_config_text(language)
     config_dir = get_config_dir()
-    filename = os.path.join(config_dir, f'{alias}.yaml')
+    filename = os.path.join(config_dir, alias)
     
     if os.path.isfile(filename) and not upgrade:
         logger.error(f'Language \'{alias}\' already exists. '
@@ -305,19 +306,23 @@ def install(args):
         file.write(config_text)
     print(f'Successfully installed \'{alias}\'.')
 
-def uninstall(args: dict):
-    language = args['<language>']
-    lang_name = utils.lang_name(language)
-    config_dir = get_config_dir()
-    for filename in system_config_languages():
-        file_lang = filename.split('.')[0]
-        file_path = os.path.join(config_dir, filename)
+def uninstall_command(args: dict):
+    languages = args['<language>']
+    for language in languages:
+        path = os.path.join(get_config_dir(), language)
+        try:
+            os.remove(path)
+            print(f'Successfully uninstalled \'{language}\'.')
+        except FileNotFoundError:
+            logger.warning(f'Skipping \'{language}\' as it is not already '
+                           f'installed.')  
 
-        if filename == language or file_lang == language:
-            os.remove(file_path)
-            print(f'Successfully uninstalled \'{lang_name}\'.')
-            return
-    logger.warning(f'Skipping, \'{lang_name}\' not already installed.')
+def list_command(args):
+    languages = system_config_languages()
+    if languages == []:
+        print('No languages installed.')
+    else:
+        print(*languages, sep='\n')
 
 def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language
@@ -330,7 +335,7 @@ def get_symlink_args(filename, version) -> dict:
         print(pathlib.Path(filename).resolve())
         exit(0)
 
-    args['<language>'] = utils.lang_name(filename)
+    args['<language>'] = utils.get_language_name(filename)
     base_args = args | {'<command>': 'run'}
     return base_args, args
 
@@ -361,7 +366,9 @@ def main():
     else:
         base_args, args = get_args(version)
 
-    logger.verbose = base_args['--verbose'] or args['--verbose']
-    logger.strict = base_args['--strict'] or args['--strict']
+    logger.verbose = base_args.get('--verbose', False) or \
+        args.get('--verbose', False)
+    logger.strict = base_args.get('--strict', False) or \
+        args.get('--strict', False)
 
-    globals()[base_args['<command>']](args)
+    globals()[f"{base_args['<command>']}_command"](args)

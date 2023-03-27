@@ -53,7 +53,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
 
     sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)
     debug = bool(debug_file)
-    tabmodule = f'tabmodule_{lang_name}'
+    tabmodule = f'tabmodule_{utils.get_valid_identifier(lang_name)}'
 
     options = {
         'debug': debug,
