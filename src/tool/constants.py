@@ -73,7 +73,7 @@ Usage:
     (language) [options] -- [<args>...]
 
 Symlink Options:
-    --where  Show symbolic link src location.
+    --where  Show symlink src location.
 
 {RUN_OPTIONS}
 

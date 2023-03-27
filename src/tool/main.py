@@ -1,4 +1,4 @@
-import sys, os, fileinput, subprocess, pathlib, re, venv
+import sys, os, fileinput, subprocess, pathlib, re, venv, site
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -126,14 +126,24 @@ def run(args):
     lang_name = utils.lang_name(language)
     config = get_config(language)
 
-    # env = config.get('environment', None)
-    # if env:
-    #     config_env_dir = get_config_env_dir()
-    #     env_name = os.path.join(config_env_dir, f'venv-{env}')
-    #     venv.create(env_name, with_pip=True)
-    #     context = venv.EnvBuilder().ensure_directories(env_name)
+    env = config.get('environment', None)
+    env_created = False
+    if env:
+        for sitepackage in site.getsitepackages():
+            sys.path.remove(sitepackage)
+        
+        env_name = os.path.join(get_config_env_dir(), f'venv-{env}')
+        if not os.path.exists(env_name):
+            venv.create(env_name, with_pip=True)
+            env_created = True
+        
+        for sitepackage in site.getsitepackages([env_name]):
+            sys.path.append(sitepackage)
+        
+        context = venv.EnvBuilder().ensure_directories(env_name)
+        sys.executable = context.env_exe
 
-    if args['--requirements']:
+    if args['--requirements'] or env_created:
         requirements(config.get('requirements', None))
 
     version = config.get('version', None)
@@ -217,6 +227,9 @@ def run(args):
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
+    
+    # Remove module cache to allow for correct user import
+    sys.modules.clear() # TODO will deleting everything cause any issues?
 
     # root_execute = get_execute_func(ast, functionality, global_env)
     # global_env = {
