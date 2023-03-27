@@ -49,6 +49,12 @@ grammar:
     - text | === <text>
 
 code:
+  start: | # py
+    import networkx
+    import pylatex
+    print(pylatex)
+    print(networkx)
+    print(networkx.__version__)
   main: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
@@ -109,9 +115,10 @@ code:
 styles:
   Punctuation: "#eb3434"
 
-# environment: gantt
+environment: gantt
 requirements: | # pip
   PyLaTex==1.4.1
+  networkx==2.8
 
 # code:
 #   setup: | # python

@@ -1,4 +1,7 @@
-import sys, os, fileinput, subprocess, pathlib, re, venv, site
+import sys
+init_modules = sys.modules.copy().keys()
+
+import os, fileinput, subprocess, pathlib, re, venv, site
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -229,7 +232,9 @@ def run(args):
     functionality = Functionality(code, commands, grammar_map)
     
     # Remove module cache to allow for correct user import
-    sys.modules.clear() # TODO will deleting everything cause any issues?
+    for module in sys.modules.copy().keys():
+        if not module in init_modules:
+            del sys.modules[module]
 
     # root_execute = get_execute_func(ast, functionality, global_env)
     # global_env = {
