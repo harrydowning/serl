@@ -56,13 +56,13 @@ Usage:
     list"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements        Install pip requirements.
-    --debug=FILE              Create parser state debug file.
-    -H, --highlight=FILE      Create highlighted version of <src> in the format
-                              of the extension of FILE.
-    -S, --style=STYLE         Highlight style.
-    -F, --format=FORMAT       Override file extension format.
-    --format-options=OPTIONS  Options supplied to formatter."""
+    -r, --requirements            Install pip requirements.
+    --debug=FILE                  Create parser state debug file.
+    -H, --highlight=FILE          Create highlighted version of <src> in the 
+                                  format of the extension of FILE.
+    -f, --format=FORMAT           Override file extension format.
+    -O, --format-options=OPTIONS  Options supplied to formatter.
+    --style-defs=FILE             Output highlight style defs to FILE."""
 
 CLI_RUN = f"""{NAME} run
 

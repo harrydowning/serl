@@ -8,7 +8,7 @@ from tool.lexer import build_lexer
 from tool.parser import build_parser, AST
 import tool.utils as utils
 import tool.logger as logger
-from tool.highlight import get_pygments_output
+from tool.highlight import get_pygments_output, parse_key_value
 from tool.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from tool.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
@@ -87,19 +87,12 @@ def requirements(req: str | None):
 def highlight(args: dict, src: str, tokens: dict, ignore: str, 
               tokentypes: dict, user_styles: dict):
     filename = args['--highlight']
-    style_name = args['--style'] or 'default'
-    format = args['--format'] or filename.split('.')[-1]
-    format_options_str = re.sub(r'\s', '', args['--format-options'] or '') 
-    format_options = {
-        name: eval(value)
-        for option in args['--format-options'].split(',')
-        for name, value in option.split('=')
-    }
-
-    highlighted_src = get_pygments_output(src, tokens, ignore, tokentypes, 
-                                         user_styles, style_name, format, 
-                                         format_options)
-    
+    format = args['--format'] or os.path.splitext(filename)[1][1:]
+    format_options = parse_key_value(args['--format-options'] or '')
+        
+    output = get_pygments_output(src, tokens, ignore, tokentypes, user_styles, 
+                                 format, format_options)
+    highlighted_src, style_defs = output
     if type(highlighted_src) == bytes:
         mode = 'wb'
     else:
@@ -107,6 +100,10 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
 
     with open(filename, mode) as file:
         file.write(highlighted_src)
+    
+    if args['--style-defs']:
+        with open(args['--style-defs'], 'w') as file:
+            file.write(style_defs)
     exit(0)
 
 def link_command(args):
