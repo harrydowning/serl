@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, copy
 import pytest
 import tool.main as main
 from test_utils import tokens, token_split, exp_tokens
@@ -10,47 +10,30 @@ def test_token_expansion():
     # ensure order is also preserved
     assert list(actual.keys()) == list(expected.keys())
 
-# TODO redo command line tests
-# base_args = {
-#     '--debug': False,
-#     '--help': False,
-#     '--requirements': None,
-#     '--strict': False,
-#     '--version': False,
-#     '<dir>': None,
-#     '<input>': [],
-#     '<language>': '',
-#     'link': False
-# }
+file = 'path/to/file'
+@pytest.mark.parametrize('file, platform, expected', [
+    (file, 'posix', file), (file, 'nt', file + '.exe')
+])
+def test_extension(file, platform, expected):
+    tmp = os.name
+    os.name = platform
+    actual = main.extension(file)
+    assert actual == expected
+    os.name = tmp
 
-# link_args = {
-#     '--': True,
-#     '--debug': False,
-#     '--help': False,
-#     '--requirements': None,
-#     '--strict': False,
-#     '--version': False,
-#     '<input>': [],
-#     '<language>': ''
-# }
+@pytest.mark.parametrize('argv,  base_args_expected, args_expected', [
+    (['link/for/lang1'], {'<command>': 'run'}, {'<language>': 'lang1'}),
+    (['link/for/lang1', '--verbose', '--'], {}, {'--verbose': True, '<args>': []}),
+    (['link/for/lang1', '--verbose'],  {}, {'--verbose': False, '<args>': ['--verbose']})
+])
+def test_get_symlink_args(argv, base_args_expected, args_expected):
+    sys.argv = argv
+    filename = main.extension(argv[0])
+    version = '0.0.1'
+    base_args_actual, args_actual = main.get_symlink_args(filename, version)
 
-# args_data = [
-#     (['path/to/link1', '-o', 'example.txt'], True, 
-#      link_args | {'<language>': 'link1', '<input>': ['-o', 'example.txt']}),
-#     (['path/to/link2', '--debug', '--', 'example.txt'], True, 
-#      link_args | {'<language>': 'link2', '--debug': True, 
-#                   '<input>': ['example.txt']}),
-#     (['path/to/tool', '--strict', 'lang1', '--debug', 'example.txt'], False,
-#      base_args | {'<language>': 'lang1', '--strict': True,
-#                   '<input>': ['--debug', 'example.txt']}),
-#     (['path/to/tool', 'link', 'lang1', 'path/to/dir'], False,
-#      base_args | {'<language>': 'lang1', '<dir>': 'path/to/dir', 
-#                   'link': True}),
-# ]
-
-# @pytest.mark.parametrize("args, is_link, expected", args_data)
-# def test_get_args(args, is_link, expected):
-#     os.path.islink = lambda x: is_link
-#     sys.argv = args
-#     actual = main.get_args()
-#     assert actual == expected
+    for k, v in base_args_expected.items():
+        assert base_args_actual[k] == v
+    
+    for k, v in args_expected.items():
+        assert args_actual[k] == v

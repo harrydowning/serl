@@ -333,7 +333,7 @@ def get_symlink_args(filename, version) -> dict:
         exit(0)
 
     args['<language>'] = utils.get_language_name(filename)
-    base_args = args | {'<command>': 'run'}
+    base_args = {'<command>': 'run'}
     return base_args, args
 
 def get_args(version):
