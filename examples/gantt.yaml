@@ -106,13 +106,14 @@ code:
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
 
 tokentypes:
+  (?i)background: Punctuation
   text: Literal.String
   ===: Literal
   "<": Punctuation
   ">": Punctuation
 
 styles:
-  Punctuation: "ansiblue"
+  Punctuation: "ansired"
 
 environment: avenv-gantt
 requirements: | # pip

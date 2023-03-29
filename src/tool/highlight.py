@@ -15,8 +15,11 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
 
         tokens = {
             'root': [
-                (pattern, string_to_tokentype(tokentypes.get(name, Text))) 
-                for name, pattern in _tokens.items()
+                (_tokens.get(name_or_pattern, name_or_pattern), 
+                 string_to_tokentype(ttype)) 
+                for name_or_pattern, ttype in tokentypes.items()
+            ] + [
+                (pattern, Text) for name, pattern in _tokens.items()
             ] + [
                 (r'\s', Whitespace), # TODO may not need
                 (ignore, Comment)

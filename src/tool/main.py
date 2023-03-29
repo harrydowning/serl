@@ -135,7 +135,8 @@ def run_command(args):
         
         env_name = os.path.join(get_config_env_dir(), env)
         if not os.path.exists(env_name):
-            logger.info(f'Creating virtual environment \'{env}\'.')
+            logger.info(f'Creating virtual environment \'{env}\'.', 
+                        important=True)
             venv.create(env_name, with_pip=True)
             env_created = True
         
@@ -146,7 +147,7 @@ def run_command(args):
         sys.executable = context.env_exe
 
     if args['--requirements'] or env_created:
-        logger.info(f'Installing requirements.')
+        logger.info(f'Installing requirements.', important=True)
         requirements(config.get('requirements', None))
 
     version = config.get('version', None)
