@@ -14,13 +14,12 @@ usage: |
     --pdf           Output as pdf.
 
 meta:
-  tokens:
-    ref: null
   grammar:
     permissive: true
 
 tokens:
   text: ([\w ]+)
+  title: some text and more
   -----: ---+
   "|": \|
   ===: ([ ]* =+)
@@ -115,7 +114,7 @@ tokentypes:
 styles:
   Punctuation: "ansiblue"
 
-# environment: gantt
+environment: avenv-gantt
 requirements: | # pip
   PyLaTex==1.4.1
   networkx==2.8

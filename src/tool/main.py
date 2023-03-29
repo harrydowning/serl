@@ -1,7 +1,7 @@
 import sys
 init_modules = sys.modules.copy().keys()
 
-import os, fileinput, subprocess, pathlib, re, venv, site
+import os, fileinput, subprocess, pathlib, re, venv, site, shutil
 from docopt import docopt
 import networkx as nx
 from tool.lexer import build_lexer
@@ -133,8 +133,9 @@ def run_command(args):
         for sitepackage in site.getsitepackages():
             sys.path.remove(sitepackage)
         
-        env_name = os.path.join(get_config_env_dir(), f'venv-{env}')
+        env_name = os.path.join(get_config_env_dir(), env)
         if not os.path.exists(env_name):
+            logger.info(f'Creating virtual environment \'{env}\'.')
             venv.create(env_name, with_pip=True)
             env_created = True
         
@@ -145,6 +146,7 @@ def run_command(args):
         sys.executable = context.env_exe
 
     if args['--requirements'] or env_created:
+        logger.info(f'Installing requirements.')
         requirements(config.get('requirements', None))
 
     version = config.get('version', None)
@@ -176,6 +178,7 @@ def run_command(args):
     using_regex = meta_tokens.get('regex', False)
     ignore = meta_tokens.get('ignore', '.')
     
+    tokens_copy = tokens.copy()
     if ref != None:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
@@ -183,10 +186,10 @@ def run_command(args):
                     f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
         tokens = token_expansion(tokens, ref.split('token'))
     
-    logger.info('===== TOKENS =====')
-    for token, pattern in tokens.items():
-        logger.info(f'{token}: \'{pattern.strip()}\'')
-    logger.info('===== TOKENS =====')
+    for token in tokens_copy:
+        tb, ta = tokens_copy[token].strip(), tokens[token].strip()
+        if tb != ta:
+            logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
     sync = config.get('sync', [])
@@ -305,21 +308,32 @@ def install_command(args):
 
 def uninstall_command(args: dict):
     languages = args['<language>']
-    for language in languages:
-        path = os.path.join(get_config_dir(), language)
+    envs = args['<env>']
+    remove_venv = args['--venv']
+    remove, files, prefix = os.remove, languages, get_config_dir()
+    if remove_venv:
+        remove, files, prefix = shutil.rmtree, envs, get_config_env_dir()
+    
+    for file in files:
+        path = os.path.join(prefix, file)
         try:
-            os.remove(path)
-            print(f'Successfully uninstalled \'{language}\'.')
+            remove(path)
+            print(f'Successfully uninstalled \'{file}\'.')
         except FileNotFoundError:
-            logger.warning(f'Skipping \'{language}\' as it is not already '
+            logger.warning(f'Skipping \'{file}\' as it is not already '
                            f'installed.')  
 
 def list_command(args):
     languages = system_config_languages()
-    if languages == []:
-        print('No languages installed.')
+    envs = os.listdir(get_config_env_dir())
+    files, name = languages, 'languages'
+    if args['--venv']:
+        files, name = envs, 'environments'
+    
+    if files == []:
+        print(f'No {name} installed.')
     else:
-        print(*languages, sep='\n')
+        print(*files, sep='\n')
 
 def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language

@@ -47,13 +47,19 @@ CLI_UNINSTALL = f"""{NAME} uninstall
 
 Usage:
     uninstall [options] [<language>...]
+    uninstall [options] --venv [<env>...]
 
 {OPTIONS}"""
 
 CLI_LIST = f"""{NAME} list
 
 Usage:
-    list"""
+    list [options]
+
+List Options:
+    --venv  List installed virtual environments.
+
+{OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements            Install pip requirements.
