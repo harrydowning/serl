@@ -1,5 +1,5 @@
 import yaml
-import ysl.schema as schema
+import serl.schema as schema
 import pytest
 
 test_data = [

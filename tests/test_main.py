@@ -1,6 +1,6 @@
 import sys, os, copy
 import pytest
-import ysl.main as main
+import serl.main as main
 from test_utils import tokens, token_split, exp_tokens
 
 def test_token_expansion():

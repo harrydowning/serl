@@ -1,4 +1,4 @@
-import ysl.highlight as highlight
+import serl.highlight as highlight
 import pytest
 
 test_data = [

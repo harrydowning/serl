@@ -1,4 +1,4 @@
-from ysl.main import main
+from serl.main import main
 
 if __name__ == '__main__':
     exit(main())

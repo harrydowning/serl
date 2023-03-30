@@ -4,14 +4,14 @@ init_modules = sys.modules.copy().keys()
 import os, fileinput, subprocess, pathlib, re, venv, site, shutil
 from docopt import docopt
 import networkx as nx
-from ysl.lexer import build_lexer
-from ysl.parser import build_parser, AST
-import ysl.utils as utils
-import ysl.logger as logger
-from ysl.highlight import get_pygments_output, parse_key_value
-from ysl.config import get_config, get_config_dir, get_config_env_dir, \
+from serl.lexer import build_lexer
+from serl.parser import build_parser, AST
+import serl.utils as utils
+import serl.logger as logger
+from serl.highlight import get_pygments_output, parse_key_value
+from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
-from ysl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
+from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
     DEFAULT_REF, RETURN_VAR
 
 class Functionality():
