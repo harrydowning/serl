@@ -1,26 +1,13 @@
-# COMP3200 Project
-University of Southampton 3YP project.
+# Serialized Language (serl)
+Serl is a command line tool used to manage and execute complete languages serialized with YAML.
 
-## Workflow
-### Build
-```
-$ pip install .
-```
-### Run
-```
-$ py -m tool --help
-$ tool --help
-```
+### Development Workflow
+| Command | Description |
+| ------- | ----------- |
+| `pip install .` | Build/install locally |
+| `serl help` | Show the tool command line help screen |
+| `pytest tests` or `test.bat` | Run automated test suite |
+| `py -m build` | Build distribution |
+| `py -m twine upload dist/*` | Upload distribution |
+| `sphinx-build -b html docs/source/ docs/build/html` | Build documentation |
 
-### Test
-```
-$ pytest tests
-```
-### Build dist
-
-### Publish dist
-
-### Build docs
-```
-$ sphinx-build -b html docs/source/ docs/build/html
-```
