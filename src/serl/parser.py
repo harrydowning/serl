@@ -3,9 +3,9 @@ import serl.logger as logger
 import serl.utils as utils
 import ply.yacc as yacc
 
-class AST(tuple):
+class SerlAST(tuple):
     def __new__(cls, name: str, pos: int, value):
-        return super(AST, cls).__new__(cls, (name, pos, value))
+        return super(SerlAST, cls).__new__(cls, (name, pos, value))
 
 def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
     symbols = prod[2].split(' ')
@@ -13,7 +13,7 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        p[0] = AST(
+        p[0] = SerlAST(
             flipped_symbol_map[prod[0]], 
             prod[1], 
             {flipped_symbol_map[symbol]: [p[i] for i in idxs] 

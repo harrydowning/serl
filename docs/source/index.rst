@@ -3,11 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Tool's documentation!
+Overview
 ================================
 
-.. note ::
-  some note about this being the tools beta and its interface could change
+Serl is a command line tool used to manage and execute programming languages serialized with YAML.
+The format of these language is specified in the :ref:`lang-config` section.
+
+.. .. note ::
+..   At the moment the tool is in an early stage of its development and so its interface may change.
 
 .. toctree::
   :caption: Home

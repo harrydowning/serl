@@ -63,7 +63,7 @@ def parse_key_value(input: str) -> dict:
             continue
         value %= str_vals
         try:
-            result[name] = eval(value)
+            result[name] = eval(value, {}, {})
         except NameError:
             result[name] = value
         except Exception as e:

@@ -1,11 +1,11 @@
 import sys
 init_modules = sys.modules.copy().keys()
 
-import os, fileinput, subprocess, pathlib, re, venv, site, shutil
+import os, fileinput, subprocess, pathlib, re, venv, site, shutil, ast
 from docopt import docopt
 import networkx as nx
 from serl.lexer import build_lexer
-from serl.parser import build_parser, AST
+from serl.parser import build_parser, SerlAST
 import serl.utils as utils
 import serl.logger as logger
 from serl.highlight import get_pygments_output, parse_key_value
@@ -228,7 +228,7 @@ def run_command(args):
     #         break      # No more input
     #     print(tok)
 
-    # ast = parser.parse(src, lexer=lexer)
+    # serl_ast = parser.parse(src, lexer=lexer)
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
@@ -242,30 +242,44 @@ def run_command(args):
     # global_env = {
     #     '__name__': lang_name,
     #     'args': language_args,
-    #     ast[0]: root_execute
+    #     serl_ast[0]: root_execute
     # }
 
     # if functionality.main:
-    #     main = [cd for cd in functionality.main if cd != None]
-    #     for cd in main: 
-    #         exec(cd, global_env)
+    #     main = functionality.main[0]
+    #     result = exec_and_eval(main, global_env)
+    #     print(result)
+    #     print(global_env.keys())
     # else:
-    #     global_env[RETURN_VAR] = root_execute()
+    #     result = root_execute()
     
-    # result = global_env.get(RETURN_VAR, None)
     # if result:
     #     print(result, end='')
 
-def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
+def exec_and_eval(code, global_env, local_env=None):
+    code_ast = ast.parse(code)
+
+    try:
+        last_stmt = code_ast.body.pop()
+        expr = ast.Expression(last_stmt.value)
+    except AttributeError:
+        return exec(code, global_env, local_env)
+    except IndexError:
+        return None
+
+    exec(compile(code_ast, '<string>', mode='exec'), global_env, local_env)
+    return eval(compile(expr, '<string>', mode='eval'), global_env, local_env)
+
+def get_execute_func(ast: SerlAST, functionality: Functionality, global_env: dict):
     name, i, value = ast
     env = {}
     for k, v in value.items():
         if isinstance(v, list):
             env[k] = [get_execute_func(e, functionality, global_env) 
-                      if isinstance(e, AST) else e for e in v]
+                      if isinstance(e, SerlAST) else e for e in v]
         else:
             exec_func = get_execute_func(v, functionality, global_env)
-            env[k] = exec_func if isinstance(v, AST) else v
+            env[k] = exec_func if isinstance(v, SerlAST) else v
     
     active = True
     def execute(**local_env):
@@ -275,16 +289,15 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             return None
         active = False
 
-        cd = functionality.get_code(name, i)
-        cm = functionality.get_command(name, i)
-        if cd:
+        code = functionality.get_code(name, i)
+        command = functionality.get_command(name, i)
+        if code:
             local_env |= env
-            exec(cd, global_env, local_env)
-            return local_env.get(RETURN_VAR, None)
-        elif cm:
+            return exec_and_eval(code, global_env, local_env)
+        elif command:
             # TODO add global and local vars to env TODO how to invoke code/command of child nonterminals
             env = os.environ.copy() | {}
-            return subprocess.run(cm, capture_output=True, text=True, 
+            return subprocess.run(command, capture_output=True, text=True, 
                                   shell=True, env=env, check=True).stdout
         else:
             return env

@@ -6,12 +6,12 @@ usage: |
     gantt [options] [<src>]
 
   Options:
-    -h --help       Show this screen.
-    -v --version    Show version.
-    -o --ouputFILE  pecify output file. If no file is specified output is sent 
-                    to stdout.
-    --doc           Create as full document.
-    --pdf           Output as pdf.
+    -h --help        Show this screen.
+    -v --version     Show version.
+    -o --ouput=FILE  pecify output file. If no file is specified output is sent 
+                     to stdout.
+    --doc            Create as full document.
+    --pdf            Output as pdf.
 
 meta:
   grammar:
@@ -49,11 +49,7 @@ grammar:
 
 code:
   start: | # py
-    import networkx
-    import pylatex
-    print(pylatex)
-    print(networkx)
-    print(networkx.__version__)
+    50 + 1234
   main: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
@@ -70,7 +66,7 @@ code:
     def get_bar(text, bar, milestone=None):
       return (text, bar.find('='), len(bar), milestone)
     
-    _ = gantt()
+    gantt()
   
   gantt: | # py
     headings, rows = headings(), rows()
@@ -93,17 +89,17 @@ code:
         gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
       gantt.append(NoEscape(r'\\'))
 
-    _ = ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
+    ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
   headings:
-    - _ = [text[1]] + headings()
-    - _ = [text[1]]
+    - "[text[1]] + headings()"
+    - "[text[1]]"
   rows:
-    - _ = [row()] + rows()
-    - _ = [row()]
+    - "[row()] + rows()"
+    - "[row()]"
   row:
-    - _ = get_bar(text[1], vars()['==='])
-    - _ = get_bar(text[1], vars()['==='], '')
-    - _ = get_bar(text[0][1], vars()['==='], text[1][1])
+    - get_bar(text[1], vars()['==='])
+    - get_bar(text[1], vars()['==='], '')
+    - get_bar(text[0][1], vars()['==='], text[1][1])
 
 tokentypes:
   (?i)background: Punctuation
@@ -115,7 +111,7 @@ tokentypes:
 styles:
   Punctuation: "ansired"
 
-environment: avenv-gantt
+# environment: avenv-gantt
 requirements: | # pip
   PyLaTex==1.4.1
   networkx==2.8
