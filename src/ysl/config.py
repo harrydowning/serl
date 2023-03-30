@@ -1,9 +1,9 @@
 import os, re
 import yaml
 import requests
-import tool.logger as logger
-from tool.constants import SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_ENV_DIR
-from tool.schema import validate
+import ysl.logger as logger
+from ysl.constants import SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_ENV_DIR
+from ysl.schema import validate
 
 def get_config_dir(path=[]) -> str:
     home = os.path.expanduser('~')

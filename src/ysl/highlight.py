@@ -1,5 +1,5 @@
 import re
-import tool.logger as logger
+import ysl.logger as logger
 import pygments
 from pygments.style import Style, StyleMeta
 from pygments.util import ClassNotFound

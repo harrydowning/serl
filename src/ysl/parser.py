@@ -1,6 +1,6 @@
 import itertools, re, pathlib, os
-import tool.logger as logger
-import tool.utils as utils
+import ysl.logger as logger
+import ysl.utils as utils
 import ply.yacc as yacc
 
 class AST(tuple):

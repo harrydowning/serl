@@ -1,4 +1,4 @@
-from tool.main import main
+from ysl.main import main
 
 if __name__ == '__main__':
     exit(main())

@@ -1,6 +1,6 @@
 import logging
 import re
-from tool.constants import PLY_ERR_MSG
+from ysl.constants import PLY_ERR_MSG
 
 verbose = False
 strict = False
