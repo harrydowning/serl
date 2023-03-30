@@ -2,12 +2,13 @@ NAME = __package__
 VERSION = '0.0.1'
 
 SYSTEM_CONFIG_DIR = f'.{NAME}'
+SYSTEM_CONFIG_ENV_DIR = 'environments'
 RETURN_VAR = '_'
 
 OPTIONS = """Options:
     -h, --help     Show this screen.
     -V, --version  Show version.
-    -v, --verbose  Provide more ouput.
+    -v, --verbose  Provide more output.
     --strict       Run in strict mode, stopping execution on warnings."""
 
 CLI = f"""{NAME}
@@ -19,8 +20,9 @@ Commands:
     link       Create a language symbolic link.
     install    install language to {SYSTEM_CONFIG_DIR} in home directory.
     uninstall  Uninstall language from {SYSTEM_CONFIG_DIR} in home directory.
+    list       list installed languages.
     run        Execute language.
-    help       Show command help screen. If non specified show this screen.
+    help       Show help for commands.
 
 {OPTIONS}"""
 
@@ -34,7 +36,7 @@ Usage:
 CLI_INSTALL = f"""{NAME} install
 
 Usage:
-    install [options] <language> [as <alias>]
+    install [options] <language> [(as <alias>)]
 
 Install Options:
     -U, --upgrade  Override installed language if present.
@@ -44,18 +46,29 @@ Install Options:
 CLI_UNINSTALL = f"""{NAME} uninstall
 
 Usage:
-    uninstall [options] <language>
+    uninstall [options] [<language>...]
+    uninstall [options] --venv [<env>...]
+
+{OPTIONS}"""
+
+CLI_LIST = f"""{NAME} list
+
+Usage:
+    list [options]
+
+List Options:
+    --venv  List installed virtual environments.
 
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
-    -r, --requirements=FILE  Create pip requirements file.
-    --debug=FILE             Create parser state debug file.
-    -H, --highlight=FILE     Create highlighted version of <src> in the format
-                             of the file extension.
-    -s, --style=STYLE        Highlight style.
-    --nowrap                 Don't wrap tokens in highlighted output.
-    --linenos                Display line number in highlighted output."""
+    -r, --requirements            Install pip requirements.
+    --debug=FILE                  Create parser state debug file.
+    -H, --highlight=FILE          Create highlighted version of <src> in the 
+                                  format of the extension of FILE.
+    -f, --format=FORMAT           Override file extension format.
+    -O, --format-options=OPTIONS  Options supplied to formatter.
+    --style-defs=FILE             Output highlight style defs to FILE."""
 
 CLI_RUN = f"""{NAME} run
 
@@ -71,6 +84,9 @@ SYMLINK_CLI = f"""{NAME}
 Usage:
     (language) [options] -- [<args>...]
 
+Symlink Options:
+    --where  Show symlink src location.
+
 {RUN_OPTIONS}
 
 {OPTIONS}"""
@@ -84,6 +100,7 @@ CLI_COMMANDS = {
     'link': CLI_LINK,
     'install': CLI_INSTALL,
     'uninstall': CLI_UNINSTALL,
+    'list': CLI_LIST,
     'run': CLI_RUN,
     'help': CLI_HELP
 }

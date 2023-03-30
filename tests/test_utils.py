@@ -1,4 +1,5 @@
-import tool.utils as utils
+import ysl.utils as utils
+import pytest
 
 token_split = ['@', '']
 
@@ -134,3 +135,27 @@ def test_get_dups():
     actual = utils.get_dups(code, commands)
     expected = [('p2', 1), ('p4', 0)]
     assert sorted(actual) == sorted(expected)
+
+def test_flip_dict():
+    expected = utils.flip_dict({'key_str': 'value', 'key_num': 1})
+    actual = {'value': 'key_str', 1: 'key_num'}
+    assert actual == expected
+
+@pytest.mark.parametrize('language, expected', [
+    ('lang1.yaml', 'lang1'), ('lang2.yaml.yaml', 'lang2.yaml')
+])
+def test_get_language_name(language, expected):
+    actual = utils.get_language_name(language)
+    assert actual == expected
+
+def test_filter_dict_keys():
+    actual = utils.filter_dict_keys({'a': 1, 'b': 2, 'c': 3}, ['a', 'c'])
+    expected = {'a': 1, 'c': 3}
+    assert actual == expected
+
+@pytest.mark.parametrize('string, expected', [
+    ('not-valid', 'notvalid'), ('90notvalid.txt', 'notvalidtxt')
+])
+def test_get_valid_identifier(string, expected):
+    actual = utils.get_valid_identifier(string)
+    assert actual == expected

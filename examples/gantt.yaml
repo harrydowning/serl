@@ -14,13 +14,12 @@ usage: |
     --pdf           Output as pdf.
 
 meta:
-  tokens:
-    ref: null
   grammar:
     permissive: true
 
 tokens:
   text: ([\w ]+)
+  title: some text and more
   -----: ---+
   "|": \|
   ===: ([ ]* =+)
@@ -49,6 +48,12 @@ grammar:
     - text | === <text>
 
 code:
+  start: | # py
+    import networkx
+    import pylatex
+    print(pylatex)
+    print(networkx)
+    print(networkx.__version__)
   main: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
@@ -101,15 +106,19 @@ code:
     - _ = get_bar(text[0][1], vars()['==='], text[1][1])
 
 tokentypes:
+  (?i)background: Punctuation
   text: Literal.String
   ===: Literal
   "<": Punctuation
   ">": Punctuation
 
 styles:
-  Punctuation: "#eb3434"
+  Punctuation: "ansired"
 
-requirements: PyLaTex==1.4.1
+environment: avenv-gantt
+requirements: | # pip
+  PyLaTex==1.4.1
+  networkx==2.8
 
 # code:
 #   setup: | # python

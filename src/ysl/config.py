@@ -1,38 +1,31 @@
-import os, sys, re
+import os, re
 import yaml
 import requests
-import tool.logger as logger
-from tool.constants import SYSTEM_CONFIG_DIR
-from tool.schema import validate
+import ysl.logger as logger
+from ysl.constants import SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_ENV_DIR
+from ysl.schema import validate
 
-def get_home_dir() -> str:
+def get_config_dir(path=[]) -> str:
     home = os.path.expanduser('~')
-    home_dir = os.path.join(home, SYSTEM_CONFIG_DIR)
-    os.makedirs(home_dir, exist_ok=True)
-    return home_dir
+    config_dir = os.path.join(home, SYSTEM_CONFIG_DIR, *path)
+    os.makedirs(config_dir, exist_ok=True)
+    return config_dir
+
+def get_config_env_dir() -> str:
+    return get_config_dir([SYSTEM_CONFIG_ENV_DIR])
+
+def system_config_languages() -> list[str]:
+    config_dir = get_config_dir()
+    return [filename for filename in os.listdir(config_dir) 
+            if not os.path.isdir(os.path.join(config_dir, filename))]
 
 def system_config_exists(language: str):
-    home_dir = get_home_dir()
-    listdir = os.listdir(home_dir)
-    return language in listdir or language in map(lambda x: x.split('.')[0], listdir)
+    return language in system_config_languages()
 
-def get_system_config_text(language: str) -> str | None:
-    home_dir = get_home_dir()
-    # Allow Python files with functionality to be shared across languages
-    sys.path.append(home_dir)
-    
-    for filename in os.listdir(home_dir):
-        file_lang = filename.split('.')[0]
-        file_path = os.path.join(home_dir, filename)
-
-        if filename == language or file_lang == language:
-            with open(file_path) as file:
-                return file.read()
-    return None
-
-def get_file_config_text(language: str) -> str | None:
+def get_file_config_text(language: str, prefix: str ='') -> str | None:
+    path = os.path.join(prefix, language)
     try:
-        with open(language) as file:
+        with open(path) as file:
             return file.read()
     except FileNotFoundError:
         return None
@@ -54,7 +47,8 @@ def get_config_text(language: str) -> str | None:
             logger.error(rqe)
     else:
         # File config has higher precedence than system
-        config_text = get_file_config_text(language) or get_system_config_text(language)
+        config_text = get_file_config_text(language) or \
+            get_file_config_text(language, get_config_dir())
         if config_text == None:
             logger.error(f"Could not find system or file config for " 
                          f"\'{language}\'.")

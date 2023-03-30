@@ -87,8 +87,14 @@ def get_dups(d1: dict[str, list[str]],
 def flip_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}
 
-def lang_name(language: str):
-    return os.path.basename(language).split('.')[0]
+def get_language_name(language: str):
+    name, ext = os.path.splitext(os.path.basename(language))
+    return name
 
 def filter_dict_keys(d: dict, l: list[str]):
     return {k: v for k, v in d.items() if k in l}
+
+def get_valid_identifier(s):
+   s = re.sub('[^0-9a-zA-Z_]', '', s)
+   s = re.sub('^[^a-zA-Z_]+', '', s)
+   return s

@@ -5,7 +5,7 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-from tool.constants import NAME, VERSION
+from ysl.constants import NAME, VERSION
 
 project = NAME.title()
 copyright = '2023, Harry Downing'

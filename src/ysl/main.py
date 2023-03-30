@@ -1,14 +1,17 @@
-import sys, os, fileinput, subprocess
+import sys
+init_modules = sys.modules.copy().keys()
+
+import os, fileinput, subprocess, pathlib, re, venv, site, shutil
 from docopt import docopt
 import networkx as nx
-from tool.lexer import build_lexer
-from tool.parser import build_parser, AST
-import tool.utils as utils
-import tool.logger as logger
-from tool.highlight import get_pygments_output
-from tool.config import get_config, get_home_dir, get_config_text, \
-    system_config_exists
-from tool.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
+from ysl.lexer import build_lexer
+from ysl.parser import build_parser, AST
+import ysl.utils as utils
+import ysl.logger as logger
+from ysl.highlight import get_pygments_output, parse_key_value
+from ysl.config import get_config, get_config_dir, get_config_env_dir, \
+    get_config_text, system_config_exists, system_config_languages
+from ysl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
     DEFAULT_REF, RETURN_VAR
 
 class Functionality():
@@ -70,54 +73,82 @@ def extension(file: str) -> str:
         file += '.exe'
     return file
 
-def requirements(args: dict, reqs: str):
-    filename = args['--requirements']
-    if reqs == '':
+def requirements(req: str | None):
+    if req == None:
         logger.warning('No requirements specified.')
-    
-    with open(filename, 'w') as file:
-        file.write(reqs)
-    exit(0)
+        return
+    reqs = re.split(r'\n', req.strip())
+    try:
+        subprocess.check_call([sys.executable, '-m', 'pip', '--no-color',
+                               'install', '-qqq', *reqs])
+    except subprocess.CalledProcessError as e:
+        exit(e.returncode)
 
 def highlight(args: dict, src: str, tokens: dict, ignore: str, 
               tokentypes: dict, user_styles: dict):
     filename = args['--highlight']
-    style_name = args['--style'] or 'default'
-    format = filename.split('.')[-1]
-    format_options = {
-        'nowrap': args['--nowrap'],
-        'linenos': args['--linenos']
-    }
+    format = args['--format'] or os.path.splitext(filename)[1][1:]
+    format_options = parse_key_value(args['--format-options'] or '')
+        
+    output = get_pygments_output(src, tokens, ignore, tokentypes, user_styles, 
+                                 format, format_options)
+    highlighted_src, style_defs = output
+    if type(highlighted_src) == bytes:
+        mode = 'wb'
+    else:
+        mode = 'w'
 
-    highlighted_src = get_pygments_output(src, tokens, ignore, tokentypes, 
-                                         user_styles, style_name, format, 
-                                         format_options)
-    with open(filename, 'w') as file:
+    with open(filename, mode) as file:
         file.write(highlighted_src)
+    
+    if args['--style-defs']:
+        with open(args['--style-defs'], 'w') as file:
+            file.write(style_defs)
     exit(0)
 
-def link(args):
-    lang_name = utils.lang_name(args['<language>'])
+def link_command(args):
+    language = args['<language>']
     dir = args['<dir>'] or ''
     
     src = extension(sys.argv[0])
-    dst = extension(os.path.join(dir, f'{lang_name}'))
+    dst = extension(os.path.join(dir, language))
 
-    if not system_config_exists(lang_name):
-        logger.warning(f'No system config for language \'{lang_name}\'')
+    if not system_config_exists(language):
+        logger.warning(f'No system config for language \'{language}\'')
 
     try:
         os.symlink(src, dst)
+        print(f'Successfully linked \'{language}\'.')
     except Exception as e:
         logger.error(f'Symbolic link error: {e}')
 
-def run(args):
+def run_command(args):
     language = args['<language>']
-    lang_name = utils.lang_name(language)
+    lang_name = utils.get_language_name(language)
     config = get_config(language)
 
-    if args['--requirements']:
-        requirements(args, config.get('requirements', ''))
+    env = config.get('environment', None)
+    env_created = False
+    if env:
+        for sitepackage in site.getsitepackages():
+            sys.path.remove(sitepackage)
+        
+        env_name = os.path.join(get_config_env_dir(), env)
+        if not os.path.exists(env_name):
+            logger.info(f'Creating virtual environment \'{env}\'.', 
+                        important=True)
+            venv.create(env_name, with_pip=True)
+            env_created = True
+        
+        for sitepackage in site.getsitepackages([env_name]):
+            sys.path.append(sitepackage)
+        
+        context = venv.EnvBuilder().ensure_directories(env_name)
+        sys.executable = context.env_exe
+
+    if args['--requirements'] or env_created:
+        logger.info(f'Installing requirements.', important=True)
+        requirements(config.get('requirements', None))
 
     version = config.get('version', None)
     usage = config.get('usage', None)
@@ -131,8 +162,8 @@ def run(args):
         src_input = language_args.get('<src>', None)
         if not(isinstance(src_input, str) or src_input == None):
             logger.error('File to be parsed must be specified in usage pattern' 
-                         ' as \'<src>\' (file path), \'[<src>]\' '
-                         '(file path or stdin) or nothing (stdin).')
+                         ' as \'<src>\' (filepath), \'[<src>]\' '
+                         '(filepath or stdin) or nothing (stdin).')
     else:
         src_input = next(iter(inputs), None) # First element if it exists
     
@@ -148,6 +179,7 @@ def run(args):
     using_regex = meta_tokens.get('regex', False)
     ignore = meta_tokens.get('ignore', '.')
     
+    tokens_copy = tokens.copy()
     if ref != None:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
@@ -155,10 +187,10 @@ def run(args):
                     f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
         tokens = token_expansion(tokens, ref.split('token'))
     
-    logger.info('===== TOKENS =====')
-    for token, pattern in tokens.items():
-        logger.info(f'{token}: \'{pattern.strip()}\'')
-    logger.info('===== TOKENS =====')
+    for token in tokens_copy:
+        tb, ta = tokens_copy[token].strip(), tokens[token].strip()
+        if tb != ta:
+            logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
     sync = config.get('sync', [])
@@ -200,6 +232,11 @@ def run(args):
     code = config.get('code', {})
     commands = config.get('commands', {})
     functionality = Functionality(code, commands, grammar_map)
+    
+    # Remove module cache to allow for correct user import
+    for module in sys.modules.copy().keys():
+        if not module in init_modules:
+            del sys.modules[module]
 
     # root_execute = get_execute_func(ast, functionality, global_env)
     # global_env = {
@@ -253,14 +290,14 @@ def get_execute_func(ast: AST, functionality: Functionality, global_env: dict):
             return env
     return execute
 
-def install(args):
+def install_command(args):
     language = args['<language>']
-    alias = args['<alias>'] or utils.lang_name(language)
+    alias = args['<alias>'] or utils.get_language_name(language)
     upgrade = args['--upgrade']
     
     config_text = get_config_text(language)
-    home_dir = get_home_dir()
-    filename = os.path.join(home_dir, f'{alias}.yaml')
+    config_dir = get_config_dir()
+    filename = os.path.join(config_dir, alias)
     
     if os.path.isfile(filename) and not upgrade:
         logger.error(f'Language \'{alias}\' already exists. '
@@ -270,19 +307,34 @@ def install(args):
         file.write(config_text)
     print(f'Successfully installed \'{alias}\'.')
 
-def uninstall(args: dict):
-    language = args['<language>']
-    lang_name = utils.lang_name(language)
-    home_dir = get_home_dir()
-    for filename in os.listdir(home_dir):
-        file_lang = filename.split('.')[0]
-        file_path = os.path.join(home_dir, filename)
+def uninstall_command(args: dict):
+    languages = args['<language>']
+    envs = args['<env>']
+    remove_venv = args['--venv']
+    remove, files, prefix = os.remove, languages, get_config_dir()
+    if remove_venv:
+        remove, files, prefix = shutil.rmtree, envs, get_config_env_dir()
+    
+    for file in files:
+        path = os.path.join(prefix, file)
+        try:
+            remove(path)
+            print(f'Successfully uninstalled \'{file}\'.')
+        except FileNotFoundError:
+            logger.warning(f'Skipping \'{file}\' as it is not already '
+                           f'installed.')  
 
-        if filename == language or file_lang == language:
-            os.remove(file_path)
-            print(f'Successfully uninstalled \'{lang_name}\'.')
-            return
-    logger.warning(f'Skipping, \'{lang_name}\' not already installed.')
+def list_command(args):
+    languages = system_config_languages()
+    envs = os.listdir(get_config_env_dir())
+    files, name = languages, 'languages'
+    if args['--venv']:
+        files, name = envs, 'environments'
+    
+    if files == []:
+        print(f'No {name} installed.')
+    else:
+        print(*files, sep='\n')
 
 def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language
@@ -290,8 +342,13 @@ def get_symlink_args(filename, version) -> dict:
         sys.argv.insert(1, '--')
     
     args = docopt(SYMLINK_CLI, version=version, options_first=True)
-    args['<language>'] = utils.lang_name(filename)
-    base_args = args | {'<command>': 'run'}
+
+    if args['--where']:
+        print(pathlib.Path(filename).resolve())
+        exit(0)
+
+    args['<language>'] = utils.get_language_name(filename)
+    base_args = {'<command>': 'run'}
     return base_args, args
 
 def get_args(version):
@@ -321,7 +378,9 @@ def main():
     else:
         base_args, args = get_args(version)
 
-    logger.verbose = base_args['--verbose'] or args['--verbose']
-    logger.strict = base_args['--strict'] or args['--strict']
+    logger.verbose = base_args.get('--verbose', False) or \
+        args.get('--verbose', False)
+    logger.strict = base_args.get('--strict', False) or \
+        args.get('--strict', False)
 
-    globals()[base_args['<command>']](args)
+    globals()[f"{base_args['<command>']}_command"](args)

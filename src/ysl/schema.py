@@ -113,6 +113,9 @@ config_schema = {
                 }
             },
         },
+        'environment': {
+            'type': 'string'
+        },
         'requirements': {
             'type': 'string'
         }

@@ -1,6 +1,6 @@
 import logging
 import re
-from tool.constants import PLY_ERR_MSG
+from ysl.constants import PLY_ERR_MSG
 
 verbose = False
 strict = False
@@ -58,14 +58,14 @@ class LoggingWrapper():
                           if t == 's' else args[i] 
                           for i, (_, t) in enumerate(matches)])
 
-    def info(self, msg, *args):
+    def info(self, msg, *args, important=False):
         msg = self._repl(msg, args)
         should_show = self.verbose if self.verbose != None else verbose
-        if should_show:
+        if should_show or important:
             self.logger.info(msg)
 
-    def debug(self, msg, *args):
-        self.info(msg, *args)
+    def debug(self, msg, *args, **kwargs):
+        self.info(msg, *args, **kwargs)
 
     def warning(self, msg, *args):
         msg = self._repl(msg, args)
@@ -89,11 +89,11 @@ def get_file_logger(filename: str, **kwargs):
 
 logger = LoggingWrapper()
 
-def info(msg, *args):
-    logger.info(msg, *args)
+def info(msg, *args, **kwargs):
+    logger.info(msg, *args, **kwargs)
 
-def debug(msg, *args):
-    logger.debug(msg, *args)
+def debug(msg, *args, **kwargs):
+    logger.debug(msg, *args, **kwargs)
 
 def warning(msg, *args):
     logger.warning(msg, *args)

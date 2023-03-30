@@ -1,5 +1,5 @@
 import re, regex
-import tool.logger as logger
+import ysl.logger as logger
 import ply.lex as lex
 import platform
 
