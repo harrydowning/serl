@@ -70,6 +70,8 @@ Token names shouldn't contain whitespace.
 :code:`code`
 ------------
 
+If you don't want to return anything you can explicitly make the final statement `pass`
+
 :code:`commands`
 ----------------
 

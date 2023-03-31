@@ -15,6 +15,9 @@ meta = {
                 },
                 'ignore': {
                     'type': ['string', 'null']
+                },
+                'flags': {
+                    'type': 'string'
                 }
             }
         },

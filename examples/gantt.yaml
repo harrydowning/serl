@@ -14,6 +14,8 @@ usage: |
     --pdf            Output as pdf.
 
 meta:
+  tokens:
+    flags: VERBOSE MULTILINE
   grammar:
     permissive: true
 

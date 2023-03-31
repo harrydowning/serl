@@ -39,7 +39,7 @@ def get_ignore_func(pattern):
     return f
 
 def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
-                using_regex: bool):
+                using_regex: bool, flags: str):
     g = globals()
     g['tokens'] = ()
 
@@ -49,7 +49,6 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
         g['tokens'] = (*g['tokens'], token_name)
         g[f't_{token_name}'] = get_pattern_function(token, pattern, using_regex)
 
-    # TODO g['t_DEFAULT'] = r'.'
     # Lower precedence than user rules
     g['t_newline'] = newline
     if ignore != None:
@@ -63,5 +62,16 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
                          f'implementation. Current implementation: '
                          f'\'{implementation}\'.')
     
+    flag_value = re.NOFLAG
+    for flag_str in re.split(r'\s+', flags.strip()):
+        try:
+            flag = getattr(re, flag_str)
+            if isinstance(flag, re.RegexFlag):
+                flag_value |= flag
+                continue
+        except AttributeError:
+            pass
+        logger.warning(f'Can\'t find regex flag \'{flag_str}\'.')
+    
     errorlog = logger.LoggingWrapper(ply_repl=True)
-    return lex.lex(errorlog=errorlog)
+    return lex.lex(errorlog=errorlog, reflags=flag_value)

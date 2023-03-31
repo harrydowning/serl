@@ -178,6 +178,7 @@ def run_command(args):
     ref = meta_tokens.get('ref', DEFAULT_REF)
     using_regex = meta_tokens.get('regex', False)
     ignore = meta_tokens.get('ignore', '.')
+    flags = meta_tokens.get('flags', 'VERBOSE')
     
     tokens_copy = tokens.copy()
     if ref != None:
@@ -218,7 +219,7 @@ def run_command(args):
         user_styles = config.get('styles', {})
         highlight(args, src, tokens, ignore, tokentypes, user_styles)
 
-    lexer = build_lexer(tokens, token_map, ignore, using_regex)
+    lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
     parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
                           grammar, precedence, debug_file, sync, permissive)
     # lexer.input(src)
