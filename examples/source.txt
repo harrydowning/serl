@@ -1,6 +1,6 @@
                   Part III Project
 --------------------------------------------------------------
-                | Oct | Nov | Dec | Jan | Feb | Mar | Apr | May
+             [4]| Oct | Nov | Dec | Jan | Feb | Mar | Apr | May
 Background      |=========
 Prototype       |      =========
 Interim Report  |             === <Interim Handin>

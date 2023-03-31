@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Overview
-================================
+========
 
 Serl is a command line tool used to manage and execute programming languages serialized with YAML.
 The format of these language is specified in the :ref:`lang-config` section.
@@ -17,6 +17,7 @@ The format of these language is specified in the :ref:`lang-config` section.
   :hidden:
 
   self
+  glossary
 
 .. toctree::
    :maxdepth: 2

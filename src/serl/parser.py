@@ -25,6 +25,16 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     return f
 
 def p_error(p):
+    # err_toks = []
+    # while True:
+    #     tok = parser.token()
+    #     if tok == None:
+    #         logger.error('Parsing error: Reached end of file.')
+    #     elif tok in sync:
+    #         parser.errok()
+    #         return tok
+    #     else:
+    #         err_toks += tok
     if p != None:
         logger.error('Parsing error: Reached end of file.')
     else:
