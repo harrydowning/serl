@@ -1,5 +1,18 @@
+import re
 import serl.utils as utils
 import pytest
+
+id = lambda x: x
+@pytest.mark.parametrize('rule,  symbol_map, symbol_f, repl_f, expected', [
+    ('<a>', [('<', 'b'), ('>', 'b')], id, lambda x: f' {x} ', ' b a b '),
+    ('a * a', [('*', 'b')], re.escape, id, 'a b a'),
+    ('b aaab', [('a+', 'c'), ('b$', 'd')], id, id, 'b cd'),
+    ('b aaab', [('a+?', 'c'), ('b$', 'd')], id, id, 'b cccd'),
+    ('aba', [('a', 'b'), ('bbb', 'c')], id, id, 'bbb')
+])
+def test_expand(rule, symbol_map, symbol_f, repl_f, expected):
+    actual = utils.expand(rule, symbol_map, symbol_f, repl_f)
+    assert actual == expected
 
 token_split = ['@', '']
 
