@@ -3,5 +3,11 @@ Glossary
 
 .. glossary::
 
+  Base Style
+    Something
+
   Token Expansion
-    The action of 
+    Something 
+  
+  Token Types
+    Something

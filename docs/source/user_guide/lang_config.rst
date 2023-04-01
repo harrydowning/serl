@@ -5,7 +5,7 @@ Language Configuration
 
 Languages are specified with `YAML <https://yaml.org/spec/1.2.2/>`_ syntax. 
 This page documents the possible configuration fields.
-See the section :ref:`using-yaml` for YAML tips.
+See the section :ref:`using-yaml` for tips.
 
 :code:`version`
 ---------------
@@ -90,6 +90,26 @@ If you don't want to return anything you can explicitly make the final statement
 
 :code:`styles`
 --------------
+:Type: ``object``
+:Required: ``False``
+
+A mapping between `built-in <https://pygments.org/docs/tokens/>`_ or user-defined :term:`token types`, and styles specified in the format of `Pygments <https://pygments.org/>`_ `style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
+These styles will override those used by the :term:`base style`.
+
+:Example:
+
+.. code-block:: yaml
+
+  styles:
+    Number: "#42f2f5"
+    Keyword.Constant: "bold #ff0000"
+    Punctuation: "#f57242"
+    String: "#75b54a"
+    Whitespace: "bg:#e8dfdf"
+    
+.. Note::
+  The use of quotes around the styles in the above example are neccessary, as otherwise the hex colours would be treated as YAML comments and ``:`` would try to create another mapping.
+  See :ref:`using-yaml` for tips.
 
 :code:`environment`
 -------------------
@@ -98,10 +118,30 @@ If you don't want to return anything you can explicitly make the final statement
 
 The name of a virtual environment to be created to contain any python dependencies specified in :ref:`requirements`.
 
-specify that manually created environments should be with builtin venv
+This is only required if you plan to use dependencies that may clash with those used by the tool or other serl languages used in the same environemnt.
+Not setting this property means that language dependencies are installed to the environemnt where the instance of the tool being used was installed.
+
+To list the dependencies used by the tool and then get a specific version thereof you can use:
+
+.. code-block:: console
+
+  $ pip show serl
+  $ pip show <dependency>
 
 .. Note::
   When running a language that specifies an environment that doesn't already exist, a new environment will be created and the specified requirements will be installed.
+  This may take a bit of time to complete but will only be run once unless the environment is removed.
+
+Environments are created using the `venv <https://docs.python.org/3/library/venv.html>`_ module from the Python `standard library <https://docs.python.org/3/library/>`_ and are located in the directory ``~/.serl/environments``.
+
+Environments can be manually created, however they must be created in the aforementioned directory and with the same `venv <https://docs.python.org/3/library/venv.html>`_ module.
+Creating environments manually would still require setting the value of this property to the name of the environment directory.
+
+:Example:
+
+.. code-block:: yaml
+
+  environment: venv-lang
 
 .. _requirements:
 
@@ -113,7 +153,7 @@ specify that manually created environments should be with builtin venv
 :Type: ``object``
 :Required: ``False``
 
-The meta object provides the ability to alter certain aspects of the configuration and language behaviour.
+The meta object provides the ability to alter certain aspects of the configuration or language behaviour.
 
 :code:`meta.tokens`
 ~~~~~~~~~~~~~~~~~~~
@@ -129,7 +169,7 @@ Properties relating to the :ref:`tokens` object.
 :Default: ``^token(?!$)|(?<= )token``
 
 A regex used to determine how tokens can be referenced in other tokens and consequently expanded (substituted).
-If the value of this property is set to null or equivalently defined but not given a value :term:`token expansion<Token Expansion>` will not take place.
+If the value of this property is set to null or equivalently defined but not given a value, :term:`token expansion` will not take place.
 
 The special identifier ``token`` is used as a substitute for user-defined token names.
 If this special identifier isn't used the defined regex is assumed to be a prefix to the token name.
@@ -159,6 +199,11 @@ As previously mentioned if the identifier ``token`` is not used the value of ``m
 :Type: ``boolean``
 :Required: ``False``
 :Default: ``False``
+
+.. Important::
+  Setting this to true will change the interface for language captures.
+  Specifically, they will now be returned as a list rather than a single value.
+  This is due to the fact the the ``regex`` package offers the ability to retain all captures within a group even when modified by a regex quantifier.
 
 :code:`meta.tokens.ignore`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
