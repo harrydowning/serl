@@ -243,7 +243,7 @@ def run_command(args):
     # global_env = {
     #     '__name__': lang_name,
     #     'args': language_args,
-    #     serl_ast[0]: root_execute
+    #     #serl_ast[0]: root_execute
     # }
 
     # if functionality.main:

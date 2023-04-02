@@ -194,16 +194,40 @@ As previously mentioned if the identifier ``token`` is not used the value of ``m
 .. Note::
   The ``$`` symbol has been escaped because this string is treated as a regex and this has the special meaning of signifying the end of a string.
 
+.. _meta-tokens-regex:
+
 :code:`meta.tokens.regex`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 :Type: ``boolean``
 :Required: ``False``
 :Default: ``False``
 
+Setting this property to :code:`True` allows for the use of the more feature rich 3rd party `regex <https://github.com/mrabarnett/mrab-regex>`_ module for patterns in the :ref:`tokens` object.
+
 .. Important::
-  Setting this to true will change the interface for language captures.
+  When used this will change the interface for language captures.
   Specifically, they will now be returned as a list rather than a single value.
-  This is due to the fact the the ``regex`` package offers the ability to retain all captures within a group even when modified by a regex quantifier.
+  This is due to the fact that the `regex <https://github.com/mrabarnett/mrab-regex>`_ package offers the ability to retain all captures within a group even when modified by a regex quantifier.
+
+.. Note::
+  The `regex <https://github.com/mrabarnett/mrab-regex>`_ module may only be used with CPython implementations.
+  
+  Run the following two commands in Python's interactive shell to see what implmentation you're using:
+  
+  .. code-block:: console
+
+    $ python
+    >>> import platform
+    >>> platform.python_implementation()
+
+
+:Example:
+
+.. code-block:: yaml
+
+  meta:
+    tokens:
+      regex: True
 
 :code:`meta.tokens.ignore`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,6 +241,16 @@ As previously mentioned if the identifier ``token`` is not used the value of ``m
 :Required: ``False``
 :Default: ``VERBOSE``
 
+A whitespace seperated list of regex flags for the lexer to use corresponding to the regex patterns defined in the :ref:`tokens` object.
+Valid flags include any defined in the `re <https://docs.python.org/3/library/re.html#flags>`_ module or if :ref:`meta-tokens-regex` is enabled, any flag in the `regex <https://github.com/mrabarnett/mrab-regex#flags>`__ module.
+
+:Example:
+
+.. code-block:: yaml
+
+  meta:
+    tokens:
+      flags: VERBOSE MULTILINE I
 
 :code:`meta.grammar`
 ~~~~~~~~~~~~~~~~~~~~

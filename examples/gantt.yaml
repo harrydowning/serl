@@ -45,6 +45,9 @@ grammar:
     - text | === <text>
 
 code:
+  first: | # py
+    import networkx
+    networkx.__version__
   main: | # py
     from pylatex import Package
     from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
@@ -98,6 +101,8 @@ code:
     - get_row(text[1], vars()['==='])
     - get_row(text[1], vars()['==='], '')
     - get_row(text[0][1], vars()['==='], text[1][1])
+
+environment: something/venv-gantt
 
 requirements: | # pip
   PyLaTex==1.4.1

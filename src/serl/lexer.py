@@ -65,7 +65,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
     flag_value = re.NOFLAG
     for flag_str in re.split(r'\s+', flags.strip()):
         try:
-            flag = getattr(re, flag_str)
+            flag = getattr(lex.re, flag_str)
             if isinstance(flag, re.RegexFlag):
                 flag_value |= flag
                 continue
