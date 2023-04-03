@@ -1,2 +1,3 @@
 pip install .
-pytest -s -v tests
+pytest -s -v --cov --cov-report term tests
+del .coverage
