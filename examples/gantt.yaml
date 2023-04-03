@@ -102,9 +102,6 @@ code:
     - get_row(text[1], vars()['==='], '')
     - get_row(text[0][1], vars()['==='], text[1][1])
 
-commands:
-  row: python {}
-
 environment: something/venv-gantt
 
 requirements: | # pip

@@ -28,14 +28,6 @@ meta = {
                     'type': 'boolean'
                 }
             }
-        },
-        'commands': {
-            'type': 'object',
-            'properties': {
-                'prefix': {
-                    'type': 'string'
-                }
-            }
         }
     }
 }

@@ -77,13 +77,21 @@ Token names shouldn't contain whitespace.
 :code:`grammar`
 ---------------
 
+.. _code:
+
 :code:`code`
 ------------
+:Type: ``object``
+:Required: ``True`` or ``commands``
+:Property Type: ``str``, ``list[str | null]``
 
-If you don't want to return anything you can explicitly make the final statement `pass`
+If you don't want to return anything you can explicitly make the final statement ``pass``
 
 :code:`commands`
 ----------------
+:Type: ``object``
+:Required: ``True`` or ``code``
+:Property Type: ``str``, ``list[str | null]``
 
 .. Note::
   To be able to access values with identifiers containing special characters not normally allowed within environment variables ensure the more explicit syntax ``${...}`` is used e.g., ``${*${}``.
@@ -100,6 +108,7 @@ If you don't want to return anything you can explicitly make the final statement
 --------------
 :Type: ``object``
 :Required: ``False``
+:Property Type: ``string``
 
 A mapping between `built-in <https://pygments.org/docs/tokens/>`_ or user-defined :term:`token types`, and styles specified in the format of `Pygments <https://pygments.org/>`_ `style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
 These styles will override those used by the :term:`base style`.
@@ -272,10 +281,3 @@ Properties relating to the :ref:`grammar` object.
 :Type: ``boolean``
 :Required: ``False``
 :Default: ``True``
-
-
-:code:`meta.commands`
-~~~~~~~~~~~~~~~~~~~~~
-
-:code:`meta.tokens.prefix`
-^^^^^^^^^^^^^^^^^^^^^^^^^^
