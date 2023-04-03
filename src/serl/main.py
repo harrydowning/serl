@@ -42,6 +42,23 @@ class Functionality():
     def get_command(self, name: str, pos: int) -> str | None:
         return self._get(self.commands, name, pos)
 
+class Traversable():
+    def __init__(self, f):
+        self.f = f
+    
+    def __call__(self, *args, **kwargs):
+        return self.f(*args, **kwargs)
+
+class TraversableFormat(dict):
+    def __getitem__(self, __key):
+        __val = super().__getitem__(__key)
+        if isinstance(__val, Traversable):
+            return __val()
+        return __val
+
+    def __missing__(self, key):
+        return key
+
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
     token_graph = nx.DiGraph(utils.get_token_graph(repl_tokens))
@@ -239,7 +256,7 @@ def run_command(args):
         if not module in init_modules:
             del sys.modules[module]
 
-    # root_execute = get_execute_func(ast, functionality, global_env)
+    # root_execute = get_execute_func(serl_ast, functionality, global_env)
     # global_env = {
     #     '__name__': lang_name,
     #     'args': language_args,
@@ -271,16 +288,16 @@ def exec_and_eval(code, global_env, local_env=None):
     exec(compile(code_ast, '<string>', mode='exec'), global_env, local_env)
     return eval(compile(expr, '<string>', mode='eval'), global_env, local_env)
 
-def get_execute_func(ast: SerlAST, functionality: Functionality, global_env: dict):
-    name, i, value = ast
+def get_execute_func(serl_ast: SerlAST, functionality: Functionality, global_env: dict):
+    name, i, value = serl_ast
     env = {}
     for k, v in value.items():
         if isinstance(v, list):
             env[k] = [get_execute_func(e, functionality, global_env) 
                       if isinstance(e, SerlAST) else e for e in v]
         else:
-            exec_func = get_execute_func(v, functionality, global_env)
-            env[k] = exec_func if isinstance(v, SerlAST) else v
+            env[k] = get_execute_func(v, functionality, global_env) \
+                if isinstance(v, SerlAST) else v
     
     active = True
     def execute(**local_env):
@@ -296,13 +313,13 @@ def get_execute_func(ast: SerlAST, functionality: Functionality, global_env: dic
             local_env |= env
             return exec_and_eval(code, global_env, local_env)
         elif command:
-            # TODO add global and local vars to env TODO how to invoke code/command of child nonterminals
-            env = os.environ.copy() | {}
-            return subprocess.run(command, capture_output=True, text=True, 
-                                  shell=True, env=env, check=True).stdout
+            command_env = global_env | local_env | env
+            exp_command = command.format_map(TraversableFormat(**command_env))
+            return subprocess.run(exp_command, capture_output=True, text=True, 
+                                  shell=True, check=True).stdout
         else:
             return env
-    return execute
+    return Traversable(execute)
 
 def install_command(args):
     language = args['<language>']

@@ -85,6 +85,14 @@ If you don't want to return anything you can explicitly make the final statement
 :code:`commands`
 ----------------
 
+.. Note::
+  To be able to access values with identifiers containing special characters not normally allowed within environment variables ensure the more explicit syntax ``${...}`` is used e.g., ``${*${}``.
+  The exception is the character ``}`` which can't be referenced with any syntax.
+
+.. Note::
+  In general it is also recommened to use Unix style environment variable syntax (``$...`` and ``${...}``) as this makes languages more portable since these are also supported on Windows.
+
+
 :code:`tokentypes`
 ------------------
 
