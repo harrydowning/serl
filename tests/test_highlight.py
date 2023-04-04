@@ -12,7 +12,7 @@ test_data = [
      {'key1': ['list', 'of', 'strings'], 'key2': 'value2'})
 ]
 
-@pytest.mark.parametrize("input, expected", test_data, 
+@pytest.mark.parametrize('input, expected', test_data, 
                          ids=[f'input{i}' for i in range(len(test_data))])
 def test_parse_key_value(input, expected):
     actual = highlight.parse_key_value(input)
