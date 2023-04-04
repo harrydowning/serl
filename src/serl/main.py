@@ -1,7 +1,7 @@
 import sys
 init_modules = sys.modules.copy().keys()
 
-import os, fileinput, subprocess, pathlib, re, venv, site, shutil, ast
+import os, fileinput, subprocess, pathlib, re, venv, site, shutil, ast, glob
 from docopt import docopt
 import networkx as nx
 from serl.lexer import build_lexer
@@ -218,7 +218,8 @@ def command_line_run(args):
     if debug_lexer:
         flipped_token_map = utils.flip_dict(token_map)
         lexer.input(src)
-        tokens_by_line = [[] for _ in range(src.count('\n') + 1)]
+        lines = src.count('\n') + 1
+        tokens_by_line = [[] for _ in range(lines)]
         
         while True:
             tok = lexer.token()
@@ -228,7 +229,8 @@ def command_line_run(args):
         
         logger.info(f'===== Debug Lexer =====', important=True)
         for i, line in enumerate(tokens_by_line):
-            logger.info(f'{i + 1}: {" ".join(line)}', important=True)
+            lineno = str(i + 1).rjust(len(str(lines)), ' ')
+            logger.info(f'{lineno}: {" ".join(line)}', important=True)
         logger.info(f'===== Debug Lexer =====', important=True)
 
     serl_ast = parser.parse(src, lexer=lexer)
@@ -343,7 +345,14 @@ def command_line_uninstall(args: dict):
 
 def command_line_list(args):
     languages = system_config_languages()
-    envs = os.listdir(get_config_env_dir())
+    config_env_dir = get_config_env_dir() + os.sep
+    glob_path = os.path.join(config_env_dir, '**', 'pyvenv.cfg')
+    envs = glob.glob(glob_path, recursive=True)
+    envs = [
+        str(pathlib.Path(path).parent.resolve()).removeprefix(config_env_dir) 
+        for path in envs
+    ]
+    
     files, name = languages, 'languages'
     if args['--venv']:
         files, name = envs, 'environments'
