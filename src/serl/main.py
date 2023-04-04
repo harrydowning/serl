@@ -12,7 +12,7 @@ from serl.highlight import get_pygments_output, parse_key_value
 from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
-    DEFAULT_REF, RETURN_VAR
+    DEFAULT_REF, SHELL_CHAR
 
 class Functionality():
     def __init__(self, code: dict, commands: dict, grammar_map: dict):
@@ -144,26 +144,26 @@ def run_command(args):
     lang_name = utils.get_language_name(language)
     config = get_config(language)
 
-    env = config.get('environment', None)
-    env_created = False
-    if env:
+    venv = config.get('environment', None)
+    venv_created = False
+    if venv:
         for sitepackage in site.getsitepackages():
             sys.path.remove(sitepackage)
         
-        env_name = os.path.join(get_config_env_dir(), env)
-        if not os.path.exists(env_name):
-            logger.info(f'Creating virtual environment \'{env}\'.', 
+        venv_path = os.path.join(get_config_env_dir(), venv)
+        if not os.path.exists(venv_path):
+            logger.info(f'Creating virtual environment \'{venv}\'.', 
                         important=True)
-            venv.create(env_name, with_pip=True)
+            venv.create(venv_path, with_pip=True)
             env_created = True
         
-        for sitepackage in site.getsitepackages([env_name]):
+        for sitepackage in site.getsitepackages([venv_path]):
             sys.path.append(sitepackage)
         
-        context = venv.EnvBuilder().ensure_directories(env_name)
+        context = venv.EnvBuilder().ensure_directories(venv_path)
         sys.executable = context.env_exe
 
-    if args['--requirements'] or env_created:
+    if args['--requirements'] or venv_created:
         logger.info(f'Installing requirements.', important=True)
         requirements(config.get('requirements', None))
 
@@ -246,34 +246,34 @@ def run_command(args):
     #         break      # No more input
     #     print(tok)
 
-    # serl_ast = parser.parse(src, lexer=lexer)
-    code = config.get('code', {})
-    commands = config.get('commands', {})
-    functionality = Functionality(code, commands, grammar_map)
+    serl_ast = parser.parse(src, lexer=lexer)
+    code = utils.normalise_dict(config['code'])
+    main_code = utils.get_main_code(code)
     
     # Remove module cache to allow for correct user import
     for module in sys.modules.copy().keys():
         if not module in init_modules:
             del sys.modules[module]
 
-    # root_execute = get_execute_func(serl_ast, functionality, global_env)
-    # global_env = {
-    #     '__name__': lang_name,
-    #     'args': language_args,
-    #     #serl_ast[0]: root_execute
-    # }
+    global_env = {
+        '__name__': lang_name,
+        'args': language_args,
+    }
+    execute_func = get_execute_func(serl_ast, code, global_env)
 
-    # if functionality.main:
-    #     main = functionality.main[0]
-    #     result = exec_and_eval(main, global_env)
-    #     print(result)
-    #     print(global_env.keys())
-    # else:
-    #     result = root_execute()
+    if main_code:
+        global_env[serl_ast[0]] = execute_func
+        
+        if main_code.startswith(SHELL_CHAR):
+            result = run_command(main_code[1:], global_env)
+        else:
+            result = exec_and_eval(main_code, global_env)
+    else:
+        result = execute_func()
+
+    if result:
+        print(result)
     
-    # if result:
-    #     print(result, end='')
-
 def exec_and_eval(code, global_env, local_env=None):
     code_ast = ast.parse(code)
 
@@ -288,16 +288,18 @@ def exec_and_eval(code, global_env, local_env=None):
     exec(compile(code_ast, '<string>', mode='exec'), global_env, local_env)
     return eval(compile(expr, '<string>', mode='eval'), global_env, local_env)
 
-def get_execute_func(serl_ast: SerlAST, functionality: Functionality, global_env: dict):
+def run_command(command: str, env: dict):
+    command = command.format_map(TraversableFormat(**env))
+    return subprocess.run(command, capture_output=True, text=True, shell=True, 
+                          check=True).stdout
+
+def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
     name, i, value = serl_ast
     env = {}
     for k, v in value.items():
-        if isinstance(v, list):
-            env[k] = [get_execute_func(e, functionality, global_env) 
-                      if isinstance(e, SerlAST) else e for e in v]
-        else:
-            env[k] = get_execute_func(v, functionality, global_env) \
-                if isinstance(v, SerlAST) else v
+        env[k] = [get_execute_func(e, code, global_env) 
+                  if isinstance(e, SerlAST) else e for e in v]
+        env[k] = env[k][0] if len(env[k]) == 1 else env[k]
     
     active = True
     def execute(**local_env):
@@ -307,18 +309,17 @@ def get_execute_func(serl_ast: SerlAST, functionality: Functionality, global_env
             return None
         active = False
 
-        code = functionality.get_code(name, i)
-        command = functionality.get_command(name, i)
-        if code:
-            local_env |= env
-            return exec_and_eval(code, global_env, local_env)
-        elif command:
-            command_env = global_env | local_env | env
-            exp_command = command.format_map(TraversableFormat(**command_env))
-            return subprocess.run(exp_command, capture_output=True, text=True, 
-                                  shell=True, check=True).stdout
-        else:
+        code_list = code.get(name, None)
+        node_code = code_list[i] if code_list and len(code_list) > i else None
+        
+        if not node_code:
             return env
+
+        if node_code.startswith(SHELL_CHAR):
+            return run_command(node_code[1:], global_env | local_env | env)
+        else:
+            return exec_and_eval(node_code, global_env, local_env | env)
+    
     return Traversable(execute)
 
 def install_command(args):

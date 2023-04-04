@@ -6,7 +6,7 @@ import platform
 implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'
 
-def get_pattern_function(token, pattern, using_regex):
+def get_pattern_func(token, pattern, using_regex):
     def f(t):
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
@@ -47,7 +47,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
         token_name = token_map[token]
 
         g['tokens'] = (*g['tokens'], token_name)
-        g[f't_{token_name}'] = get_pattern_function(token, pattern, using_regex)
+        g[f't_{token_name}'] = get_pattern_func(token, pattern, using_regex)
 
     # Lower precedence than user rules
     g['t_newline'] = newline

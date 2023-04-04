@@ -94,7 +94,16 @@ def get_language_name(language: str):
 def filter_dict_keys(d: dict, l: list[str]):
     return {k: v for k, v in d.items() if k in l}
 
-def get_valid_identifier(s):
+def get_valid_identifier(s: str):
    s = re.sub('[^0-9a-zA-Z_]', '', s)
    s = re.sub('^[^a-zA-Z_]+', '', s)
    return s
+
+def get_main_code(
+        code: dict[str, list[str]], grammar_map: dict[str, str]
+    ) -> str | None:
+    item = next(iter(code.items()), None)
+    if item:
+        return None if item[0] in grammar_map else next(iter(item[1]), None)
+    else:
+        return None

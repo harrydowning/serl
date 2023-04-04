@@ -35,7 +35,8 @@ It can be used in the following ways:
 - Using :code:`<src>` means the input will only be read from the file :code:`<src>`.
 - Not using it at all means the input will always be read from ``stdin``.
 
-
+.. Note::
+  Add how this can be accessed in code. And command?
 
 :Example:
 

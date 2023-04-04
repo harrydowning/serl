@@ -16,9 +16,10 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
         p[0] = SerlAST(
             flipped_symbol_map[prod[0]], 
             prod[1], 
-            {flipped_symbol_map[symbol]: [p[i] for i in idxs] 
-             if len(idxs) > 1 else p[idxs[0]]
-             for symbol, idxs in groups.items()}
+            {
+                flipped_symbol_map[symbol]: [p[i] for i in idxs] 
+                for symbol, idxs in groups.items()
+            }
         )
     
     f.__doc__ = f'{prod[0]} : {prod[2]}'

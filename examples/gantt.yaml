@@ -64,7 +64,7 @@ code:
     def get_row(text, bar, milestone=None):
       return (text, bar.find('='), len(bar), milestone)
     
-    gantt()
+    return gantt()
   gantt: | # py
     title_width, titles = titles(),
     rows = rows()
@@ -87,7 +87,7 @@ code:
       gantt.append(NoEscape(r'\\'))
 
     # TODO add noindent before
-    ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
+    return ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
   heading:
     - (width[1], titles())
     - (4, titles())
