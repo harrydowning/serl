@@ -257,7 +257,7 @@ def command_line_run(args):
         result = execute_func()
 
     if result:
-        print(result)
+        print(result, end='')
     
 def exec_and_eval(code, global_env, local_env=None):
     code_ast = ast.parse(code)

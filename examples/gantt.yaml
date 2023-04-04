@@ -45,8 +45,7 @@ grammar:
     - text | === <text>
 
 code:
-  first: | # py
-    print('hello')
+  first: $ python {args[--output]}
   # main: | # py
   #   from pylatex import Package
   #   from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
