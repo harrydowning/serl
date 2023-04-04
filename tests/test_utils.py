@@ -130,25 +130,6 @@ def test_get_tokens_in_grammar():
     expected = ['<', '>', 'foo', 'foos', 'bar']
     assert actual == expected
 
-code = {
-    'p1': ['b1'],
-    'p2': [None, 'b2'],
-    'p3': [None, 'b3'],
-    'p4': ['b4']
-}
-
-commands = {
-    'p2': [None, 'b5'],
-    'p3': ['b6'],
-    'p4': ['b7'],
-    'p5': ['b8']
-}
-
-def test_get_dups():
-    actual = utils.get_dups(code, commands)
-    expected = [('p2', 1), ('p4', 0)]
-    assert sorted(actual) == sorted(expected)
-
 def test_flip_dict():
     expected = utils.flip_dict({'key_str': 'value', 'key_num': 1})
     actual = {'value': 'key_str', 1: 'key_num'}
@@ -171,4 +152,13 @@ def test_filter_dict_keys():
 ])
 def test_get_valid_identifier(string, expected):
     actual = utils.get_valid_identifier(string)
+    assert actual == expected
+
+@pytest.mark.parametrize('code, expected', [
+    ({'init': ['c1', 'c2'], 'MAIN': ['c3'], 'OTHER': ['c4']}, 'c1'),
+    ({'MAIN': ['c2'], 'OTHER': ['c3']}, None),
+    ({'MAIN': ['c1'], 'init': ['c2'], 'OTHER': ['c3']}, None)
+])
+def test_get_main_code(code, expected):
+    actual = utils.get_main_code(code,  grammar_map)
     assert actual == expected

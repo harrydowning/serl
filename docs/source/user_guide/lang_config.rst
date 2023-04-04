@@ -83,16 +83,10 @@ Token names shouldn't contain whitespace.
 :code:`code`
 ------------
 :Type: ``object``
-:Required: ``True`` or ``commands``
-:Property Type: ``str``, ``list[str | null]``
+:Required: ``True`` 
+:Property Type: ``string``, ``array[string | null]``
 
 If you don't want to return anything you can explicitly make the final statement ``pass``
-
-:code:`commands`
-----------------
-:Type: ``object``
-:Required: ``True`` or ``code``
-:Property Type: ``str``, ``list[str | null]``
 
 .. Note::
   To be able to access values with identifiers containing special characters not normally allowed within environment variables ensure the more explicit syntax ``${...}`` is used e.g., ``${*${}``.

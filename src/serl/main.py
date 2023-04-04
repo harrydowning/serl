@@ -14,34 +14,6 @@ from serl.config import get_config, get_config_dir, get_config_env_dir, \
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
     DEFAULT_REF, SHELL_CHAR
 
-class Functionality():
-    def __init__(self, code: dict, commands: dict, grammar_map: dict):
-        self.code = utils.normalise_dict(code)
-        self.commands = utils.normalise_dict(commands)
-
-        items = self.code.items()
-        name, cd = next(iter(items), None)
-        self.main = cd if not name in grammar_map else None
-
-        dups = utils.get_dups(self.code, self.commands)
-        if len(dups) > 0:
-            msg = (f'Functionality defined in both \'code\' and \'command\' '
-                   f'for {", ".join(map(str, dups))}, \'code\' will take '
-                   f'precedence.')
-            logger.warning(msg)
-
-    def _get(self, d: dict, name: str, pos: int) -> str | None:
-        v = d.get(name, None)
-        if v and len(v) > pos:
-            return v[pos]
-        return None
-
-    def get_code(self, name: str, pos: int) -> str | None:
-        return self._get(self.code, name, pos)
-
-    def get_command(self, name: str, pos: int) -> str | None:
-        return self._get(self.commands, name, pos)
-
 class Traversable():
     def __init__(self, f):
         self.f = f

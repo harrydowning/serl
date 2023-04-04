@@ -81,17 +81,6 @@ config_schema = {
                 }
             },
         },
-        'commands': {
-            'type': 'object',
-            'patternProperties': {
-                '^.*$': {
-                    'type': ['string', 'array'],
-                    'items': {
-                        'type': ['string', 'null']
-                    }
-                }
-            },
-        },
         'tokentypes': { # TODO might rename
             'type': 'object',
             'patternProperties': {
@@ -115,11 +104,7 @@ config_schema = {
             'type': 'string'
         }
     },
-    'anyOf': [
-        {'required': ['tokens', 'grammar', 'code']},
-        {'required': ['tokens', 'grammar', 'commands']},
-    ]
-    
+    'required': ['tokens', 'grammar', 'code'] 
 }
 
 def validate(config: dict) -> Tuple[bool, str]:

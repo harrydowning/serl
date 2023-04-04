@@ -72,18 +72,6 @@ def get_tokens_in_grammar(token_map: dict[str, str],
     return [token for token, token_name in token_map.items() 
             if token_name in used]
 
-def get_dups(d1: dict[str, list[str]], 
-             d2: dict[str, list[str]]) -> list[tuple[str, int]]:
-    dups = []
-    for k, v1 in d1.items():
-        v2 = d2.get(k, None)
-        if v2:
-            l = min(len(v1), len(v2))
-            v1, v2 = v1[:l], v2[:l]
-            dups += [(k, i) for i in range(l) 
-                     if type(v1[i]) == type(v2[i]) and type(v1[i]) == str]
-    return dups
-
 def flip_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}
 
