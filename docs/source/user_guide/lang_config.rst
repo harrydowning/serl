@@ -86,7 +86,71 @@ Token names shouldn't contain whitespace.
 :Required: ``True`` 
 :Property Type: ``string``, ``array[string | null]``
 
+Language functionality specified with either Python or shell commands.
+Defined properties of this object directly correspond to the properties of the :ref:`grammar` object to allow functionality to be associated with syntax.
+
+:Example:
+
+.. code-block:: yaml
+
+  grammar:
+    non-termianl: ... # production
+
+  code:
+    non-termianl: ... # functionality for production
+
+For non-terminals with multiple productions the same applies but the list elements also correspond.
+
+:Example:
+
+.. code-block:: yaml
+
+  grammar:
+    non-termianl:
+      - ... # production 1
+      - ... # production 2
+      - ... # production 3
+
+  code:
+    non-termianl:
+      - ... # functionality for production 1
+      - ... # functionality for production 2
+      - ... # functionality for production 3
+
+Properties defined within this object but not within the :ref:`grammar` object will be ignored, except for the first property, but only if it doesn't have a corresponding property in the :ref:`grammar` object.
+This property is taken as the main or entry point, allowing the user to write any .
+Without this property the entry point will be the property corresponding to the grammar start non-terminal.
+
+The functionality for properties defined within the :ref:`grammar` object but not within this object will default to returning a Python dictionary of their local values.
+
+The following sections provide more detail regarding the two functionality modes.
+
+Python Code
+~~~~~~~~~~~
+
 If you don't want to return anything you can explicitly make the final statement ``pass``
+
+:Example:
+
+.. code-block:: yaml
+
+  code:
+    main: | # python
+      # import modules ...
+      # Create classes/functions ...
+      start() # Result of grammar start non-terminal
+    
+    start: | # python
+      # Code for start
+    ...
+
+.. Note::
+  Currently available for `VS Code <https://code.visualstudio.com/>`_ the `YAML Embedded Languages <https://marketplace.visualstudio.com/items?itemName=harrydowning.yaml-embedded-languages>`_ extension provides syntax highlighting within YAML block-scalars by specifying the language name in a comment next to the block to highlight as shown above.
+
+Shell Commands
+~~~~~~~~~~~~~~
+Shell commands can be used by making the first character of the property value :code:`$`
+
 
 .. Note::
   To be able to access values with identifiers containing special characters not normally allowed within environment variables ensure the more explicit syntax ``${...}`` is used e.g., ``${*${}``.
@@ -94,6 +158,14 @@ If you don't want to return anything you can explicitly make the final statement
 
 .. Note::
   In general it is also recommened to use Unix style environment variable syntax (``$...`` and ``${...}``) as this makes languages more portable since these are also supported on Windows.
+
+
+:Example:
+
+.. code-block:: yaml
+
+  code:
+    non-termianl: $ echo {args[<src>]}
 
 
 :code:`tokentypes`

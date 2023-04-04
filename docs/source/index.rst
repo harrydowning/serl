@@ -9,6 +9,8 @@ Overview
 Serl is a command line tool used to manage and execute programming languages serialized with YAML.
 The format of these language is specified in the :ref:`lang-config` section.
 
+--- Provide broad overview for how it works
+
 .. .. note ::
 ..   At the moment the tool is in an early stage of its development and so its interface may change.
 
