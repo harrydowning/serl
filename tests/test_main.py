@@ -2,6 +2,7 @@ import sys, os, subprocess
 from types import SimpleNamespace
 import pytest
 import serl.main as main
+from serl.parser import SerlAST
 from test_utils import tokens, token_split, exp_tokens
 
 def test_token_expansion():
@@ -72,8 +73,47 @@ def test_run_command(command, expected):
     main.run_command(command, env)
     subprocess.run = tmp_run
 
-def test_get_execute_func():
-    pass
+code = {
+    'NT0': [
+        'f"{var} {T0}"',
+        '''
+first_NT1 = NT1[0]()
+second_NT1 = NT1[1](pass_down = "pdv1")
+NT2 = NT2(local_var = "lv1").strip()
+first_NT1 + " " + second_NT1 + " " + NT2
+        '''
+    ],
+    'NT1': [
+        'return "(" + pass_down + ")"',
+        'return T1.upper()'
+    ],
+    'NT2': [
+        '$ echo {local_var} {var}'
+    ]
+}
+
+global_env = {
+    'var': 'gv1',
+}
+
+@pytest.mark.parametrize('serl_ast, local_env, expected', [
+    (SerlAST('NT0', 0, {'T0': ['v1']}), {}, 'gv1 v1'),
+    (SerlAST('NT0', 1, {
+                'NT1': [
+                    SerlAST('NT1', 1, {'T1': ['v2']}),
+                    SerlAST('NT1', 0, {})
+                ],
+                'NT2': [SerlAST('NT2', 0, {'var': ['v3']})]
+             }), 
+    {}, 'V2 (pdv1) lv1 v3'),
+    (SerlAST('NT0', 2, {'var': ['v1']}), {'local_var': 'v2'}, {'var': 'v1'}),
+    (SerlAST('NT2', 0, {'var': ['v1']}), {'local_var': 'v2'}, 'v2 v1\n'),
+])
+def test_get_execute_func(serl_ast, local_env, expected):
+    actual_execute = main.get_execute_func(serl_ast, code, global_env)
+    actual = actual_execute(**local_env)
+    assert actual == expected
+
 
 @pytest.mark.parametrize('argv,  base_args_expected, args_expected', [
     (['link/for/lang1'], {'<command>': 'run'}, {'<language>': 'lang1'}),
