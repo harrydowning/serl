@@ -22,8 +22,28 @@ def test_extension(file, platform, expected):
     assert actual == expected
     os.name = tmp
 
-def test_exec_and_eval():
-    pass
+@pytest.mark.parametrize(
+        'code, global_env, local_env, expected,'
+        'expected_global_env, expected_local_env', 
+        [
+            ('', {}, None, None, {}, None),
+            ('var = "v2"; pass', {}, None, None, {'var': 'v2'}, None),
+            ('var', {'var': 'v1'}, None, 'v1', {'var': 'v1'}, None),
+            ('var = "v3"; new = var + " v2"', {'var': 'v1'}, None, 'v3 v2', {'var': 'v3'}, None),
+            ('global var; var = "v3"; var', {'var': 'v1'}, {}, 'v3', {'var': 'v3'}, {}),
+            ('var = "v3"; 3 + 2', {'var': 'v1'}, {}, 5, {'var': 'v1'}, {'var': 'v3'}),
+            ('a = 5\nreturn a', {}, {}, 5, {}, {'a': 5}),
+        ]
+)
+def test_exec_and_eval(
+    code, global_env, local_env, expected, 
+    expected_global_env, expected_local_env
+):
+    actual = main.exec_and_eval(code, global_env, local_env)
+    assert actual == expected
+    global_env.pop('__builtins__', None)
+    assert global_env == expected_global_env
+    assert local_env == expected_local_env
 
 env = {
     'dict': {
@@ -45,11 +65,10 @@ env = {
 ])
 def test_run_command(command, expected):
     tmp_run = subprocess.run
-    
-    def correct_call(command, *args, **kwargs):
+    def mock_run(command, *args, **kwargs):
         assert command == expected
         return SimpleNamespace(stdout=None)
-    subprocess.run = correct_call
+    subprocess.run = mock_run
     main.run_command(command, env)
     subprocess.run = tmp_run
 
