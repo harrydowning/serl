@@ -123,7 +123,7 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
             file.write(style_defs)
     exit(0)
 
-def link_command(args):
+def command_line_link(args):
     language = args['<language>']
     dir = args['<dir>'] or ''
     
@@ -139,7 +139,7 @@ def link_command(args):
     except Exception as e:
         logger.error(f'Symbolic link error: {e}')
 
-def run_command(args):
+def command_line_run(args):
     language = args['<language>']
     lang_name = utils.get_language_name(language)
     config = get_config(language)
@@ -322,7 +322,7 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
     
     return Traversable(execute)
 
-def install_command(args):
+def command_line_install(args):
     language = args['<language>']
     alias = args['<alias>'] or utils.get_language_name(language)
     upgrade = args['--upgrade']
@@ -339,7 +339,7 @@ def install_command(args):
         file.write(config_text)
     print(f'Successfully installed \'{alias}\'.')
 
-def uninstall_command(args: dict):
+def command_line_uninstall(args: dict):
     languages = args['<language>']
     envs = args['<env>']
     remove_venv = args['--venv']
@@ -356,7 +356,7 @@ def uninstall_command(args: dict):
             logger.warning(f'Skipping \'{file}\' as it is not already '
                            f'installed.')  
 
-def list_command(args):
+def command_line_list(args):
     languages = system_config_languages()
     envs = os.listdir(get_config_env_dir())
     files, name = languages, 'languages'
@@ -415,4 +415,4 @@ def main():
     logger.strict = base_args.get('--strict', False) or \
         args.get('--strict', False)
 
-    globals()[f"{base_args['<command>']}_command"](args)
+    globals()[f'command_line_{base_args["<command>"]}'](args)
