@@ -46,63 +46,62 @@ grammar:
 
 code:
   first: | # py
-    import networkx
-    networkx.__version__
-  main: | # py
-    from pylatex import Package
-    from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
-    from pylatex.utils import NoEscape
+    print('hello')
+  # main: | # py
+  #   from pylatex import Package
+  #   from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
+  #   from pylatex.utils import NoEscape
 
-    class GanttChart(Environment):
-      packages = [Package('pgfgantt')]
-      content_separator = "\n"
-    class ResizeBox(ContainerCommand): pass
-    class GanttTitle(CommandBase): pass
-    class GanttBar(CommandBase): pass
-    class GanttMilestone(CommandBase): pass
+  #   class GanttChart(Environment):
+  #     packages = [Package('pgfgantt')]
+  #     content_separator = "\n"
+  #   class ResizeBox(ContainerCommand): pass
+  #   class GanttTitle(CommandBase): pass
+  #   class GanttBar(CommandBase): pass
+  #   class GanttMilestone(CommandBase): pass
     
-    def get_row(text, bar, milestone=None):
-      return (text, bar.find('='), len(bar), milestone)
+  #   def get_row(text, bar, milestone=None):
+  #     return (text, bar.find('='), len(bar), milestone)
     
-    return gantt()
-  gantt: | # py
-    title_width, titles = titles(),
-    rows = rows()
-    max_width = max(rows, key=lambda row: row[2])[2]
-    start, end = 0, min(len(titles) * title_width, max_width)
+  #   return gantt()
+  # gantt: | # py
+  #   title_width, titles = titles(),
+  #   rows = rows()
+  #   max_width = max(rows, key=lambda row: row[2])[2]
+  #   start, end = 0, min(len(titles) * title_width, max_width)
 
-    gantt_options = map(NoEscape, ['vgrid', 'hgrid', 'x unit = 1cm', 'y unit = 1cm', 'bar/.append style={fill = lightgray}'])
-    gantt = GanttChart(options=gantt_options, arguments=[start, end])
-    gantt.append(GanttTitle(arguments=[text[1], max_width]))
-    gantt.append(NoEscape(r'\\'))
+  #   gantt_options = map(NoEscape, ['vgrid', 'hgrid', 'x unit = 1cm', 'y unit = 1cm', 'bar/.append style={fill = lightgray}'])
+  #   gantt = GanttChart(options=gantt_options, arguments=[start, end])
+  #   gantt.append(GanttTitle(arguments=[text[1], max_width]))
+  #   gantt.append(NoEscape(r'\\'))
 
-    for title in titles:
-      gantt.append(GanttTitle(arguments=[title, title_width]))
-    gantt.append(NoEscape(r'\\'))
+  #   for title in titles:
+  #     gantt.append(GanttTitle(arguments=[title, title_width]))
+  #   gantt.append(NoEscape(r'\\'))
 
-    for text, start, end, milestone in rows:
-      gantt.append(GanttBar(arguments=[text, start, end]))
-      if milestone != None:
-        gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
-      gantt.append(NoEscape(r'\\'))
+  #   for text, start, end, milestone in rows:
+  #     gantt.append(GanttBar(arguments=[text, start, end]))
+  #     if milestone != None:
+  #       gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
+  #     gantt.append(NoEscape(r'\\'))
 
-    # TODO add noindent before
-    return ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
-  heading:
-    - (width[1], titles())
-    - (4, titles())
-  titles:
-    - "[text[1]] + titles()"
-    - "[text[1]]"
-  rows:
-    - "[row()] + rows()"
-    - "[row()]"
-  row:
-    - get_row(text[1], vars()['==='])
-    - get_row(text[1], vars()['==='], '')
-    - get_row(text[0][1], vars()['==='], text[1][1])
+  #   # TODO add noindent before
+  #   return ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
+  # heading:
+  #   - (width[1], titles())
+  #   - (4, titles())
+  # titles:
+  #   - "[text[1]] + titles()"
+  #   - "[text[1]]"
+  # rows:
+  #   - "[row()] + rows()"
+  #   - "[row()]"
+  # row:
+  #   - get_row(text[1], vars()['==='])
+  #   - get_row(text[1], vars()['==='], '')
+  #   - get_row(text[0][1], vars()['==='], text[1][1])
 
-environment: something/venv-gantt
+# environment: something/venv-gantt
 
 requirements: | # pip
   PyLaTex==1.4.1

@@ -143,7 +143,8 @@ def command_line_run(args):
     usage = config.get('usage', None)
     
     inputs = args['<args>']
-    debug_file = args['--debug']
+    debug_parser_file = args['--debug-parser']
+    debug_lexer = args['--debug-lexer']
 
     # User language docopt
     if usage != None:
@@ -209,18 +210,30 @@ def command_line_run(args):
         highlight(args, src, tokens, ignore, tokentypes, user_styles)
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
-    parser = build_parser(lang_name, list(token_map.values()), symbol_map, 
-                          grammar, precedence, debug_file, sync, permissive)
-    # lexer.input(src)
-    # while True:
-    #     tok = lexer.token()
-    #     if not tok: 
-    #         break      # No more input
-    #     print(tok)
+    parser = build_parser(
+        lang_name, list(token_map.values()), symbol_map, grammar, precedence, 
+        debug_parser_file, sync, permissive
+    )
+
+    if debug_lexer:
+        flipped_token_map = utils.flip_dict(token_map)
+        lexer.input(src)
+        tokens_by_line = [[] for _ in range(src.count('\n') + 1)]
+        
+        while True:
+            tok = lexer.token()
+            if not tok: 
+                break
+            tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])
+        
+        logger.info(f'===== Debug Lexer =====', important=True)
+        for i, line in enumerate(tokens_by_line):
+            logger.info(f'{i + 1}: {" ".join(line)}', important=True)
+        logger.info(f'===== Debug Lexer =====', important=True)
 
     serl_ast = parser.parse(src, lexer=lexer)
     code = utils.normalise_dict(config['code'])
-    main_code = utils.get_main_code(code)
+    main_code = utils.get_main_code(code, grammar_map)
     
     # Remove module cache to allow for correct user import
     for module in sys.modules.copy().keys():

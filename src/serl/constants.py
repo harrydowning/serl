@@ -63,7 +63,8 @@ List Options:
 
 RUN_OPTIONS = f"""Run Options:
     -r, --requirements            Install pip requirements.
-    --debug=FILE                  Create parser state debug file.
+    --debug-lexer                 Output tokens found line-by-line.
+    --debug-parser=FILE           Create parser state file.
     -H, --highlight=FILE          Create highlighted version of <src> in the 
                                   format of the extension of FILE.
     -f, --format=FORMAT           Override file extension format.
