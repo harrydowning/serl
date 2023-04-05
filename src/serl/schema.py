@@ -107,10 +107,7 @@ config_schema = {
     'required': ['tokens', 'grammar', 'code'] 
 }
 
-def validate(config: dict) -> Tuple[bool, str]:
-    try:
-        jsonschema.validate(config, config_schema)
-    except jsonschema.exceptions.ValidationError as ve:
-        error = f'{ve.message} for key \'{".".join(ve.absolute_path)}\'.'
-        return False, error
-    return True, ''
+def validate(config: dict) -> list[str]:
+    validator = jsonschema.Draft202012Validator(config_schema)
+    errs = validator.iter_errors(config)
+    return [f'{err.message} for \'{err.json_path}\'.' for err in errs]

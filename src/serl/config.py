@@ -58,9 +58,12 @@ def get_config(language: str) -> dict:
     config_text = get_config_text(language)
     config = yaml.safe_load(config_text) # TODO handle errors
 
-    valid, error = validate(config)
-    if valid:
+    errs = validate(config)
+    if errs == []:
         return config
     else:
-        logger.error(f'Validation error in config \'{language}\'. {error}',
-                     code=1)
+        err_msg = lambda file, err: f'Validation error in \'{file}\': {err}'
+        last = errs.pop()
+        for err in errs:
+            logger.error(err_msg(language, err))
+        logger.error(err_msg(language, last), code=1) 
