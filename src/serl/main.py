@@ -155,6 +155,7 @@ def command_line_run(args):
                          ' as \'<src>\' (filepath), \'[<src>]\' '
                          '(filepath or stdin) or nothing (stdin).')
     else:
+        language_args = {}
         src_input = next(iter(inputs), None) # First element if it exists
     
     # Read input file if prsent else read from stdin
@@ -215,23 +216,22 @@ def command_line_run(args):
         debug_parser_file, sync, permissive
     )
 
-    if debug_lexer:
-        flipped_token_map = utils.flip_dict(token_map)
-        lexer.input(src)
-        lines = src.count('\n') + 1
-        tokens_by_line = [[] for _ in range(lines)]
-        
-        while True:
-            tok = lexer.token()
-            if not tok: 
-                break
-            tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])
-        
-        logger.info(f'===== Debug Lexer =====', important=True)
-        for i, line in enumerate(tokens_by_line):
-            lineno = str(i + 1).rjust(len(str(lines)), ' ')
-            logger.info(f'{lineno}: {" ".join(line)}', important=True)
-        logger.info(f'===== Debug Lexer =====', important=True)
+    # Debug lexer
+    flipped_token_map = utils.flip_dict(token_map)
+    lexer.input(src)
+    lines = src.count('\n') + 1
+    tokens_by_line = [[] for _ in range(lines)]
+    
+    while True:
+        tok = lexer.token()
+        if not tok: 
+            break
+        tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])
+    
+    logger.info(f'Tokens Found:', important=debug_lexer)
+    for i, line in enumerate(tokens_by_line):
+        lineno = str(i + 1).rjust(len(str(lines)), ' ')
+        logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
 
     serl_ast = parser.parse(src, lexer=lexer)
     code = utils.normalise_dict(config['code'])
@@ -406,7 +406,9 @@ def main():
 
     logger.verbose = base_args.get('--verbose', False) or \
         args.get('--verbose', False)
-    logger.strict = base_args.get('--strict', False) or \
-        args.get('--strict', False)
 
-    globals()[f'command_line_{base_args["<command>"]}'](args)
+    try:
+        globals()[f'command_line_{base_args["<command>"]}'](args)
+    except Exception:
+        if not logger.error_seen:
+            raise

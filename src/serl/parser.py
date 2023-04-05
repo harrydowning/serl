@@ -52,7 +52,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     for rule in _precedence:
         split = re.split(r'\s+', rule.strip())
         tag = split.pop(0)
-        toks = [symbol_map[tok] for tok in split if symbol_map.get(tok, None)]
+        toks = [symbol_map.get(tok, tok) for tok in split]# if symbol_map.get(tok, None)]
         if len(toks) > 0:
             precedence.append((tag, *toks))
     g['precedence'] = precedence
@@ -63,19 +63,20 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
 
     sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)
-    debug = bool(debug_file)
     tabmodule = f'tabmodule_{utils.get_valid_identifier(lang_name)}'
 
     options = {
-        'debug': debug,
+        'debug': True,
+        'write_tables': False,
         'tabmodule': tabmodule,
         'errorlog': logger.LoggingWrapper(repl_map=sorted_flipped_symbol_map, 
                                           ply_repl=True)
     }
 
     # Remove tables file (tabmodule) to regenerate debug file
-    if debug:
-        debuglog = logger.get_file_logger(debug_file, verbose=debug,
+    debug_parser = bool(debug_file)
+    if debug_parser:
+        debuglog = logger.get_file_logger(debug_file, verbose=debug_parser,
                                           repl_map=sorted_flipped_symbol_map)
         options['debuglog'] = debuglog
         package_dir = pathlib.Path(__file__).parent.resolve()
@@ -86,7 +87,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
 
     parser = yacc.yacc(**options)
     
-    if debug:
+    if debug_parser:
         exit(0)
 
     g['parser'] = parser

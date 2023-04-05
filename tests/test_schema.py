@@ -51,11 +51,12 @@ test_data = [
     """, True),
     ("""
     tokens:
-        _ignore: string
+        token: string
     grammar:
         rule: string
     code:
         rule: string
+    Notes: string
     """, True),
     ("""
     version: string

@@ -8,8 +8,7 @@ SHELL_CHAR = '$'
 OPTIONS = """Options:
     -h, --help     Show this screen.
     -V, --version  Show version.
-    -v, --verbose  Provide more output.
-    --strict       Run in strict mode, stopping execution on warnings."""
+    -v, --verbose  Provide more output."""
 
 CLI = f"""{NAME}
 

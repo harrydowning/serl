@@ -3,17 +3,16 @@ import re
 from serl.constants import PLY_ERR_MSG
 
 verbose = False
-strict = False
+error_seen = False
 
 logging.basicConfig(format='%(levelname)s: %(message)s')
 logging.getLogger().setLevel(logging.INFO)
 
 class LoggingWrapper():
-    def __init__(self, logger = logging, *, verbose=None, strict=None, 
-                 repl_map={}, ply_repl=False):
+    def __init__(self, logger = logging, *, verbose=None, repl_map={}, 
+                 ply_repl=False):
         self.logger = logger
         self.verbose = verbose
-        self.strict = strict
         self.repl_map = repl_map
         self.ply_repl = ply_repl
     
@@ -70,15 +69,12 @@ class LoggingWrapper():
     def warning(self, msg, *args):
         msg = self._repl(msg, args)
         self.logger.warning(msg)
-        should_exit = self.strict if self.strict != None else strict
-        if should_exit:
-            exit(1)
 
-    def error(self, msg, *args, should_exit=True):
+    def error(self, msg, *args):
         msg = self._repl(msg, args)
         self.logger.error(msg)
-        if should_exit:
-            exit(1)
+        global error_seen
+        error_seen = True
 
 def get_file_logger(filename: str, **kwargs):
     file_logger = logging.getLogger('file')

@@ -45,7 +45,7 @@ grammar:
     - text | === <text>
 
 code:
-  first: $ echo hello
+  first: $ cd
   # main: | # py
   #   from pylatex import Package
   #   from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
