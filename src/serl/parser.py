@@ -68,7 +68,6 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
 
     options = {
         'debug': True,
-        'write_tables': False,
         'tabmodule': tabmodule,
         'errorlog': logger.LoggingWrapper(repl_map=sorted_flipped_symbol_map, 
                                           ply_repl=True)
