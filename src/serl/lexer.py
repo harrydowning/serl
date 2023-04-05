@@ -60,7 +60,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
         else:
             logger.error(f'Use of \'regex\' package requires \'CPython\' '
                          f'implementation. Current implementation: '
-                         f'\'{implementation}\'.')
+                         f'\'{implementation}\'.', code=1)
     
     flag_value = re.NOFLAG
     for flag_str in re.split(r'\s+', flags.strip()):

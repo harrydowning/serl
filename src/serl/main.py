@@ -109,7 +109,7 @@ def command_line_link(args):
         os.symlink(src, dst)
         print(f'Successfully linked \'{language}\'.')
     except Exception as e:
-        logger.error(f'Symbolic link error: {e}')
+        logger.error(f'Symbolic link error: {e}', code=1)
 
 def command_line_run(args):
     language = args['<language>']
@@ -153,7 +153,7 @@ def command_line_run(args):
         if not(isinstance(src_input, str) or src_input == None):
             logger.error('File to be parsed must be specified in usage pattern' 
                          ' as \'<src>\' (filepath), \'[<src>]\' '
-                         '(filepath or stdin) or nothing (stdin).')
+                         '(filepath or stdin) or nothing (stdin).', code=1)
     else:
         language_args = {}
         src_input = next(iter(inputs), None) # First element if it exists
@@ -195,7 +195,7 @@ def command_line_run(args):
     if common_keys:
         s = '\', \''
         logger.error(f'Grammar identifiers \'{s.join(common_keys)}\' already '
-                     f'used in tokens')
+                     f'used in tokens', code=1)
     
     symbol_map = token_map | grammar_map
     grammar = utils.normalise_grammar(symbol_map, grammar)
@@ -302,10 +302,13 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         if not node_code:
             return env
 
+        # try:
         if node_code.startswith(SHELL_CHAR):
             return run_command(node_code[1:], global_env | local_env | env)
         else:
             return exec_and_eval(node_code, global_env, local_env | env)
+        # except Exception as e:
+        #     logger.error(f'Uncaught error in \'{name}\', position {i + 1}: {e}', code=1)
     
     return Traversable(execute)
 
@@ -320,7 +323,7 @@ def command_line_install(args):
     
     if os.path.isfile(filename) and not upgrade:
         logger.error(f'Language \'{alias}\' already exists. '
-                     f'Use -U or --upgrade to override.')
+                     f'Use -U or --upgrade to override.', code=1)
     
     with open(filename, 'w') as file:
         file.write(config_text)

@@ -90,6 +90,6 @@ def get_pygments_output(src: str, tokens: dict[str, str], ignore: str,
     try:
         formatter = get_formatter_by_name(format, **format_options)
     except ClassNotFound:
-        logger.error(f'No Pygment formmatter found for \'{format}\'.')
+        logger.error(f'No Pygment formmatter found for \'{format}\'.', code=1)
 
     return pygments.highlight(src, lexer, formatter),formatter.get_style_defs()

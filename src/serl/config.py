@@ -40,18 +40,18 @@ def get_config_text(language: str) -> str | None:
         try:
             config_text = get_url_config_text(language)
         except requests.exceptions.ConnectionError as ce:
-            logger.error(ce)
+            logger.error(ce, code=1)
         except requests.exceptions.HTTPError as httpe:
-            logger.error(httpe)
+            logger.error(httpe, code=1)
         except requests.exceptions.RequestException as rqe:
-            logger.error(rqe)
+            logger.error(rqe, code=1)
     else:
         # File config has higher precedence than system
         config_text = get_file_config_text(language) or \
             get_file_config_text(language, get_config_dir())
         if config_text == None:
             logger.error(f"Could not find system or file config for " 
-                         f"\'{language}\'.")
+                         f"\'{language}\'.", code=1)
     return config_text
 
 def get_config(language: str) -> dict:
@@ -62,4 +62,5 @@ def get_config(language: str) -> dict:
     if valid:
         return config
     else:
-        logger.error(f'Validation error in config \'{language}\'. {error}')
+        logger.error(f'Validation error in config \'{language}\'. {error}',
+                     code=1)

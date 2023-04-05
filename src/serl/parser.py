@@ -37,10 +37,11 @@ def p_error(p):
     #     else:
     #         err_toks += tok
     if p != None:
-        logger.error('Parsing error: Reached end of file.')
+        logger.error('Parsing error: Reached end of file.', code=1)
     else:
         tok = p.value[0][0] if isinstance(p.value[0], list) else p.value[0]
-        logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}')
+        logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}', 
+                     code=1)
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[str],

@@ -70,11 +70,13 @@ class LoggingWrapper():
         msg = self._repl(msg, args)
         self.logger.warning(msg)
 
-    def error(self, msg, *args):
+    def error(self, msg, *args, code=0):
         msg = self._repl(msg, args)
-        self.logger.error(msg)
+        self.logger.error(msg) 
         global error_seen
         error_seen = True
+        if code:
+            exit(code)
 
 def get_file_logger(filename: str, **kwargs):
     file_logger = logging.getLogger('file')
@@ -94,5 +96,5 @@ def debug(msg, *args, **kwargs):
 def warning(msg, *args):
     logger.warning(msg, *args)
 
-def error(msg, *args):
-    logger.error(msg, *args)
+def error(msg, *args, **kwargs):
+    logger.error(msg, *args, **kwargs)
