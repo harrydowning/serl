@@ -13,6 +13,9 @@ Tool
 
 make sure any command line special characters are escaped
 
+.. Note::
+  Reported schema errors use Json Path notation.
+
 .. _highlighting:
 
 Highlighting

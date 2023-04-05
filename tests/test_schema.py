@@ -12,7 +12,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, True),
+    """, []),
     ("""
     version: 1
     usage: string
@@ -22,7 +22,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, True),
+    """, []),
     ("""
     usage: string
     tokens:
@@ -31,7 +31,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, True),
+    """, []),
     ("""
     version: string
     tokens:
@@ -40,7 +40,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, True),
+    """, []),
     ("""
     tokens:
         token: string
@@ -48,7 +48,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, True),
+    """, []),
     ("""
     tokens:
         token: string
@@ -57,7 +57,7 @@ test_data = [
     code:
         rule: string
     Notes: string
-    """, True),
+    """, []),
     ("""
     version: string
     usage: string
@@ -65,7 +65,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, False),
+    """, ['']),
     ("""
     version: string
     usage: string
@@ -73,7 +73,7 @@ test_data = [
         token: string
     code:
         rule: string
-    """, False),
+    """, ['']),
     ("""
     version: string
     usage: string
@@ -81,12 +81,22 @@ test_data = [
         token: string
     grammar:
         rule: string
-    """, False),
+    """, ['']),
+    ("""
+    version: string
+    usage: string
+    tokens:
+        token: string
+    grammar:
+        rule: string
+    code:
+        rule: [1,2,3,4,5,6,7,8,9,10]
+    """, [''] * 10),
 ]
 
 @pytest.mark.parametrize("test_config, expected", test_data, 
                          ids=[f'config{i}' for i in range(len(test_data))])
 def test_validate(test_config, expected):
     config = yaml.safe_load(test_config)
-    valid, _ = schema.validate(config)
-    assert valid == expected
+    errs = schema.validate(config)
+    assert len(errs) == len(expected)

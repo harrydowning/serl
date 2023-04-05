@@ -192,7 +192,7 @@ def command_line_run(args):
     
     for token in tokens_copy:
         tb, ta = tokens_copy[token].strip(), tokens[token].strip()
-        if tb != ta:
+        if tb != ta: # TODO case where expansion is actually equal?
             logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
@@ -261,7 +261,7 @@ def command_line_run(args):
 
     if main_code:
         global_env[serl_ast[0]] = execute_func
-        
+
         if main_code.startswith(SHELL_CHAR):
             result = run_command(main_code[1:], global_env)
         else:
@@ -312,16 +312,25 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         
         if not node_code:
             return env
-
-        # try:
-        if node_code.startswith(SHELL_CHAR):
-            return run_command(node_code[1:], global_env | local_env | env)
-        else:
-            return exec_and_eval(node_code, global_env, local_env | env)
+        print(name)
+        try:
+            if node_code.startswith(SHELL_CHAR):
+                return run_command(node_code[1:], global_env | local_env | env)
+            else:
+                return exec_and_eval(node_code, global_env, local_env | env)
+        except SyntaxError as err:
+            err.add_note(f'({name}, {i})')
+            raise
+        except subprocess.CalledProcessError:
+            pass
+        except Exception as err:
+            print(name)
+            err.add_note(name)
+            raise
         # except Exception as e:
         #     cl, exc, tb = sys.exc_info()
         #     lineno = traceback.extract_tb(tb)[-1][1]
-        #     logger.error(f'Uncaught error in \'{name}\', position {i + 1}: {e}', code=1)
+        #     logger.error(f'Error in functionality block \'{name}\', position {i + 1}: {e}', code=1)
     
     return Traversable(execute)
 

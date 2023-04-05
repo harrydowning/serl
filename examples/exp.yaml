@@ -10,7 +10,7 @@ tokens:
 precedence:
   - left + -
   - left * /
-  - right UMINUS
+  # - right UMINUS
 
 grammar:
   exp:
@@ -18,16 +18,18 @@ grammar:
     - exp - exp
     - exp * exp
     - exp / exp
-    - '- exp'
+    # - '- exp UMINUS'
     - (exp)
     - num
   
-code:
-  exp:
-    - exp[0]() + exp[1]()
-    - exp[0]() - exp[1]()
-    - exp[0]() * exp[1]()
-    - exp[0]() / exp[1]()
-    - '-exp()'
-    - exp()
-    - int(num[0])
+# code:
+#   exp:
+#     - exp[0]() + exp[1]()
+#     - exp[0]() - exp[1]()
+#     - exp[0]() * exp[1]()
+#     - exp[0]() / exp[1]()
+#     # - '-exp()'
+#     - exp()
+#     - | # py
+#       a = int(num[0])
+#       raise Exception('hi')

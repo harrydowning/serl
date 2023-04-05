@@ -1,0 +1,6 @@
+Syntax errors:
+- nonassoc
+- panic mode
+
+Error handling
+- errors can propagate and can be handled by user
