@@ -4,6 +4,7 @@ VERSION = '0.0.2-alpha'
 SYSTEM_CONFIG_DIR = f'.{NAME}'
 SYSTEM_CONFIG_ENV_DIR = 'environments'
 SHELL_CHAR = '$'
+VENV_CONFIG = 'pyvenv.cfg'
 
 OPTIONS = """Options:
     -h, --help     Show this screen.

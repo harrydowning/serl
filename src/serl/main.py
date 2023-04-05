@@ -1,7 +1,18 @@
 import sys
 init_modules = sys.modules.copy().keys()
 
-import os, fileinput, subprocess, pathlib, re, venv, site, shutil, ast, glob
+import os
+import fileinput
+import subprocess
+import pathlib
+import re
+import venv
+import site
+import shutil
+import ast
+import glob
+import traceback
+
 from docopt import docopt
 import networkx as nx
 from serl.lexer import build_lexer
@@ -12,7 +23,7 @@ from serl.highlight import get_pygments_output, parse_key_value
 from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
-    DEFAULT_REF, SHELL_CHAR
+    DEFAULT_REF, SHELL_CHAR, VENV_CONFIG
 
 class Traversable():
     def __init__(self, f):
@@ -116,18 +127,18 @@ def command_line_run(args):
     lang_name = utils.get_language_name(language)
     config = get_config(language)
 
-    venv = config.get('environment', None)
+    venv_name = config.get('environment', None)
     venv_created = False
-    if venv:
+    if venv_name:
         for sitepackage in site.getsitepackages():
             sys.path.remove(sitepackage)
         
-        venv_path = os.path.join(get_config_env_dir(), venv)
-        if not os.path.exists(venv_path):
-            logger.info(f'Creating virtual environment \'{venv}\'.', 
+        venv_path = os.path.join(get_config_env_dir(), venv_name)
+        if not glob.glob(os.path.join(venv_path, VENV_CONFIG)):
+            logger.info(f'Creating virtual environment \'{venv_name}\'.', 
                         important=True)
             venv.create(venv_path, with_pip=True)
-            env_created = True
+            venv_created = True
         
         for sitepackage in site.getsitepackages([venv_path]):
             sys.path.append(sitepackage)
@@ -308,6 +319,8 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         else:
             return exec_and_eval(node_code, global_env, local_env | env)
         # except Exception as e:
+        #     cl, exc, tb = sys.exc_info()
+        #     lineno = traceback.extract_tb(tb)[-1][1]
         #     logger.error(f'Uncaught error in \'{name}\', position {i + 1}: {e}', code=1)
     
     return Traversable(execute)
@@ -349,7 +362,7 @@ def command_line_uninstall(args: dict):
 def command_line_list(args):
     languages = system_config_languages()
     config_env_dir = get_config_env_dir() + os.sep
-    glob_path = os.path.join(config_env_dir, '**', 'pyvenv.cfg')
+    glob_path = os.path.join(config_env_dir, '**', VENV_CONFIG)
     envs = glob.glob(glob_path, recursive=True)
     envs = [
         str(pathlib.Path(path).parent.resolve()).removeprefix(config_env_dir) 
@@ -415,3 +428,4 @@ def main():
     except Exception:
         if not logger.error_seen:
             raise
+        exit(1)
