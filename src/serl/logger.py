@@ -57,22 +57,22 @@ class LoggingWrapper():
                           if t == 's' else args[i] 
                           for i, (_, t) in enumerate(matches)])
 
-    def info(self, msg, *args, important=False):
+    def info(self, msg, *args, important=False, **kwargs):
         msg = self._repl(msg, args)
         should_show = self.verbose if self.verbose != None else verbose
         if should_show or important:
-            self.logger.info(msg)
+            self.logger.info(msg, **kwargs)
 
     def debug(self, msg, *args, **kwargs):
         self.info(msg, *args, **kwargs)
 
-    def warning(self, msg, *args):
+    def warning(self, msg, *args, **kwargs):
         msg = self._repl(msg, args)
-        self.logger.warning(msg)
+        self.logger.warning(msg, **kwargs)
 
-    def error(self, msg, *args, code=0):
+    def error(self, msg, *args, code=0, **kwargs):
         msg = self._repl(msg, args)
-        self.logger.error(msg) 
+        self.logger.error(msg, **kwargs) 
         global error_seen
         error_seen = True
         if code:
@@ -93,8 +93,8 @@ def info(msg, *args, **kwargs):
 def debug(msg, *args, **kwargs):
     logger.debug(msg, *args, **kwargs)
 
-def warning(msg, *args):
-    logger.warning(msg, *args)
+def warning(msg, *args, **kwargs):
+    logger.warning(msg, *args, **kwargs)
 
 def error(msg, *args, **kwargs):
     logger.error(msg, *args, **kwargs)

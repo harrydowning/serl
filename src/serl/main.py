@@ -259,15 +259,29 @@ def command_line_run(args):
     }
     execute_func = get_execute_func(serl_ast, code, global_env)
 
-    if main_code:
-        global_env[serl_ast[0]] = execute_func
-
-        if main_code.startswith(SHELL_CHAR):
-            result = run_command(main_code[1:], global_env)
+    try:
+        if main_code:
+            global_env[serl_ast[0]] = execute_func
+            result = exec_or_error(main_code[0], 0, main_code[1], global_env)
         else:
-            result = exec_and_eval(main_code, global_env)
-    else:
-        result = execute_func()
+            result = execute_func()
+    except SyntaxError as err:
+        err.__traceback__ = None
+        err.__context__ = None
+        err.__notes__ = None
+        logger.error(f'In {err.filename}:\n\n', exc_info=True, code=1)
+    except subprocess.CalledProcessError as err:
+        err.__notes__ = None
+        logger.error(f'In {err.filename}:\n\n{err.stderr}',code=err.returncode)
+    except Exception as err:
+        lineno = traceback.extract_tb(sys.exc_info()[2])[-1][1]
+        err.__traceback__ = None
+        err.__context__ = None
+        code_name, i = err.__notes__[0].rsplit(' ', 1)
+        code_line = code[code_name][int(i)].split('\n')[lineno - 1]
+        err.__notes__ = None
+        logger.error(f'In {err.filename}, line {lineno}:\n\n  {code_line}\n\n', 
+                     exc_info=True, code=1)
 
     if result:
         print(result, end='')
@@ -291,6 +305,19 @@ def run_command(command: str, env: dict):
     return subprocess.run(command, capture_output=True, text=True, shell=True, 
                           check=True).stdout
 
+def exec_or_error(name, i, code_str, global_env, local_env=None):
+    try:
+        if code_str.startswith(SHELL_CHAR):
+            local_env = local_env or {}
+            return run_command(code_str[1:], global_env | local_env)
+        else:
+            return exec_and_eval(code_str, global_env, local_env)
+    except Exception as err:
+        if not getattr(err, '__notes__', None):
+            err.filename = f'$.code.{name}[{i}]'
+            err.add_note(f'{name} {i}')
+        raise
+
 def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
     name, i, value = serl_ast
     env = {}
@@ -308,29 +335,12 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         active = False
 
         code_list = code.get(name, None)
-        node_code = code_list[i] if code_list and len(code_list) > i else None
+        code_str = code_list[i] if code_list and len(code_list) > i else None
         
-        if not node_code:
+        if not code_str:
             return env
-        print(name)
-        try:
-            if node_code.startswith(SHELL_CHAR):
-                return run_command(node_code[1:], global_env | local_env | env)
-            else:
-                return exec_and_eval(node_code, global_env, local_env | env)
-        except SyntaxError as err:
-            err.add_note(f'({name}, {i})')
-            raise
-        except subprocess.CalledProcessError:
-            pass
-        except Exception as err:
-            print(name)
-            err.add_note(name)
-            raise
-        # except Exception as e:
-        #     cl, exc, tb = sys.exc_info()
-        #     lineno = traceback.extract_tb(tb)[-1][1]
-        #     logger.error(f'Error in functionality block \'{name}\', position {i + 1}: {e}', code=1)
+        
+        return exec_or_error(name, i, code_str, global_env, local_env | env)
     
     return Traversable(execute)
 

@@ -89,9 +89,9 @@ def get_valid_identifier(s: str):
 
 def get_main_code(
         code: dict[str, list[str]], grammar_map: dict[str, str]
-    ) -> str | None:
+    ) -> tuple[str, str] | None:
     item = next(iter(code.items()), None)
     if item:
-        return None if item[0] in grammar_map else next(iter(item[1]), None)
+        return None if item[0] in grammar_map else (item[0], next(iter(item[1]), None))
     else:
         return None
