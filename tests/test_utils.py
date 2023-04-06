@@ -142,9 +142,12 @@ def test_get_language_name(language, expected):
     actual = utils.get_language_name(language)
     assert actual == expected
 
-def test_filter_dict_keys():
-    actual = utils.filter_dict_keys({'a': 1, 'b': 2, 'c': 3}, ['a', 'c'])
-    expected = {'a': 1, 'c': 3}
+@pytest.mark.parametrize('d, l, expected', [
+    ({'a': 1, 'b': 2, 'c': 3}, ['a', 'c'], {'a': 1, 'c': 3}), 
+    ({'a': 1, 'b': 2, 'c': 3}, [], {})
+])
+def test_keep_keys_in_list(d, l, expected):
+    actual = utils.keep_keys_in_list(d, l)
     assert actual == expected
 
 @pytest.mark.parametrize('string, expected', [
@@ -155,7 +158,7 @@ def test_get_valid_identifier(string, expected):
     assert actual == expected
 
 @pytest.mark.parametrize('code, expected', [
-    ({'init': ['c1', 'c2'], 'MAIN': ['c3'], 'OTHER': ['c4']}, 'c1'),
+    ({'init': ['c1', 'c2'], 'MAIN': ['c3'], 'OTHER': ['c4']}, ('init', 'c1')),
     ({'MAIN': ['c2'], 'OTHER': ['c3']}, None),
     ({'MAIN': ['c1'], 'init': ['c2'], 'OTHER': ['c3']}, None)
 ])

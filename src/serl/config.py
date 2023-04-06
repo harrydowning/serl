@@ -1,9 +1,12 @@
-import os, re
-import yaml
-import requests
+import os
+import re
+
 import serl.logger as logger
 from serl.constants import SYSTEM_CONFIG_DIR, SYSTEM_CONFIG_ENV_DIR
 from serl.schema import validate
+
+import yaml
+import requests
 
 def get_config_dir(path=[]) -> str:
     home = os.path.expanduser('~')

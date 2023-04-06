@@ -1,4 +1,5 @@
-import re, os
+import re
+import os
 from typing import Callable
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], 
@@ -79,7 +80,7 @@ def get_language_name(language: str):
     name, ext = os.path.splitext(os.path.basename(language))
     return name
 
-def filter_dict_keys(d: dict, l: list[str]):
+def keep_keys_in_list(d: dict, l: list):
     return {k: v for k, v in d.items() if k in l}
 
 def get_valid_identifier(s: str):

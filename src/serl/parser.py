@@ -1,6 +1,11 @@
-import itertools, re, pathlib, os
+import itertools
+import re
+import pathlib
+import os
+
 import serl.logger as logger
 import serl.utils as utils
+
 import ply.yacc as yacc
 
 class SerlAST(tuple):

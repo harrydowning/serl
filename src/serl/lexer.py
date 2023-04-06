@@ -1,7 +1,10 @@
-import re, regex
-import serl.logger as logger
-import ply.lex as lex
+import re
 import platform
+
+import serl.logger as logger
+
+import ply.lex as lex
+import regex
 
 implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'

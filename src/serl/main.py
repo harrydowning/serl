@@ -13,8 +13,6 @@ import ast
 import glob
 import traceback
 
-from docopt import docopt
-import networkx as nx
 from serl.lexer import build_lexer
 from serl.parser import build_parser, SerlAST
 import serl.utils as utils
@@ -24,6 +22,9 @@ from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
     DEFAULT_REF, SHELL_CHAR, VENV_CONFIG
+
+from docopt import docopt
+import networkx as nx
 
 class Traversable():
     def __init__(self, f):
@@ -212,8 +213,8 @@ def command_line_run(args):
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
     tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    tokens = utils.filter_dict_keys(tokens, tokens_in_grammar)
-    token_map = utils.filter_dict_keys(token_map, tokens_in_grammar)
+    tokens = utils.keep_keys_in_list(tokens, tokens_in_grammar)
+    token_map = utils.keep_keys_in_list(token_map, tokens_in_grammar)
     symbol_map = token_map | grammar_map
 
     if args['--highlight']:
@@ -243,10 +244,19 @@ def command_line_run(args):
     for i, line in enumerate(tokens_by_line):
         lineno = str(i + 1).rjust(len(str(lines)), ' ')
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
+    # Debug lexer
 
     serl_ast = parser.parse(src, lexer=lexer)
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)
+    
+    for code_name, code_list in code.items():
+        internal_name = grammar_map.get(code_name, None)
+        if not internal_name: continue
+        for i in range(len(grammar[internal_name])):
+            value = code_list[i] if len(code_list) > i else None
+            if value == None:
+                logger.warning(f'Code missing for $.code.{code_name}[{i}]')
     
     # Remove module cache to allow for correct user import
     for module in sys.modules.copy().keys():
