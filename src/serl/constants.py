@@ -110,18 +110,25 @@ DEFAULT_REF = r'^token(?!$)|(?<= )token'
 
 PLY_ERR_MSG = {
     # lex 3.11 errorlog messages
-    '%s:%d: Regular expression for rule \'%s\' matches empty string': 
-        ('Regular expression for token \'%s\' matches empty string', [2]),
-    'Invalid regular expression for rule \'%s\'. %s': 
-        ('Invalid regular expression for token \'%s\'.', [0]),
-    '%s:%d: Invalid regular expression for rule \'%s\'. %s': 
-        ('Invalid regular expression for token \'%s\'.', [2]),
-    '%s:%d. Make sure \'#\' in rule \'%s\' is escaped with \'\\#\'': 
-        ('Make sure \'#\' in token \'%s\' is escaped with \'\\#\'', [2]),
+    r".*:\d+: No regular expression defined for rule ('.*?')":
+        r"No regular expression defined for rule \1",
+    r".*:\d+: Regular expression for rule ('.*?') matches empty string": 
+        r'Regular expression for token \1 matches empty string',
+    r"Invalid regular expression for rule ('.*?').(.*?)": 
+        r'Invalid regular expression for token \1:\2',
+    
+    r".*:\d+: Invalid regular expression for rule ('.*?').(.*)": 
+        r'Invalid regular expression for token \1:\2',
+    r".*:\d+. Make sure '#' in rule ('.*?') is escaped with '\\#'": 
+        r"Make sure '#' in token \1 is escaped with '\#'",
     
     # yacc 3.11 errorlog messages
-    '%s:%d: Symbol %r used, but not defined as a token or a rule': 
-        ('Symbol %r used, but not defined as a token or a rule', [2]),
-    '%s:%d: Rule %r defined, but not used': 
-        ('Rule %r defined, but not used', [2]),
+    r".*:\d+: Symbol ('.*?') used, but not defined as a token or a rule": 
+        r'Symbol \1 used, but not defined as a token or a rule',
+    r".*:\d+: Rule ('.*?') defined, but not used": 
+        r'Rule \1 defined, but not used',
+    
+    # yacc 3.11 GrammarErrors
+    r".*:\d+: Illegal name ('.*?') in rule '.*?'": 
+        r'Symbol \1 used, but not defined as a token or rule'
 }

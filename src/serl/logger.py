@@ -18,17 +18,18 @@ class LoggingWrapper():
         self.ply_repl = ply_repl
     
     def _repl(self, msg, args):
-        msg, args = self._ply_repl(msg, args)
         args = self._args_repl(msg, args)
-        msg %= args
+        msg = self._ply_repl(msg, args)
         return self._str_repl(msg)
 
     def _ply_repl(self, msg, args):
-        if not self.ply_repl or not msg in PLY_ERR_MSG:
-            return msg, args
-        else:
-            new_msg, arg_idxs = PLY_ERR_MSG[msg]
-            return new_msg, tuple(args[i] for i in arg_idxs)
+        msg %= args
+        if self.ply_repl:
+            for key, template in PLY_ERR_MSG.items():
+                match = re.match(key, msg)
+                if match: 
+                    return match.expand(template)
+        return msg
 
     def _str_repl(self, s: str) -> str:
         for pattern, repl in self.repl_map.items():
