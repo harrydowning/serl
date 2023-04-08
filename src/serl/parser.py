@@ -32,14 +32,8 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     return f
 
 def get_error_msg(p, parser, flipped_symbol_map):
-    tok = get_whole_match(p)
-    tok_type = flipped_symbol_map[p.type]
-    if tok == tok_type:
-        tok_msg = f'Token \'{tok}\''
-    else:
-        tok_msg = f'Token \'{tok}\' of type \'{tok_type}\''
     expected = [
-        'EOF' if symbol == '$end' else flipped_symbol_map[symbol] 
+        'end of file' if symbol == '$end' else flipped_symbol_map[symbol] 
         for symbol in parser.action[parser.state].keys()
     ]
     
@@ -48,15 +42,22 @@ def get_error_msg(p, parser, flipped_symbol_map):
     else:
         s = '\' or \''
         expected_msg = f' Expected \'{s.join(expected)}\'.'
+
+    if not p:
+        return f'Parsing error: Reached end of file.{expected_msg}'
+
+    tok = get_whole_match(p)
+    tok_type = flipped_symbol_map[p.type]
+    if tok == tok_type:
+        tok_msg = f'Token \'{tok}\''
+    else:
+        tok_msg = f'Token \'{tok}\' of type \'{tok_type}\''
     
     return f'Parsing error: {tok_msg} on line {p.lineno}.{expected_msg}'
 
 def get_error_func(parser, sync, permissive, flipped_symbol_map):
     def p_error(p):
-        if not p:
-            logger.error('Parsing error: Reached end of file.', code=1)
-        else:
-            logger.error(get_error_msg(p, parser, flipped_symbol_map), code=1)
+        logger.error(get_error_msg(p, parser, flipped_symbol_map), code=1)
     return p_error
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
