@@ -5,6 +5,7 @@ import os
 
 import serl.logger as logger
 import serl.utils as utils
+from serl.lexer import get_whole_match
 
 import ply.yacc as yacc
 
@@ -30,23 +31,33 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     f.__doc__ = f'{prod[0]} : {prod[2]}'
     return f
 
-def p_error(p):
-    # err_toks = []
-    # while True:
-    #     tok = parser.token()
-    #     if tok == None:
-    #         logger.error('Parsing error: Reached end of file.')
-    #     elif tok in sync:
-    #         parser.errok()
-    #         return tok
-    #     else:
-    #         err_toks += tok
-    if p != None:
-        logger.error('Parsing error: Reached end of file.', code=1)
+def get_error_msg(p, parser, flipped_symbol_map):
+    tok = get_whole_match(p)
+    tok_type = flipped_symbol_map[p.type]
+    if tok == tok_type:
+        tok_msg = f'Token \'{tok}\''
     else:
-        tok = p.value[0][0] if isinstance(p.value[0], list) else p.value[0]
-        logger.error(f'Parsing error: Token \'{tok}\' on line {p.lineno}', 
-                     code=1)
+        tok_msg = f'Token \'{tok}\' of type \'{tok_type}\''
+    expected = [
+        'EOF' if symbol == '$end' else flipped_symbol_map[symbol] 
+        for symbol in parser.action[parser.state].keys()
+    ]
+    
+    if expected == []:
+        expected_msg = ''
+    else:
+        s = '\' or \''
+        expected_msg = f' Expected \'{s.join(expected)}\'.'
+    
+    return f'Parsing error: {tok_msg} on line {p.lineno}.{expected_msg}'
+
+def get_error_func(parser, sync, permissive, flipped_symbol_map):
+    def p_error(p):
+        if not p:
+            logger.error('Parsing error: Reached end of file.', code=1)
+        else:
+            logger.error(get_error_msg(p, parser, flipped_symbol_map), code=1)
+    return p_error
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[str],
@@ -91,9 +102,12 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             pass
 
     parser = yacc.yacc(**options)
+
+    sync = [] if not sync else re.split(r'\s+', sync.strip())
+    error_func = get_error_func(parser, sync, permissive, flipped_symbol_map)
+    parser.errorfunc = error_func
     
     if debug_parser:
         exit(0)
 
-    g['parser'] = parser
     return parser

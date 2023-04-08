@@ -27,7 +27,10 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
                 (ignore, Comment)
             ]
         }
-    return PygmentsLexer()
+    try:
+        return PygmentsLexer()
+    except ValueError as err:
+        logger.error(f'Syntax highlighter lexer error: {err}', code=1)
 
 def get_pygments_style(style: StyleMeta, user_styles: dict[str, str]):
     attrs = {

@@ -197,7 +197,7 @@ def command_line_run(args):
             logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
-    sync = config.get('sync', [])
+    sync = config.get('sync', None)
     grammar = config['grammar']
     permissive = meta.get('permissive', True)
 
@@ -229,13 +229,14 @@ def command_line_run(args):
     )
 
     # Debug lexer
+    lexer_clone = lexer.clone()
     flipped_token_map = utils.flip_dict(token_map)
-    lexer.input(src)
+    lexer_clone.input(src)
     lines = src.count('\n') + 1
     tokens_by_line = [[] for _ in range(lines)]
     
     while True:
-        tok = lexer.token()
+        tok = lexer_clone.token()
         if not tok: 
             break
         tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])

@@ -32,14 +32,20 @@ def newline(t):
     t.lexer.lineno += len(t.value)
 
 def t_error(t):
-    logger.warning(f'Illegal character \'{t.value[0]}\' on line '
-                   f'{t.lexer.lineno}.')
+    logger.error(f'Illegal character \'{t.value[0]}\' on line '
+                 f'{t.lexer.lineno}.')
 
 def get_ignore_func(pattern):
     def f(t): pass
     f.__name__ = 'ignore'
     f.__doc__ = pattern
     return f
+
+def get_whole_match(token):
+    if isinstance(token.value[0], list):
+        return token.value[0][0]
+    else:
+        return token.value[0]
 
 def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
                 using_regex: bool, flags: str):
