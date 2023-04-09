@@ -59,6 +59,7 @@ It can be used in the following ways:
 --------------
 :Type: ``object``
 :Required: ``True``
+:Property Type: ``string``
 
 
 
@@ -67,8 +68,39 @@ Token names shouldn't contain whitespace.
 .. note ::
   A note on verbose regex
 
+:Example:
+
+.. code-block:: yaml
+
+  tokens:
+    +: \+
+    '-': \-
+    '*': \*
+    /: /
+    (: \(
+    ): \)
+    num: \d+
+
 :code:`precedence`
 ------------------
+:Type: ``array``
+:Required: False
+:Item Type: ``string``
+
+A list of token precedence levels with the lowest being the first item in the list.
+This can be used to disambiguate shift/reduce or reduce/reduce parser conflicts.
+Precedence levels are specified as an association type followed by a whitespace seperated list of tokens.
+Association type can be either ``left``, ``right``, or ``nonassoc``.
+
+:Example:
+
+.. code-block:: yaml
+
+  precedence:
+    - left + -
+    - right * /
+    - nonassoc < >
+
 
 :code:`sync`
 ------------
@@ -149,16 +181,11 @@ If you don't want to return anything you can explicitly make the final statement
 
 Shell Commands
 ~~~~~~~~~~~~~~
-Shell commands can be used by making the first character of the property value :code:`$`
-
-
-.. Note::
-  To be able to access values with identifiers containing special characters not normally allowed within environment variables ensure the more explicit syntax ``${...}`` is used e.g., ``${*${}``.
-  The exception is the character ``}`` which can't be referenced with any syntax.
+Shell commands can be used by making the first character of the property value :code:`$`.
+Global, local, and :term:`grammar variables`` can be accessed through the Python `format language <>`_.
 
 .. Note::
-  In general it is also recommened to use Unix style environment variable syntax (``$...`` and ``${...}``) as this makes languages more portable since these are also supported on Windows.
-
+  Use of ``{`` or ``}`` in other contexts than for format strings require escaping with ``{{`` or  ``}}``.
 
 :Example:
 
@@ -170,6 +197,11 @@ Shell commands can be used by making the first character of the property value :
 
 :code:`tokentypes`
 ------------------
+:Type: ``object``
+:Required: ``False``
+:Property Type: ``string``
+
+
 
 :code:`styles`
 --------------
