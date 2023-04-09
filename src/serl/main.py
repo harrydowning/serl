@@ -12,6 +12,7 @@ import shutil
 import ast
 import glob
 import traceback
+import inspect
 
 from serl.lexer import build_lexer
 from serl.parser import build_parser, SerlAST
@@ -212,9 +213,10 @@ def command_line_run(args):
     symbol_map = token_map | grammar_map
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
-    tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    tokens = utils.keep_keys_in_list(tokens, tokens_in_grammar)
-    token_map = utils.keep_keys_in_list(token_map, tokens_in_grammar)
+    tokens_used, implicit_map = utils.get_tokens_in_grammar(token_map, grammar)
+    tokens = utils.keep_keys_in_list(tokens, tokens_used)
+    token_map = utils.keep_keys_in_list(token_map, tokens_used) | implicit_map
+    tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
     symbol_map = token_map | grammar_map
 
     if args['--highlight']:
@@ -247,7 +249,8 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parse(src, lexer=lexer)
+    serl_ast = parser.parsedebug(src, lexer=lexer, debug=logger.LoggingWrapper(repl_map=utils.get_sorted_map(utils.flip_dict(symbol_map))))
+    # serl_ast = parser.parse(src, lexer=lexer)
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)
     
@@ -350,7 +353,7 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         
         if not code_str:
             return env
-        
+
         return exec_or_error(name, i, code_str, global_env, local_env | env)
     
     return Traversable(execute)
@@ -452,10 +455,10 @@ def main():
 
     logger.verbose = base_args.get('--verbose', False) or \
         args.get('--verbose', False)
-
+    # TODO sys.setrecursionlimit(20000)
     try:
         globals()[f'command_line_{base_args["<command>"]}'](args)
     except Exception:
         if not logger.error_seen:
             raise
-        exit(1)
+        raise # TODO exit(1)
