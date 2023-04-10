@@ -178,7 +178,7 @@ def command_line_run(args):
     meta = config.get('meta', {})
     meta_tokens = meta.get('tokens', {})
 
-    tokens = config['tokens']
+    tokens = config.get('tokens', {})
     ref = meta_tokens.get('ref', DEFAULT_REF)
     using_regex = meta_tokens.get('regex', False)
     ignore = meta_tokens.get('ignore', '.')
@@ -288,14 +288,17 @@ def command_line_run(args):
         err.__notes__ = None
         logger.error(f'In {err.filename}:\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
-        lineno = traceback.extract_tb(sys.exc_info()[2])[-1][1]
+        tb = traceback.extract_tb(err.__traceback__)[-1]
+        lineno = tb.lineno
         err.__traceback__ = None
         err.__context__ = None
         code_name, i = err.__notes__[0].rsplit(' ', 1)
-        code_line = code[code_name][int(i)].split('\n')[lineno - 1]
+        code_lines = code[code_name][int(i)].split('\n')
+        code_line = ':'
+        if tb.filename == '<string>' and lineno - 1 < len(code_lines):
+            code_line = f', line {lineno}:\n\n  {code_lines[lineno - 1]}'
         err.__notes__ = None
-        logger.error(f'In {err.filename}, line {lineno}:\n\n  {code_line}\n\n', 
-                     exc_info=True, code=1)
+        logger.error(f'In {err.filename}{code_line}\n\n', exc_info=True,code=1)
 
     if result:
         print(result, end='')
@@ -323,6 +326,7 @@ def exec_or_error(name, i, code_str, global_env, local_env=None):
     try:
         if code_str.startswith(SHELL_CHAR):
             local_env = local_env or {}
+            local_env = {'locals()': local_env} | local_env
             return run_command(code_str[1:], global_env | local_env)
         else:
             return exec_and_eval(code_str, global_env, local_env)

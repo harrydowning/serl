@@ -103,7 +103,7 @@ config_schema = {
             'type': 'string'
         }
     },
-    'required': ['tokens', 'grammar', 'code'] 
+    'required': ['grammar', 'code'] 
 }
 
 def validate(config: dict) -> list[str]:
