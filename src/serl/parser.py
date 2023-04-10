@@ -2,8 +2,6 @@ import itertools
 import re
 import pathlib
 import os
-import inspect
-import ctypes
 
 import serl.logger as logger
 import serl.utils as utils
@@ -11,8 +9,6 @@ from serl.lexer import get_whole_match
 
 import ply.yacc as yacc
 
-# parser = None
-# symstack, statestack, state = [], [], 0
 class SerlAST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(SerlAST, cls).__new__(cls, (name, pos, value))
@@ -23,9 +19,6 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
-        # global symstack, statestack, state
-        # symstack, statestack, state = get_local_state()
-
         p[0] = SerlAST(
             flipped_symbol_map[prod[0]], 
             prod[1], 
@@ -62,50 +55,15 @@ def get_error_msg(p, parser, flipped_symbol_map):
     
     return f'Parsing error: {tok_msg} on line {p.lineno}.{expected_msg}'
 
-def update_local_state(state: int):
-    frame = inspect.currentframe().f_back.f_back.f_back
-    frame.f_locals['state'] = state
-    ctypes.pythonapi.PyFrame_LocalsToFast(ctypes.py_object(frame),ctypes.c_int(1))
-    # print(frame.f_locals)
-
-# def get_local_state():
-#     frame = inspect.currentframe().f_back.f_back
-#     statestack = frame.f_locals['statestack'].copy()
-#     plen = frame.f_locals['plen']
-#     del statestack[-plen:]
-#     symstack = frame.f_locals['symstack'].copy()
-#     sym = frame.f_locals['sym']
-#     symstack.append(sym)
-#     pname = frame.f_locals['pname']
-#     goto = frame.f_locals['goto']
-#     state = goto[statestack[-1]][pname]
-#     statestack.append(state)
-#     return symstack, statestack, state
-
-def get_error_func(parser, sync, permissive, flipped_symbol_map):
+def get_error_func(parser, flipped_symbol_map):
+    symstack = None
     def error_func(p):
-        logger.error(get_error_msg(p, parser, flipped_symbol_map))
-
-        # if not p:
-        #     print("End of File!")
-        #     return
-
-        # while True:
-        #     tok = parser.token()
-        #     if not tok or tok.type in sync: 
-        #         break
-        
-        # parser.statestack.clear()
-        # for s in statestack:
-        #     parser.statestack.append(s)
-        
-        # parser.symstack.clear()
-        # for sym in symstack:
-        #     parser.symstack.append(sym)
-
-        # update_local_state(state)
-
-        # parser.errok()
+        nonlocal symstack
+        if parser.symstack != symstack:
+            logger.error(get_error_msg(p, parser, flipped_symbol_map))
+        symstack = parser.symstack.copy()
+        logger.info(f'Token \'{get_whole_match(p)}\' discarded.')
+        parser.errok()
     return error_func
 
 def p_error(p):
@@ -113,7 +71,7 @@ def p_error(p):
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[str],
-                 debug_file: str | None, sync: str, permissive: bool):
+                 debug_file: str | None):
     g = globals()
     g['tokens'] = _tokens
     
@@ -155,9 +113,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
 
     parser = yacc.yacc(**options)
 
-    sync = [] if not sync else re.split(r'\s+', sync.strip())
-    sync = [symbol_map.get(symbol, symbol) for symbol in sync]
-    error_func = get_error_func(parser, sync, permissive, flipped_symbol_map)
+    error_func = get_error_func(parser, flipped_symbol_map)
     parser.errorfunc = error_func
     g['parser'] = parser
     

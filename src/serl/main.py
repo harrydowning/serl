@@ -198,15 +198,15 @@ def command_line_run(args):
             logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
-    sync = config.get('sync', None)
     grammar = config['grammar']
-    permissive = meta.get('permissive', True)
+    meta_grammar = meta.get('grammar', {})
+    permissive = meta_grammar.get('permissive', True)
 
     token_map = {k: f'TERMINAL{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERMINAL{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
+    s = '\', \''
     if common_keys:
-        s = '\', \''
         logger.error(f'Grammar identifiers \'{s.join(common_keys)}\' already '
                      f'used in tokens', code=1)
     
@@ -218,6 +218,9 @@ def command_line_run(args):
     token_map = utils.keep_keys_in_list(token_map, tokens_used) | implicit_map
     tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
     symbol_map = token_map | grammar_map
+    
+    if len(implicit_map):
+        logger.info(f'Implicit tokens: \'{s.join(implicit_map.keys())}\'')
 
     if args['--highlight']:
         tokentypes = config.get('tokentypes', {})
@@ -227,7 +230,7 @@ def command_line_run(args):
     lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
     parser = build_parser(
         lang_name, list(token_map.values()), symbol_map, grammar, precedence, 
-        debug_parser_file, sync, permissive
+        debug_parser_file
     )
 
     # Debug lexer
@@ -249,8 +252,10 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parsedebug(src, lexer=lexer, debug=logger.LoggingWrapper(repl_map=utils.get_sorted_map(utils.flip_dict(symbol_map))))
-    # serl_ast = parser.parse(src, lexer=lexer)
+    serl_ast = parser.parse(src, lexer=lexer)
+    if not permissive and logger.error_seen:
+        exit(1)
+    
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)
     
