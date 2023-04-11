@@ -5,6 +5,7 @@ SYSTEM_CONFIG_DIR = f'.{NAME}'
 SYSTEM_CONFIG_ENV_DIR = 'environments'
 SHELL_CHAR = '$'
 VENV_CONFIG = 'pyvenv.cfg'
+EXCEPTION_ATTR = 'serl_loc'
 
 OPTIONS = """Options:
     -h, --help     Show this screen.

@@ -65,7 +65,7 @@ test_data = [
         rule: string
     code:
         rule: string
-    """, ['']),
+    """, []),
     ("""
     version: string
     usage: string

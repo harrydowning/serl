@@ -14,7 +14,8 @@ class SerlAST(tuple):
         return super(SerlAST, cls).__new__(cls, (name, pos, value))
 
 def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
-    symbols = prod[2].split(' ')
+    rule = prod[2].rsplit('%prec', 1)[0]
+    symbols = rule.strip().split(' ')
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
@@ -69,6 +70,20 @@ def get_error_func(parser, flipped_symbol_map):
 def p_error(p):
     pass
 
+def get_prec_token(token: str, grammar: dict, symbol_map: dict, prec_map: dict):
+    internal = symbol_map.get(token, None)
+    m = re.match(r'^(.*)\[(\d+)\]$', token)
+    if internal:
+        return internal
+    elif m:
+        nt, i = m.groups()
+        nt, i = symbol_map[nt], int(i)
+        if grammar.get(nt, None) and i < len(grammar[nt]):
+            name = f'PTERMINAL{len(prec_map)}'
+            prec_map[(nt, i)] = f' %prec {name}'
+            return name
+    return token
+
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
                  grammar: dict[str, list[str]], _precedence: list[str],
                  debug_file: str | None):
@@ -76,10 +91,12 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     g['tokens'] = _tokens
     
     precedence = []
+    prec_map = {}
     for rule in _precedence:
         split = re.split(r'\s+', rule.strip())
-        tag = split.pop(0)
-        toks = [symbol_map.get(tok, tok) for tok in split]# if symbol_map.get(tok, None)]
+        tag = split.pop(0)  
+        toks = [get_prec_token(tok, grammar, symbol_map, prec_map) 
+                for tok in split]
         if len(toks) > 0:
             precedence.append((tag, *toks))
     g['precedence'] = precedence
@@ -87,6 +104,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     flipped_symbol_map = utils.flip_dict(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
+            rule += prec_map.get((nt, i), '')
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
 
     sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)

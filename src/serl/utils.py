@@ -93,8 +93,9 @@ def get_tokens_in_grammar(token_map: dict[str, str],
                 else:
                     if not implicit_map.get(symbol, None):
                         implicit_map[symbol] = f'ITERMINAL{len(implicit_map)}'
-    
-    exp_map = list(get_sorted_map(implicit_map).items())
+    # Order implicit tokens by length
+    implicit_map = get_sorted_map(implicit_map)
+    exp_map = list(implicit_map.items())
     for nt, rules in norm_grammar.items():
         for i, rule in enumerate(rules):
             norm_grammar[nt][i] = expand_grammar_rule(rule, exp_map)

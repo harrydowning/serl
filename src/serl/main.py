@@ -22,7 +22,7 @@ from serl.highlight import get_pygments_output, parse_key_value
 from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
-    DEFAULT_REF, SHELL_CHAR, VENV_CONFIG
+    DEFAULT_REF, SHELL_CHAR, VENV_CONFIG, EXCEPTION_ATTR 
 
 from docopt import docopt
 import networkx as nx
@@ -293,17 +293,20 @@ def command_line_run(args):
         err.__notes__ = None
         logger.error(f'In {err.filename}:\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
-        tb = traceback.extract_tb(err.__traceback__)[-1]
-        lineno = tb.lineno
+        frames = traceback.extract_tb(err.__traceback__)
+        frame = next((frame for frame in frames[::-1] 
+                      if frame.filename == '<string>'), frames[-1])
+        lineno = frame.lineno
         err.__traceback__ = None
         err.__context__ = None
-        code_name, i = err.__notes__[0].rsplit(' ', 1)
-        code_lines = code[code_name][int(i)].split('\n')
+        code_name, i = getattr(err, EXCEPTION_ATTR, ('', -1))
+        filename = f'$.code.{code_name}[{i}]'
+        code_lines = code[code_name][i].split('\n')
         code_line = ':'
-        if tb.filename == '<string>' and lineno - 1 < len(code_lines):
+        if frame.filename == '<string>' and lineno - 1 < len(code_lines):
             code_line = f', line {lineno}:\n\n  {code_lines[lineno - 1]}'
         err.__notes__ = None
-        logger.error(f'In {err.filename}{code_line}\n\n', exc_info=True,code=1)
+        logger.error(f'In {filename}{code_line}\n\n', exc_info=True,code=1)
 
     if result:
         print(result, end='')
@@ -336,9 +339,8 @@ def exec_or_error(name, i, code_str, global_env, local_env=None):
         else:
             return exec_and_eval(code_str, global_env, local_env)
     except Exception as err:
-        if not getattr(err, '__notes__', None):
-            err.filename = f'$.code.{name}[{i}]'
-            err.add_note(f'{name} {i}')
+        if not getattr(err, EXCEPTION_ATTR, None):
+            setattr(err, EXCEPTION_ATTR, (name, i))
         raise
 
 def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
