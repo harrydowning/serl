@@ -54,9 +54,9 @@ This allows a language to be used directly through the symbolic link, where the 
 .. Note::
   If the symbolic link is created in a directory on the path, or specified as such with :code:`<dir>`, then the language can be used as a system-wide command.
 
-Arguments provided to a linked language will be interpreted as arguemnts of the language rather than the tool.
+Arguments provided to a linked language will be interpreted as arguments of the language rather than the tool.
 Any arguments meant for the tool should come before :code:`--`. 
-This means there is an implicit :code:`--` after the langage name if not specified elsewhere.
+This means there is an implicit :code:`--` after the language name if not specified elsewhere.
 The below usage pattern shows how the tool can be used with symbolic links.
 
 :Usage:
@@ -111,14 +111,14 @@ install
 :Description:
 
 The install command can be used to add a language to the :term:`system configuration`.
-The specified :code:`<language>` can either be a relative or absolute file path, or a http URL which when resolved returns a language configuration.
-Installed languages can be renamed by specifying an :code:`alias`.
+The specified :code:`<language>` can either be a relative or absolute file path, or a HTTP URL which when resolved returns a language configuration.
+Installed languages can be renamed by specifying an :code:`<alias>`.
 
 .. Note::
   Languages are determined uniquely by their filename.
-  This means that multiple langauges in the :term:`system configuration` cannot have the same name.
-  By default, the install command won't override langauges in the :term:`system configuration`, however this can be changed with the :code:`-U` or :code:`--upgrade` command.
-  This ensures languages won't be accidently overriden.
+  This means that multiple languages in the :term:`system configuration` cannot have the same name.
+  By default, the install command won't override languages in the :term:`system configuration`, however this can be changed with the :code:`-U` or :code:`--upgrade` command.
+  This ensures languages won't be accidentally overridden.
 
 uninstall
 ---------
@@ -200,10 +200,12 @@ run
 
 The run command is used to execute a source program for a specific language configuration (:code:`<language>`).
 If :code:`-r` or :code:`--requirements` is specified then the dependencies in the :ref:`requirements` property will be installed with `pip <https://pip.pypa.io/>`_.
-These dependencies will be installed to the same environemnt that the tool is installed to or to the specified :ref:`environment`, if it is set.
+These dependencies will be installed to the same environment that the tool is installed to or to the specified :ref:`environment`, if it is set.
 
-If no :ref:`usage` pattern is defined in the language configuration, then the first arguemnt of :code:`<args>` is taken to be the source file.
+If no :ref:`usage` pattern is defined in the language configuration, then the first argument of :code:`<args>` is taken to be the source file.
 Otherwise, see :ref:`usage`.
+
+.. _static-syntax-highlighting:
 
 Static Syntax Highlighting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,7 +215,7 @@ Highlighting is performed by `Pygments <https://pygments.org/>`_ and always star
 
 The :ref:`tokentypes` property can be used to override the default lexer, which tags anything matched by a pattern in :ref:`tokens` as :code:`Token.Text` and anything matched by :ref:`meta-tokens-ignore` as :code:`Token.Comment`.
 
-The :ref:`styles` property can be used to override the style of token types defined by the `default style <https://pygments.org/styles/#default>`_ or by another `Pygments style <https://pygments.org/styles/>`_ specified with the :code:`style` key of :code:`--format-options`.
+The :ref:`styles` property can be used add style to user defined token types, or to override the style of token types in `Pygments default style <https://pygments.org/styles/#default>`_ or another `Pygments style <https://pygments.org/styles/>`_ specified with the :code:`style` key of :code:`--format-options`.
 
 The output format is determined by the file extension of the :code:`-H` or :code:`--highlight` option.
 Alternatively, it can be specified with the :code:`-f` or :code:`--format` option.

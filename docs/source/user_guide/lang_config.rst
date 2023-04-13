@@ -53,7 +53,7 @@ It can be used in the following ways:
     Options:
         -h, --help         Show this screen.
         -v, --version      Show version.
-        -o, --output=FILE  Ouput file. 
+        -o, --output=FILE  Output file. 
 
 .. _tokens:
 
@@ -63,12 +63,26 @@ It can be used in the following ways:
 :Required: ``True``
 :Property Type: ``string``
 
+Tokens to be used when constructing the :term:`lexer`.
+Tokens are specified as a mapping between a token identifier and regex pattern.
+Token identifiers can be used within :term:`grammar productions <grammar production>` as terminals and can contain any character except for whitespace.
 
+Tokens can be referenced and substituted into other tokens through :term:`token expansion`.
+See the :ref:`meta-tokens-ref` property for details on the syntax used to reference other tokens.
 
-Token names shouldn't contain whitespace.
+.. Note::
+  Any tokens defined but not used within the :ref:`grammar` will be ignored.
+  This could be because those tokens are used only to be substituted into another token for readability.
 
-.. note ::
-  A note on verbose regex
+Tokens can also be specified implicitly.
+These are tokens used within a :term:`grammar production` but not defined within this object.
+These tokens will be interpreted literally as a fully escaped regex.
+For example, if :code:`**` is used but not defined in this object then its corresponding token pattern would be :code:`\\*\\*`.
+This is useful for tokens such as operators or delimiters.
+
+.. Note::
+  By default, regex patterns will be specified according to Python's `re <https://docs.python.org/3/library/re.html>`_ module with the `verbose <https://docs.python.org/3/library/re.html#re.VERBOSE>`_ flag. 
+  However, this can be changed with the :ref:`meta-tokens-regex` and :ref:`meta-tokens-flags` properties respectively.
 
 :Example:
 
@@ -91,8 +105,10 @@ Token names shouldn't contain whitespace.
 
 A list of token precedence levels with the lowest being the first item in the list.
 This can be used to disambiguate shift/reduce or reduce/reduce parser conflicts.
-Precedence levels are specified as an association type followed by a whitespace seperated list of tokens.
+Precedence levels are specified as an association type followed by a whitespace separated list of tokens.
 Association type can be either ``left``, ``right``, or ``nonassoc``.
+
+The precedence of a specific :ref:`grammar` production can be overridden 
 
 :Example:
 
@@ -128,10 +144,10 @@ Defined properties of this object directly correspond to the properties of the :
 .. code-block:: yaml
 
   grammar:
-    non-termianl: ... # production
+    non-terminal: ... # production
 
   code:
-    non-termianl: ... # functionality for production
+    non-terminal: ... # functionality for production
 
 For non-terminals with multiple productions the same applies but the list elements also correspond.
 
@@ -140,13 +156,13 @@ For non-terminals with multiple productions the same applies but the list elemen
 .. code-block:: yaml
 
   grammar:
-    non-termianl:
+    non-terminal:
       - ... # production 1
       - ... # production 2
       - ... # production 3
 
   code:
-    non-termianl:
+    non-terminal:
       - ... # functionality for production 1
       - ... # functionality for production 2
       - ... # functionality for production 3
@@ -194,7 +210,7 @@ Global, local, and :term:`grammar variables` can be accessed through the Python 
 .. code-block:: yaml
 
   code:
-    non-termianl: $ echo {args[<src>]}
+    non-terminal: $ echo {args[<src>]}
 
 
 .. _tokentypes:
@@ -205,6 +221,24 @@ Global, local, and :term:`grammar variables` can be accessed through the Python 
 :Required: ``False``
 :Property Type: ``string``
 
+Tokens and corresponding type used in the syntax highlighter lexer.
+This is represented as a mapping between token identifiers from the :ref:`tokens` object and a dot separated list in title case (e.g., :code:`Token.Text.Whitespace`) to represent token type.
+Arbitrary regex can also be assigned a token type.
+
+.. Important::
+  To take advantage of built-in `Pygments styles <https://pygments.org/styles/>`_ it is recommended to use standard tokens names, see `Pygments built-in tokens <https://pygments.org/docs/tokens/#module-pygments.token>`_.
+
+
+:Example:
+
+.. code-block:: yaml
+
+  tokentypes:
+    +: Operator
+    '-': Operator
+    '*': Operator
+    /: Operator
+    num: Number
 
 .. _styles:
 
@@ -214,8 +248,8 @@ Global, local, and :term:`grammar variables` can be accessed through the Python 
 :Required: ``False``
 :Property Type: ``string``
 
-A mapping between `built-in <https://pygments.org/docs/tokens/>`_ or user-defined :term:`token types`, and styles specified in the format of `Pygments <https://pygments.org/>`_ `style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
-These styles will override those used by the :term:`base style`.
+The style to be applied to a certain token type. 
+This is represented as a mapping between a token type and a styles specified with `Pygments style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
 
 :Example:
 
@@ -229,9 +263,10 @@ These styles will override those used by the :term:`base style`.
     Whitespace: "bg:#e8dfdf"
     
 .. Note::
-  The use of quotes around the styles in the above example are neccessary, as otherwise the hex colours would be treated as YAML comments and ``:`` would try to create another mapping.
+  The use of quotes around the styles in the above example are necessary, as otherwise the hex colours would be treated as YAML comments and ``:`` would try to create another mapping.
   See :ref:`using-yaml` for tips.
 
+See :ref:`static-syntax-highlighting` for more details.
 
 .. _environment:
 
@@ -242,8 +277,8 @@ These styles will override those used by the :term:`base style`.
 
 The name of a virtual environment to be created to contain any python dependencies specified in :ref:`requirements`.
 
-This is only required if you plan to use dependencies that may clash with those used by the tool or other serl languages used in the same environemnt.
-Not setting this property means that language dependencies are installed to the environemnt where the instance of the tool being used is installed.
+This is only required if you plan to use dependencies that may clash with those used by the tool or other serl languages used in the same environment.
+Not setting this property means that language dependencies are installed to the environment where the instance of the tool being used is installed.
 
 To list the dependencies used by the tool and then get a specific version thereof you can use:
 
@@ -260,7 +295,7 @@ Environments are created using the `venv <https://docs.python.org/3/library/venv
 
 Environments can be manually created, however they must be created in the aforementioned directory and with the same `venv <https://docs.python.org/3/library/venv.html>`_ module.
 Creating environments manually would still require setting the value of this property to the name of the environment directory.
-If two languages specify an environment with the same name, the environemnt will be shared.
+If two languages specify an environment with the same name, the environment will be shared.
 
 :Example:
 
@@ -275,7 +310,7 @@ If two languages specify an environment with the same name, the environemnt will
 :Type: ``string``
 :Required: ``False``
 
-The required dependencies for the languages, which if specified as a `pip requirements <https://pip.pypa.io/en/stable/reference/requirements-file-format/>`_ file, can be automatically downloaed with the command line :ref:`run` option :code:`-r` or :code:`--requirements`.
+The required dependencies for the language, which if specified as a `pip requirements <https://pip.pypa.io/en/stable/reference/requirements-file-format/>`_ file, can be automatically downloaded with the command line :ref:`run` option :code:`-r` or :code:`--requirements`.
 
 :Example:
 
@@ -310,6 +345,8 @@ The meta object provides the ability to alter certain aspects of the configurati
 
 Properties relating to the :ref:`tokens` object.
 
+.. _meta-tokens-ref:
+
 :code:`meta.tokens.ref`
 ^^^^^^^^^^^^^^^^^^^^^^^
 :Type: ``string``, ``null``
@@ -331,7 +368,7 @@ If this special identifier isn't used the defined regex is assumed to be a prefi
       ref: \$token
 
 In this example the regex for a token named ``text`` defined in the :ref:`tokens` object could be substituted into any other token by specifying ``$text``.
-As previously mentioned if the identifier ``token`` is not used the value of ``meta.tokens.ref`` is taken to be a prefix and so this example can be equivialntly specified as:
+As previously mentioned if the identifier ``token`` is not used the value of ``meta.tokens.ref`` is taken to be a prefix and so this example can be equivalently specified as:
 
 .. code-block:: yaml
   
@@ -360,7 +397,7 @@ Setting this property to :code:`True` allows for the use of the more feature ric
 .. Note::
   The `regex <https://github.com/mrabarnett/mrab-regex>`_ module may only be used with CPython implementations.
   
-  Run the following two commands in Python's interactive shell to see what implmentation you're using:
+  Run the following two commands in Python's interactive shell to see what implementation you're using:
   
   .. code-block:: console
 
@@ -385,8 +422,8 @@ Setting this property to :code:`True` allows for the use of the more feature ric
 :Required: ``False``
 :Default: ``.``
 
-A regex specifying characters to be ignored by the lexer.
-This will have the lowest precedence in the lexer and so the default value can be interpreted as any character not matched in a token by the patterns in the :ref:`tokens` object.
+A regex specifying characters to be ignored by the :term:`lexer`.
+This will have the lowest precedence in the :term:`lexer` and so the default value can be interpreted as any character not matched in a token by the patterns in the :ref:`tokens` object.
 
 .. Note::
   The regex flags used for this property will be the same as those used in the :ref:`tokens` object.
@@ -408,8 +445,8 @@ This will have the lowest precedence in the lexer and so the default value can b
 :Required: ``False``
 :Default: ``VERBOSE``
 
-A whitespace seperated list of regex flags for the lexer to use corresponding to the regex patterns defined in the :ref:`tokens` object.
-Valid flags include any defined in the `re <https://docs.python.org/3/library/re.html#flags>`_ module or if :ref:`meta-tokens-regex` is enabled, any flag in the `regex <https://github.com/mrabarnett/mrab-regex#flags>`__ module.
+A whitespace separated list of regex flags for the :term:`lexer` to use corresponding to the regex patterns defined in the :ref:`tokens` object.
+Valid flags include any defined in the `re <https://docs.python.org/3/library/re.html>`_ module or if :ref:`meta-tokens-regex` is enabled, any flag in the `regex <https://github.com/mrabarnett/mrab-regex#flags>`__ module.
 
 :Example:
 
