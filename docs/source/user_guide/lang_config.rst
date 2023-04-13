@@ -4,7 +4,7 @@ Language Configuration
 ======================
 
 Languages are specified with `YAML <https://yaml.org/spec/1.2.2/>`_ syntax. 
-This page documents the possible configuration fields.
+This page documents the possible properties/configuration fields.
 See the section :ref:`using-yaml` for tips.
 
 :code:`version`
@@ -19,6 +19,8 @@ Language version shown with :code:`--version` if usage pattern specified.
 .. code-block:: yaml
 
   version: 0.0.1
+
+.. _usage:
 
 :code:`usage`
 -------------
@@ -195,6 +197,8 @@ Global, local, and :term:`grammar variables` can be accessed through the Python 
     non-termianl: $ echo {args[<src>]}
 
 
+.. _tokentypes:
+
 :code:`tokentypes`
 ------------------
 :Type: ``object``
@@ -202,6 +206,7 @@ Global, local, and :term:`grammar variables` can be accessed through the Python 
 :Property Type: ``string``
 
 
+.. _styles:
 
 :code:`styles`
 --------------
@@ -227,6 +232,9 @@ These styles will override those used by the :term:`base style`.
   The use of quotes around the styles in the above example are neccessary, as otherwise the hex colours would be treated as YAML comments and ``:`` would try to create another mapping.
   See :ref:`using-yaml` for tips.
 
+
+.. _environment:
+
 :code:`environment`
 -------------------
 :Type: ``string``
@@ -235,7 +243,7 @@ These styles will override those used by the :term:`base style`.
 The name of a virtual environment to be created to contain any python dependencies specified in :ref:`requirements`.
 
 This is only required if you plan to use dependencies that may clash with those used by the tool or other serl languages used in the same environemnt.
-Not setting this property means that language dependencies are installed to the environemnt where the instance of the tool being used was installed.
+Not setting this property means that language dependencies are installed to the environemnt where the instance of the tool being used is installed.
 
 To list the dependencies used by the tool and then get a specific version thereof you can use:
 
@@ -252,6 +260,7 @@ Environments are created using the `venv <https://docs.python.org/3/library/venv
 
 Environments can be manually created, however they must be created in the aforementioned directory and with the same `venv <https://docs.python.org/3/library/venv.html>`_ module.
 Creating environments manually would still require setting the value of this property to the name of the environment directory.
+If two languages specify an environment with the same name, the environemnt will be shared.
 
 :Example:
 
@@ -266,7 +275,7 @@ Creating environments manually would still require setting the value of this pro
 :Type: ``string``
 :Required: ``False``
 
-The required dependencies for the languages, which if specified as a pip requirements file, can be automatically downloaed with the command line :ref:`run` option :code:`-r` or :code:`--requirements`.
+The required dependencies for the languages, which if specified as a `pip requirements <https://pip.pypa.io/en/stable/reference/requirements-file-format/>`_ file, can be automatically downloaed with the command line :ref:`run` option :code:`-r` or :code:`--requirements`.
 
 :Example:
 
@@ -367,6 +376,8 @@ Setting this property to :code:`True` allows for the use of the more feature ric
   meta:
     tokens:
       regex: True
+
+.. _meta-tokens-ignore:
 
 :code:`meta.tokens.ignore`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

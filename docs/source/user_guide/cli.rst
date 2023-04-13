@@ -81,6 +81,7 @@ The below usage pattern shows how the tool can be used with symbolic links.
       -f, --format=FORMAT           Override file extension format.
       -O, --format-options=OPTIONS  Options supplied to formatter.
       --style-defs=FILE             Output highlight style defs to FILE.
+      --style-defs-arg=ARG          Argument supplied to style-defs.
 
   Options:
       -h, --help     Show this screen.
@@ -109,12 +110,13 @@ install
 
 :Description:
 
-The install command can be used to install a language to the :term:`system configuration`.
+The install command can be used to add a language to the :term:`system configuration`.
 The specified :code:`<language>` can either be a relative or absolute file path, or a http URL which when resolved returns a language configuration.
+Installed languages can be renamed by specifying an :code:`alias`.
 
 .. Note::
   Languages are determined uniquely by their filename.
-  This means that two langauges in the :term:`system configuration` can't have the same name.
+  This means that multiple langauges in the :term:`system configuration` cannot have the same name.
   By default, the install command won't override langauges in the :term:`system configuration`, however this can be changed with the :code:`-U` or :code:`--upgrade` command.
   This ensures languages won't be accidently overriden.
 
@@ -136,6 +138,9 @@ uninstall
       -V, --version  Show version.
       -v, --verbose  Provide more output.
 
+:Description:
+
+The uninstall command can be used to remove languages or :ref:`environments <environment>` from the :term:`system configuration`.
 
 list
 ----
@@ -156,6 +161,10 @@ list
       -h, --help     Show this screen.
       -V, --version  Show version.
       -v, --verbose  Provide more output.
+
+:Description:
+
+The list command can be used to display all installed languages or :ref:`environments <environment>`.
 
 .. _run:
 
@@ -180,11 +189,53 @@ run
       -f, --format=FORMAT           Override file extension format.     
       -O, --format-options=OPTIONS  Options supplied to formatter.      
       --style-defs=FILE             Output highlight style defs to FILE.
+      --style-defs-arg=ARG          Argument supplied to style-defs.
 
   Options:
       -h, --help     Show this screen.
       -V, --version  Show version.
       -v, --verbose  Provide more output.
+
+:Description:
+
+The run command is used to execute a source program for a specific language configuration (:code:`<language>`).
+If :code:`-r` or :code:`--requirements` is specified then the dependencies in the :ref:`requirements` property will be installed with `pip <https://pip.pypa.io/>`_.
+These dependencies will be installed to the same environemnt that the tool is installed to or to the specified :ref:`environment`, if it is set.
+
+If no :ref:`usage` pattern is defined in the language configuration, then the first arguemnt of :code:`<args>` is taken to be the source file.
+Otherwise, see :ref:`usage`.
+
+Static Syntax Highlighting
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The run command also allows static syntax highlighting to be performed on a language source file.
+Highlighting is performed by `Pygments <https://pygments.org/>`_ and always starts with a default to limit the work of the user.
+
+The :ref:`tokentypes` property can be used to override the default lexer, which tags anything matched by a pattern in :ref:`tokens` as :code:`Token.Text` and anything matched by :ref:`meta-tokens-ignore` as :code:`Token.Comment`.
+
+The :ref:`styles` property can be used to override the style of token types defined by the `default style <https://pygments.org/styles/#default>`_ or by another `Pygments style <https://pygments.org/styles/>`_ specified with the :code:`style` key of :code:`--format-options`.
+
+The output format is determined by the file extension of the :code:`-H` or :code:`--highlight` option.
+Alternatively, it can be specified with the :code:`-f` or :code:`--format` option.
+
+`Pygments <https://pygments.org/>`_ comes with a range of `formatters <https://pygments.org/docs/formatters/>`_ that can be used.
+Each of which has there own options that can be specified with :code:`-O` or :code:`--format-options`.
+
+.. Tip::
+  Some particularly useful format options are :code:`style`, :code:`full`, and :code:`linenos`.
+
+These format options can be specified as comma-separated list of :code:`key=value` pairs.
+The :code:`value` will be interpreted as a Python expression, however if that fails, it will fall back to a string.
+Setting boolean values to :code:`True` can use the shortcut notation of just :code:`key`.
+
+.. Note::
+  Format options can contain whitespace but only if grouped on the command line e.g., surrounded with quotes.
+
+:Example:
+
+.. code-block:: console
+
+  $ serl run -H example.html -O style=github-dark,full,linenos <language> <src>
 
 
 help
@@ -199,3 +250,6 @@ help
   Usage:
       help [<command>]
 
+:Description:
+
+The help command is used to display the various tool usage patterns seen on this page.
