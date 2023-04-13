@@ -182,7 +182,7 @@ If you don't want to return anything you can explicitly make the final statement
 Shell Commands
 ~~~~~~~~~~~~~~
 Shell commands can be used by making the first character of the property value :code:`$`.
-Global, local, and :term:`grammar variables`` can be accessed through the Python `format language <>`_.
+Global, local, and :term:`grammar variables` can be accessed through the Python `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
 
 .. Note::
   Use of ``{`` or ``}`` in other contexts than for format strings require escaping with ``{{`` or  ``}}``.
@@ -263,6 +263,29 @@ Creating environments manually would still require setting the value of this pro
 
 :code:`requirements`
 --------------------
+:Type: ``string``
+:Required: ``False``
+
+The required dependencies for the languages, which if specified as a pip requirements file, can be automatically downloaed with the command line :ref:`run` option :code:`-r` or :code:`--requirements`.
+
+:Example:
+
+.. code-block:: yaml
+
+  requirements: | # pip
+    PyYAML==6.0
+    docopt==0.6.2
+    ply==3.11
+    regex==2022.10.31
+    networkx==2.8.8
+    jsonschema==4.17.3
+    Pygments==2.13.0
+    Pillow==9.4.0
+    requests==2.28.2
+    
+    # Dev
+    pytest==7.2.2
+    pytest-cov==4.0.0
 
 :code:`meta`
 ------------
@@ -350,6 +373,23 @@ Setting this property to :code:`True` allows for the use of the more feature ric
 :Type: ``string``
 :Required: ``False``
 :Default: ``.``
+
+A regex specifying characters to be ignored by the lexer.
+This will have the lowest precedence in the lexer and so the default value can be interpreted as any character not matched in a token by the patterns in the :ref:`tokens` object.
+
+.. Note::
+  The regex flags used for this property will be the same as those used in the :ref:`tokens` object.
+  Therefore, changes to the :ref:`meta-tokens-flags` will also be reflected here.
+
+:Example:
+
+.. code-block:: yaml
+
+  meta:
+    tokens:
+      ignore: \s
+
+.. _meta-tokens-flags:
 
 :code:`meta.tokens.flags`
 ^^^^^^^^^^^^^^^^^^^^^^^^^
