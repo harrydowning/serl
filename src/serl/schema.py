@@ -55,6 +55,9 @@ config_schema = {
                 'type': 'string'
             }
         },
+        'sync': {
+            'type': 'string'
+        },
         'grammar': {
             'type': 'object',
             'patternProperties': {

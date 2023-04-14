@@ -2,6 +2,7 @@ import itertools
 import re
 import pathlib
 import os
+import inspect
 
 import serl.logger as logger
 import serl.utils as utils
@@ -13,6 +14,9 @@ class SerlAST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(SerlAST, cls).__new__(cls, (name, pos, value))
 
+error_recovery = False
+symstack = []
+parser = None
 def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
     rule = prod[2].rsplit('%prec', 1)[0]
     symbols = rule.strip().split(' ')
@@ -20,6 +24,8 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
     def f(p):
+        global symstack
+        symstack = parser.symstack.copy()
         p[0] = SerlAST(
             flipped_symbol_map[prod[0]], 
             prod[1], 
@@ -34,15 +40,15 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
 
 def get_error_msg(p, parser, flipped_symbol_map):
     expected = [
-        'end of file' if symbol == '$end' else flipped_symbol_map[symbol] 
+        'EOF' if symbol == '$end' else flipped_symbol_map[symbol] 
         for symbol in parser.action[parser.state].keys()
     ]
     
     if expected == []:
         expected_msg = ''
     else:
-        s = '\' or \''
-        expected_msg = f' Expected \'{s.join(expected)}\'.'
+        s = '\', \''
+        expected_msg = f' Expected one of: \'{s.join(expected)}\'.'
 
     if not p:
         return f'Parsing error: Reached end of file.{expected_msg}'
@@ -56,15 +62,32 @@ def get_error_msg(p, parser, flipped_symbol_map):
     
     return f'Parsing error: {tok_msg} on line {p.lineno}.{expected_msg}'
 
-def get_error_func(parser, flipped_symbol_map):
-    symstack = None
+def pop_lookahead():
+  frame = next(f.frame for f in inspect.stack() if f.function == 'parsedebug')
+  ls = frame.f_locals['lookaheadstack']
+  if len(ls) > 0:
+      ls.pop()
+
+def get_error_func(parser, sync, flipped_symbol_map):
     def error_func(p):
-        nonlocal symstack
-        if parser.symstack != symstack:
+        global error_recovery
+        if not p:
             logger.error(get_error_msg(p, parser, flipped_symbol_map))
-        symstack = parser.symstack.copy()
-        logger.info(f'Token \'{get_whole_match(p)}\' discarded.')
-        parser.errok()
+            return
+        
+        if error_recovery:
+            error_recovery = False
+            pop_lookahead()
+            parser.errok()
+            tok = parser.token()
+            return tok
+        else:
+            if p.type not in sync:    
+                while True:
+                    tok = parser.token()
+                    if not tok or tok.type in sync: 
+                        break
+        logger.error(get_error_msg(p, parser, flipped_symbol_map))
     return error_func
 
 def p_error(p):
@@ -85,8 +108,8 @@ def get_prec_token(token: str, grammar: dict, symbol_map: dict, prec_map: dict):
     return token
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]], _precedence: list[str],
-                 debug_file: str | None):
+                 grammar: dict[str, list[str]], sync: str, 
+                 _precedence: list[str], debug_file: str | None):
     g = globals()
     g['tokens'] = _tokens
     
@@ -131,7 +154,9 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
 
     parser = yacc.yacc(**options)
 
-    error_func = get_error_func(parser, flipped_symbol_map)
+    sync = [symbol_map[tok] for tok in re.split(r'\s+', sync.strip()) 
+            if tok in symbol_map]
+    error_func = get_error_func(parser, sync, flipped_symbol_map)
     parser.errorfunc = error_func
     g['parser'] = parser
     

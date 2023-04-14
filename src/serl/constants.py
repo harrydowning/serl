@@ -70,7 +70,8 @@ RUN_OPTIONS = f"""Run Options:
                                   format of the extension of FILE.
     -f, --format=FORMAT           Override file extension format.
     -O, --format-options=OPTIONS  Options supplied to formatter.
-    --style-defs=FILE             Output highlight style defs to FILE."""
+    --style-defs=FILE             Output highlight style defs to FILE.
+    --style-defs-arg=ARG          Argument supplied to style-defs."""
 
 CLI_RUN = f"""{NAME} run
 

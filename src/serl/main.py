@@ -12,10 +12,10 @@ import shutil
 import ast
 import glob
 import traceback
-import inspect
 
 from serl.lexer import build_lexer
 from serl.parser import build_parser, SerlAST
+import serl.parser
 import serl.utils as utils
 import serl.logger as logger
 from serl.highlight import get_pygments_output, parse_key_value
@@ -43,6 +43,19 @@ class TraversableFormat(dict):
 
     def __missing__(self, key):
         return key
+
+class ErrorHandler():
+    def __init__(self, parser) -> None:
+        self.parser = parser
+    
+    def error(self, *args, **kwargs):
+        if self.parser.symstack == serl.parser.symstack:
+            serl.parser.error_recovery = True
+            self.parser.errok()
+    
+    def info(self, *args, **kwargs): pass
+    def debug(self, *args, **kwargs): pass
+    def warning(self, *args, **kwargs): pass 
 
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
@@ -91,9 +104,10 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
     filename = args['--highlight']
     format = args['--format'] or os.path.splitext(filename)[1][1:]
     format_options = parse_key_value(args['--format-options'] or '')
+    style_defs_arg = args['--style-defs-arg']
         
     output = get_pygments_output(src, tokens, ignore, tokentypes, user_styles, 
-                                 format, format_options)
+                                 format, format_options, style_defs_arg)
     highlighted_src, style_defs = output
     if type(highlighted_src) == bytes:
         mode = 'wb'
@@ -103,7 +117,7 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
     with open(filename, mode) as file:
         file.write(highlighted_src)
     
-    if args['--style-defs']:
+    if args['--style-defs'] and style_defs:
         with open(args['--style-defs'], 'w') as file:
             file.write(style_defs)
     exit(0)
@@ -199,6 +213,7 @@ def command_line_run(args):
 
     precedence = config.get('precedence', [])
     grammar = config['grammar']
+    sync = config.get('sync', '')
     meta_grammar = meta.get('grammar', {})
     permissive = meta_grammar.get('permissive', True)
 
@@ -229,8 +244,8 @@ def command_line_run(args):
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
     parser = build_parser(
-        lang_name, list(token_map.values()), symbol_map, grammar, precedence, 
-        debug_parser_file
+        lang_name, list(token_map.values()), symbol_map, grammar, sync,
+        precedence, debug_parser_file
     )
 
     # Debug lexer
@@ -252,7 +267,7 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parse(src, lexer=lexer)
+    serl_ast = parser.parse(src, lexer=lexer, debug=ErrorHandler(parser))
     if not permissive and logger.error_seen:
         exit(1)
     

@@ -78,7 +78,7 @@ def parse_key_value(input: str) -> dict:
 
 def get_pygments_output(src: str, tokens: dict[str, str], ignore: str, 
                        tokentypes: dict[str, str], user_styles: dict[str, str],
-                       format: str, format_options: dict) -> str:
+                       format: str, format_options: dict, style_defs_arg):
     lexer = get_pygments_lexer(tokens, ignore, tokentypes)
     
     style_name = format_options.get('style', None)
@@ -96,5 +96,10 @@ def get_pygments_output(src: str, tokens: dict[str, str], ignore: str,
         formatter = get_formatter_by_name(format, **format_options)
     except ClassNotFound:
         logger.error(f'No Pygment formmatter found for \'{format}\'.', code=1)
+    
+    try:
+        style_defs = formatter.get_style_defs(style_defs_arg)
+    except NotImplementedError:
+        style_defs = None
 
-    return pygments.highlight(src, lexer, formatter),formatter.get_style_defs()
+    return pygments.highlight(src, lexer, formatter), style_defs
