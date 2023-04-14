@@ -63,43 +63,31 @@ def normalise_grammar(symbol_map: dict[str, str],
         norm_grammar[symbol_map[nt]] = rules
     return norm_grammar
 
-# def get_tokens_in_grammar(token_map: dict[str, str], 
-#                           norm_grammar: dict[str, list[str]]) -> list[str]:
-#     tokens = list(token_map.values())
-#     rules = [rule for rules in norm_grammar.values() for rule in rules]
-#     used = set()
-#     for rule in rules:
-#         for token in tokens:
-#             if re.search(fr'\b{token}\b', rule):
-#                 rule = re.sub(fr'\b{token}\b', '', rule)
-#                 used.add(token)
-#     return [token for token, token_name in token_map.items() 
-#             if token_name in used]
-
-def get_tokens_in_grammar(token_map: dict[str, str], 
+def get_tokens_in_grammar(token_map: dict[str, str], error: str,
                           norm_grammar: dict[str, list[str]]):
     tokens = list(token_map.values())
     nonterms = norm_grammar.keys()
     flipped_token_map = flip_dict(token_map)
     
     tokens_used, implicit_map = set(), dict()
-    for rules in norm_grammar.values():
-        for rule in rules:
+    for nt, rules in norm_grammar.items():
+        for i, rule in enumerate(rules):
+            new_rule = ''
             for symbol in rule.split(' '):
                 if symbol in tokens:
                     tokens_used.add(flipped_token_map[symbol])
                 elif symbol in nonterms:
-                    continue
+                    pass
+                elif symbol == error:
+                    symbol = 'error'
                 else:
                     if not implicit_map.get(symbol, None):
                         implicit_map[symbol] = f'ITERMINAL{len(implicit_map)}'
+                    symbol = implicit_map[symbol]
+                new_rule += f'{symbol} '
+            norm_grammar[nt][i] = new_rule.strip()
     # Order implicit tokens by length
-    implicit_map = get_sorted_map(implicit_map)
-    exp_map = list(implicit_map.items())
-    for nt, rules in norm_grammar.items():
-        for i, rule in enumerate(rules):
-            norm_grammar[nt][i] = expand_grammar_rule(rule, exp_map)
-    return list(tokens_used), implicit_map
+    return list(tokens_used), get_sorted_map(implicit_map)
 
 def flip_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}

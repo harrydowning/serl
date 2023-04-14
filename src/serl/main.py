@@ -44,19 +44,6 @@ class TraversableFormat(dict):
     def __missing__(self, key):
         return key
 
-class ErrorHandler():
-    def __init__(self, parser) -> None:
-        self.parser = parser
-    
-    def error(self, *args, **kwargs):
-        if self.parser.symstack == serl.parser.symstack:
-            serl.parser.error_recovery = True
-            self.parser.errok()
-    
-    def info(self, *args, **kwargs): pass
-    def debug(self, *args, **kwargs): pass
-    def warning(self, *args, **kwargs): pass 
-
 def token_expansion(tokens: dict[str, str], split: list[str]) -> dict[str, str]:
     repl_tokens = utils.get_repl_tokens(tokens, split)
     token_graph = nx.DiGraph(utils.get_token_graph(repl_tokens))
@@ -213,7 +200,7 @@ def command_line_run(args):
 
     precedence = config.get('precedence', [])
     grammar = config['grammar']
-    sync = config.get('sync', '')
+    error_sym = config.get('error', None)
     meta_grammar = meta.get('grammar', {})
     permissive = meta_grammar.get('permissive', True)
 
@@ -228,7 +215,8 @@ def command_line_run(args):
     symbol_map = token_map | grammar_map
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
-    tokens_used, implicit_map = utils.get_tokens_in_grammar(token_map, grammar)
+    tokens_used, implicit_map = utils.get_tokens_in_grammar(token_map, 
+                                                            error_sym, grammar)
     tokens = utils.keep_keys_in_list(tokens, tokens_used)
     token_map = utils.keep_keys_in_list(token_map, tokens_used) | implicit_map
     tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
@@ -244,8 +232,8 @@ def command_line_run(args):
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
     parser = build_parser(
-        lang_name, list(token_map.values()), symbol_map, grammar, sync,
-        precedence, debug_parser_file
+        lang_name, list(token_map.values()), symbol_map, grammar, precedence,
+        debug_parser_file
     )
 
     # Debug lexer
@@ -267,9 +255,9 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parse(src, lexer=lexer, debug=ErrorHandler(parser))
-    if not permissive and logger.error_seen:
-        exit(1)
+    serl_ast = parser.parse(src, lexer=lexer)
+    if (not permissive and logger.error_seen) or not serl_ast:
+        logger.error('Parse Failed', code=1)
     
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)

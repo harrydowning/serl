@@ -55,7 +55,7 @@ config_schema = {
                 'type': 'string'
             }
         },
-        'sync': {
+        'error': {
             'type': 'string'
         },
         'grammar': {
