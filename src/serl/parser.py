@@ -100,10 +100,6 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
         for i, rule in enumerate(grammar[nt]):
             rule += prec_map.get((nt, i), '')
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
-            
-            for j in range(rule.count('error')):
-                rule = rule.replace('error', '', 1)
-                g[f'p_{nt}_{i}_err_{j}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
 
     sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)
     tabmodule = f'tabmodule_{utils.get_valid_identifier(lang_name)}'

@@ -366,7 +366,7 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         code_str = code_list[i] if code_list and len(code_list) > i else None
         
         if not code_str:
-            return env
+            return env # TODO should 'None' be returned?
 
         return exec_or_error(name, i, code_str, global_env, local_env | env)
     

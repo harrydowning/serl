@@ -1,0 +1,42 @@
+tokens:
+  text: \w+
+
+error: err
+
+grammar:
+  blocks:
+    - blocks block
+    - block
+  block: 
+    - |
+      {
+        stmt-list
+      }
+    - "{ }"
+  stmt-list:
+    - stmt stmt-list
+    - stmt
+  stmt: 
+    - text = text ;
+    - err ;
+
+
+code:
+  main: str(blocks())
+  blocks:
+    - blocks() + [block()]
+    - '[block()]'
+  block: 
+    - return {k:v for k, v in vars()['stmt-list']()}
+    - return {}
+  stmt-list:
+    - vars()['stmt-list']() + stmt()
+    - stmt()
+  stmt: 
+    - '[(text[0][0], text[1][0])]'
+    - '[]'
+
+meta:
+  tokens:
+    ref: '@token@'
+    # ignore: '\s'

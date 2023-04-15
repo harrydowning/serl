@@ -1,16 +1,10 @@
 tokens:
-  +: \+
-  '-': '-'
-  '*': \*
-  /: /
-  (: \(
-  ): \)
   num: \d+
 
 precedence:
   - left + -
   - left * /
-  # - right UMINUS
+  - right exp[4]
 
 grammar:
   exp:
@@ -18,18 +12,24 @@ grammar:
     - exp - exp
     - exp * exp
     - exp / exp
-    # - '- exp UMINUS'
+    - -exp
     - (exp)
     - num
   
-# code:
-#   exp:
-#     - exp[0]() + exp[1]()
-#     - exp[0]() - exp[1]()
-#     - exp[0]() * exp[1]()
-#     - exp[0]() / exp[1]()
-#     # - '-exp()'
-#     - exp()
-#     - | # py
-#       a = int(num[0])
-#       raise Exception('hi')
+code:
+  exp:
+    - exp[0]() + exp[1]()
+    - exp[0]() - exp[1]()
+    - exp[0]() * exp[1]()
+    - exp[0]() / exp[1]()
+    - -exp()
+    - exp()
+    - int(num[0])
+
+tokentypes:
+  +: Operator
+  '-': Operator
+  '*': Operator
+  /: Operator
+  num: Number
+  

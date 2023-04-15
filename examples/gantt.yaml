@@ -16,10 +16,7 @@ usage: |
 tokens:
   text: (\w[\w ]*)
   -----: ---+
-  "|": \|
   ===: ([ ]* =+)
-  "<": <
-  ">": ">"
   width: \[(\d+)\]
 
 grammar:
@@ -41,7 +38,7 @@ grammar:
     - row
   row: 
     - text | ===
-    - text | === <>
+    - text | === < >
     - text | === <text>
 
 code:
