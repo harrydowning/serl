@@ -12,7 +12,7 @@ See the section :ref:`using-yaml` for tips.
 :Type: ``string``, ``number``
 :Required: ``False``
 
-Language version shown with :code:`--version` if usage pattern specified.
+Language version shown with :code:`--version` if :ref:`usage` pattern specified.
 
 :Example:
 
@@ -37,9 +37,6 @@ It can be used in the following ways:
 - Using :code:`<src>` means the input will only be read from the file :code:`<src>`.
 - Not using it at all means the input will always be read from ``stdin``.
 
-.. Note::
-  Add how this can be accessed in code. And command?
-
 :Example:
 
 .. code-block:: yaml
@@ -54,6 +51,23 @@ It can be used in the following ways:
         -h, --help         Show this screen.
         -v, --version      Show version.
         -o, --output=FILE  Output file. 
+
+
+.. Note::
+  Command line arguments are available in :ref:`code` through the identifier :code:`args`.
+  They will be represented with a dictionary with keys corresponding to positional and optional arguments as shown below.
+
+
+.. code-block:: console
+
+  $ serl run language -o out.txt example.cfg in.txt
+  {
+    '--help': False,
+    '--output': 'out.txt',
+    '--version': False,
+    '<config>': 'example.cfg',
+    '<src>': 'in.txt'
+  }
 
 .. _tokens:
 
@@ -103,12 +117,14 @@ This is useful for tokens such as operators or delimiters.
 :Required: False
 :Item Type: ``string``
 
-A list of token precedence levels with the lowest being the first item in the list.
+A list of token precedence levels, from lowest (first) to highest (last).
 This can be used to disambiguate shift/reduce or reduce/reduce parser conflicts.
-Precedence levels are specified as an association type followed by a whitespace separated list of tokens.
-Association type can be either ``left``, ``right``, or ``nonassoc``.
+Precedence levels are specified with an association type followed by a whitespace separated list of identifiers from the :ref:`tokens` object.
+Association type can be ``left``, ``right``, or ``nonassoc``.
 
-The precedence of a specific :ref:`grammar` production can be overridden 
+The precedence of a specific :ref:`grammar` production can also be overridden by specifying the non-terminal name and position (:code:`name[pos]`).
+This will only affect the rightmost terminal of the production.
+For example, this could be used to give higher precedence to unary minus.
 
 :Example:
 
@@ -118,15 +134,67 @@ The precedence of a specific :ref:`grammar` production can be overridden
     - left + -
     - right * /
     - nonassoc < >
+    - right exp[4]
 
 
-:code:`sync`
-------------
+:code:`error`
+-------------
+:Type: ``string``
+:Required: False
+
+The name of an error token to be used in the :ref:`grammar`.
+The error token can be used to support panic-mode parsing, which when encountered will discard all tokens until the rule can be matched.
+Typically, a good place to use error tokens is before delimiters which could bring parsing back to a valid state.
+
+For example, in the following grammar production the error token (:code:`err`) is used before a semi-colon which acts as the delimiter for a statement list (:code:`stmt-list`).
+
+.. code-block:: yaml
+
+  grammar:
+    stmt-list:
+      - stmt err ; 
+        stmt-list
+      - stmt err ;
+    stmt: ...
+
+This means that if a statement (:code:`stmt`) contains a syntax error, the error token will be matched until the first semi-colon delimiter, allowing parsing to continue.
+This can be used to find more errors (rather than stop on the first), or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
+
+
+
+:Example:
+
+.. code-block:: yaml
+
+  error: err
 
 .. _grammar:
 
 :code:`grammar`
 ---------------
+:Type: ``object``
+:Required: ``True`` 
+:Property Type: ``string``, ``array[string]``
+
+The language grammar specified as an object of productions.
+A grammar production consists of a head and a body, where the head is a non-terminal and the body is an arrangement of terminals (i.e., tokens) and other non-terminals.
+
+A key of this property represents the head of a production, with the value being the corresponding body.
+If the value is a list, then each element will be its own grammar production but all will correspond to the same head. 
+
+Whitespace is ignored and so rules can be spread across multiple lines.
+The grammar start symbol will be taken as the head of the production defined first.
+
+:Example:
+
+.. code-block:: yaml
+
+  grammar:
+    start: # production for start symbol
+    non-terminal:
+      - # production 0 for non-terminal
+      - # production 1 for non-terminal
+      - # production 2 for non-terminal
 
 .. _code:
 
@@ -136,7 +204,7 @@ The precedence of a specific :ref:`grammar` production can be overridden
 :Required: ``True`` 
 :Property Type: ``string``, ``array[string | null]``
 
-Language functionality specified with either Python or shell commands.
+Language functionality specified with code blocks written with Python or shell commands.
 Defined properties of this object directly correspond to the properties of the :ref:`grammar` object to allow functionality to be associated with syntax.
 
 :Example:
@@ -144,10 +212,10 @@ Defined properties of this object directly correspond to the properties of the :
 .. code-block:: yaml
 
   grammar:
-    non-terminal: ... # production
+    non-terminal: # production
 
   code:
-    non-terminal: ... # functionality for production
+    non-terminal: # functionality for production
 
 For non-terminals with multiple productions the same applies but the list elements also correspond.
 
@@ -157,26 +225,50 @@ For non-terminals with multiple productions the same applies but the list elemen
 
   grammar:
     non-terminal:
-      - ... # production 1
-      - ... # production 2
-      - ... # production 3
+      - # production 0
+      - # production 1
+      - # production 2
 
   code:
+    main: # main functionality
     non-terminal:
-      - ... # functionality for production 1
-      - ... # functionality for production 2
-      - ... # functionality for production 3
+      - # functionality for non-terminal production 0
+      - # functionality for non-terminal production 1
+      - # functionality for non-terminal production 2
+
+.. Note::
+  If the first property doesn't correspond to a defined grammar non-terminal (as seen above) then it acts as the main functionality executed in global scope.
+
+If no main functionality is defined then traversal, and thus execution is initiated with the code of the grammar start symbol.
+Otherwise, it is the responsibility of the main function to start traversal, which is done by calling functions whose name correspond to non-terminal of a grammar production.
+
+Each code block has access to the global scope and variables that correspond to the symbols in the corresponding grammar production.
+Terminal (token) variables will be a tuple of regex capture where the first is the entire match.
+Non-terminal variables will be a function which when called traverse down, executing the code of the corresponding non-terminal.
 
 Properties defined within this object but not within the :ref:`grammar` object will be ignored, except for the first property, but only if it doesn't have a corresponding property in the :ref:`grammar` object.
 This property is taken as the main or entry point, allowing the user to write any .
-Without this property the entry point will be the property corresponding to the grammar start non-terminal.
+Without this property the entry point will be the property corresponding to the grammar start non-terminal and returning the value of the called code block.
+
+If multiple of the same symbol is used within a grammar production 
+
+
 
 The functionality for properties defined within the :ref:`grammar` object but not within this object will default to returning a Python dictionary of their local values.
+
+
+.. Note::
+  args available?
+
 
 The following sections provide more detail regarding the two functionality modes.
 
 Python Code
 ~~~~~~~~~~~
+
+.. Tip::
+  variables are accessed with Python syntax and so can only use valid Python identifier characters.
+  However, the `locals <https://docs.python.org/3/library/functions.html#locals>`_ function or `vars <https://docs.python.org/3/library/functions.html#vars>`_ function can be used to access variables with arbitrary names.
 
 If you don't want to return anything you can explicitly make the final statement ``pass``
 
@@ -199,6 +291,10 @@ If you don't want to return anything you can explicitly make the final statement
 
 Shell Commands
 ~~~~~~~~~~~~~~
+
+.. Tip::
+  Bit on variables names and locals() work around
+
 Shell commands can be used by making the first character of the property value :code:`$`.
 Global, local, and :term:`grammar variables` can be accessed through the Python `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
 
@@ -368,7 +464,7 @@ If this special identifier isn't used the defined regex is assumed to be a prefi
       ref: \$token
 
 In this example the regex for a token named ``text`` defined in the :ref:`tokens` object could be substituted into any other token by specifying ``$text``.
-As previously mentioned if the identifier ``token`` is not used the value of ``meta.tokens.ref`` is taken to be a prefix and so this example can be equivalently specified as:
+As previously mentioned if the identifier ``token`` is not used, the value of ``meta.tokens.ref`` is taken to be a prefix and so this example can be equivalently specified as:
 
 .. code-block:: yaml
   
@@ -463,8 +559,20 @@ Valid flags include any defined in the `re <https://docs.python.org/3/library/re
 
 Properties relating to the :ref:`grammar` object.
 
-:code:`meta.tokens.permissive`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _meta-grammar-permissive:
+
+:code:`meta.grammar.permissive`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 :Type: ``boolean``
 :Required: ``False``
 :Default: ``True``
+
+If this property is set to :code:`False`, then language execution will not take place in the event of a syntax error, even if any input was recovered during parsing.
+
+:Example:
+
+.. code-block:: yaml
+
+  meta:
+    grammar:
+      permissive: False
