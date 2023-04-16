@@ -47,4 +47,10 @@ An example of this could be writing a regex or code block using :code:`[ ... ]`,
   It is recommended to write YAML with a good syntax highlighter as this will give a visual prompt when values may be misinterpreted.
 
 It is possible to write languages with `JSON <https://www.json.org/json-en.html>`_ as YAML is a `strict superset <https://yaml.org/spec/1.2.2/#12-yaml-history>`_.
-However, this is not recommended as it would be far less readable and harder to write regex.
+However, this is not recommended as it would be far less readable and make writing regex much harder.
+
+Notation
+--------
+
+* Along with informal naming, `JSONPath <https://www.ietf.org/archive/id/draft-goessner-dispatch-jsonpath-00.html>`_ notation has been used when referencing :ref:`lang-config` properties in this documentation and exclusively when used in the tool.
+

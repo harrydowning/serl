@@ -81,7 +81,7 @@ Tokens to be used when constructing the :term:`lexer`.
 Tokens are specified as a mapping between a token identifier and regex pattern.
 Token identifiers can be used within :term:`grammar productions <grammar production>` as terminals and can contain any character except for whitespace.
 
-Tokens can be referenced and substituted into other tokens through :term:`token expansion`.
+Tokens can be referenced and substituted into other tokens through :term:`token expansion <token expansion >`.
 See the :ref:`meta-tokens-ref` property for details on the syntax used to reference other tokens.
 
 .. Note::
@@ -142,31 +142,31 @@ For example, this could be used to give higher precedence to unary minus.
 :Type: ``string``
 :Required: False
 
-The name of an error token to be used in the :ref:`grammar`.
-The error token can be used to support panic-mode parsing, which when encountered will discard all tokens until the rule can be matched.
-Typically, a good place to use error tokens is before delimiters which could bring parsing back to a valid state.
+The name of an error token to be used in the :ref:`grammar` property.
+The error token can be used to support :term:`panic-mode` parsing.
+Typically, a good place to use error tokens is before delimiters.
 
-For example, in the following grammar production the error token (:code:`err`) is used before a semi-colon which acts as the delimiter for a statement list (:code:`stmt-list`).
-
-.. code-block:: yaml
-
-  grammar:
-    stmt-list:
-      - stmt err ; 
-        stmt-list
-      - stmt err ;
-    stmt: ...
-
-This means that if a statement (:code:`stmt`) contains a syntax error, the error token will be matched until the first semi-colon delimiter, allowing parsing to continue.
-This can be used to find more errors (rather than stop on the first), or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
-
-
+This can be used to find more errors, rather than stop on the first, or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
 
 :Example:
 
-.. code-block:: yaml
+In the following grammar snippet, a new production has been added with the error token (:code:`err`) placed before a semi-colon (marking the end of a statement).
 
+.. code-block:: yaml
+  
   error: err
+  grammar:
+    err-stmt:
+      - stmt ;
+      - err ;
+    stmt: ...
+
+The following would happen if :code:`stmt` contained a syntax error:
+
+* Any symbols pushed onto the stack will be popped off (assuming no error token within :code:`stmt`) until the state corresponding to :code:`err-stmt` is reached.
+* All :term:`tokens <token>` will be discarded until a semi-colon.
+* The :code:`$.grammar.err-stmt[1]` :term:`production <grammar production>` will be reduced.
+* On execution :code:`$.code.err-stmt[1]` will be run.
 
 .. _grammar:
 
@@ -204,7 +204,7 @@ The grammar start symbol will be taken as the head of the production defined fir
 :Required: ``True`` 
 :Property Type: ``string``, ``array[string | null]``
 
-Language functionality specified with code blocks written with Python or shell commands.
+Language functionality specified with code blocks written in Python code or Shell commands.
 Defined properties of this object directly correspond to the properties of the :ref:`grammar` object to allow functionality to be associated with syntax.
 
 :Example:
@@ -217,7 +217,7 @@ Defined properties of this object directly correspond to the properties of the :
   code:
     non-terminal: # functionality for production
 
-For non-terminals with multiple productions the same applies but the list elements also correspond.
+For multiple :term:`productions <grammar production>` with the same non-terminal head, the list elements also correspond.
 
 :Example:
 
@@ -230,21 +230,28 @@ For non-terminals with multiple productions the same applies but the list elemen
       - # production 2
 
   code:
-    main: # main functionality
+    main: # main functionality must come first
     non-terminal:
       - # functionality for non-terminal production 0
       - # functionality for non-terminal production 1
       - # functionality for non-terminal production 2
 
-.. Note::
-  If the first property doesn't correspond to a defined grammar non-terminal (as seen above) then it acts as the main functionality executed in global scope.
+The return value for properties defined within the :ref:`grammar` object but not within this object will be a Python dictionary of their :ref:`variable-environment`.
+Details about return values can be found within :ref:`python-code` or :ref:`shell-commands`.
 
-If no main functionality is defined then traversal, and thus execution is initiated with the code of the grammar start symbol.
-Otherwise, it is the responsibility of the main function to start traversal, which is done by calling the function corresponding to the start non-terminal.
+.. _variable-environment:
 
-Each code block has access to the global scope and variables that correspond to the symbols in the grammar production.
-Terminal (token) variables will be a tuple of regex captures with the first element being the entire match.
-Non-terminal variables will be a function which when called traverse down the AST, executing the code of the corresponding non-terminal.
+Variable Environment
+~~~~~~~~~~~~~~~~~~~~
+
+Each code block has access to the global scope and variables of the symbols in the corresponding grammar production i.e., :term:`grammar variables <Grammar Variables >`.
+See :term:`non-terminal variables <non-terminal variable >` and :term:`terminal variables <terminal variable >`.
+
+The following variables are initially available in the global scope:
+
+* :code:`__name__`: The name of the executing language
+* :code:`args`: A dictionary of the parsed command line argument values (see :ref:`usage`)
+* Start symbol :term:`non-terminal variable <non-terminal variable >` (only in main functionality)
 
 :Example:
 
@@ -287,39 +294,22 @@ The code block :code:`code.tag` (corresponding to :code:`grammar.tag`) would hav
   }
 
 .. Note::
-  Notice that :code:`name` is a terminal variable returned as a list since the symbol is used multiple times in the :code:`grammar.tag` production.
-  Elements of this list correspond to the order they appear in the grammar production.
-
-Calling the function :code:`value` will execute the code block :code:`code.value`
-
-Details about returning values can be found within :ref:`python-code` and :ref:`shell-commands`.
-
-
-Properties defined within this object but not within the :ref:`grammar` object will be ignored, except for the first property, but only if it doesn't have a corresponding property in the :ref:`grammar` object.
-This property is taken as the main or entry point, allowing the user to write any .
-Without this property the entry point will be the property corresponding to the grammar start non-terminal and returning the value of the called code block.
-
-If multiple of the same symbol is used within a grammar production 
+  * The :term:`terminal variable <terminal variable >` :code:`name` is returned as a list since the symbol is used multiple times in the :code:`grammar.tag` production.
+    Elements of this list correspond to the order they appear in the grammar production.
+  * Calling the function :code:`value` will execute the code block :code:`code.value`.
 
 
 
-The functionality for properties defined within the :ref:`grammar` object but not within this object will default to returning a Python dictionary of their local values.
+Main functionality
+~~~~~~~~~~~~~~~~~~
 
+If the first property doesn't correspond to a defined grammar non-terminal then it acts as the main functionality and is executed in a global context.
+This allows code to be executed before and after the main :term:`AST` traversal.
 
-Global scope
-~~~~~~~~~~~~
-main function
+If no main functionality is defined then traversal, and thus execution is initiated with the code of the grammar start symbol.
+Otherwise, it is the responsibility of the main function to start traversal, which is done by calling the :term:`non-terminal variable <non-terminal variable >` corresponding to the grammar start symbol.
 
-.. Note::
-  args available?
-
-
-Traversal
-
-The following sections provide more detail regarding the two functionality modes.
-
-
-If the main function or start grammar functionality (whichever is used) returns a value it will be sent to stdout
+If the code that initiates execution (either main or start symbol code) returns a value it will be sent to :code:`stdout`.
 
 .. _python-code:
 
@@ -328,9 +318,11 @@ Python Code
 
 Without the :ref:`shell-commands` modifier (:code:`$`), blocks are by default interpreted as normal Python code.
 
+When :term:`non-terminal variables <non-terminal variable >` are called in Python, they can take any number of keyword arguments which will be passed down to the local environment of the called code block. 
+
 .. Note::
   Variables in Python can only be accessed by a `limited character set <https://docs.python.org/3/reference/lexical_analysis.html#identifiers>`_.
-  However, :term:`grammar variables` that use characters outside this set can still be accessed through the `locals <https://docs.python.org/3/library/functions.html#locals>`_ or `vars <https://docs.python.org/3/library/functions.html#vars>`_ functions, which allow access to variables with arbitrary names.
+  However, :term:`grammar variables <Grammar Variables >` that use characters outside this set can still be accessed through the `locals <https://docs.python.org/3/library/functions.html#locals>`_ or `vars <https://docs.python.org/3/library/functions.html#vars>`_ functions, which allow access to variables with arbitrary names.
 
 The value of the final `Python statement <https://docs.python.org/3/reference/simple_stmts.html#simple-statements>`_ of a code block will be used as the return value.
 If you don't wan't to return anything you can explicitly make the final statement :code:`None` or :code:`pass`.
@@ -364,11 +356,13 @@ Shell Commands
 ~~~~~~~~~~~~~~
 
 Shell commands can be used by making the first character of the code-block :code:`$`.
-Global, local, and :term:`grammar variables` can be accessed through the Python `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
+Global, and :term:`grammar variables <Grammar Variables >` can be accessed using the Python `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
+
+Accessing :term:`non-terminal variables <non-terminal variable >` will be equivalent to calling them, although keyword arguments cannot be passed with the `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
 
 .. Note::
-  * Use of ``{`` or ``}`` in other contexts than for format strings require escaping with ``{{`` or  ``}}`` e.g., :code:`$ echo ${{HOME}}`.
-  * :term:`Grammar variables` with incompatible syntax with the `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_, can be accessed through the special key :code:`locals()` e.g., :code:`{locals()[{]}` for a variable named :code:`{`.
+  * Use of ``{`` or ``}`` for anything other than format strings require escaping with ``{{`` or  ``}}`` e.g., :code:`$ echo ${{HOME}}`.
+  * :term:`Grammar variables <Grammar Variables >` with incompatible syntax with the `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_, can be accessed through the special key :code:`locals()` e.g., :code:`{locals()[{]}` for a variable named :code:`{`.
 
 
 The output (:code:`stdout`) of a command will be used as the return value for the code block.
@@ -418,7 +412,7 @@ Arbitrary regex can also be assigned a token type.
 :Property Type: ``string``
 
 The style to be applied to a certain token type. 
-This is represented as a mapping between a token type and a styles specified with `Pygments style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
+This is represented as a mapping between a token type and a style specified with `Pygments style rules <https://pygments.org/docs/styledevelopment/#style-rules>`_.
 
 :Example:
 
@@ -432,7 +426,7 @@ This is represented as a mapping between a token type and a styles specified wit
     Whitespace: "bg:#e8dfdf"
     
 .. Note::
-  The use of quotes around the styles in the above example are necessary, as otherwise the hex colours would be treated as YAML comments and ``:`` would try to create another mapping.
+  The use of quotes around the styles in the above example are necessary, as otherwise the hex colours using :code:`#` would be treated as YAML comments.
   See :ref:`using-yaml` for tips.
 
 See :ref:`static-syntax-highlighting` for more details.
@@ -523,7 +517,7 @@ Properties relating to the :ref:`tokens` object.
 :Default: ``^token(?!$)|(?<= )token``
 
 A regex used to determine how tokens can be referenced in other tokens and consequently expanded (substituted).
-If the value of this property is set to null or equivalently defined but not given a value, :term:`token expansion` will not take place.
+If the value of this property is set to null or equivalently defined but not given a value, :term:`token expansion <token expansion >` will not take place.
 
 The special identifier ``token`` is used as a substitute for user-defined token names.
 If this special identifier isn't used the defined regex is assumed to be a prefix to the token name.
