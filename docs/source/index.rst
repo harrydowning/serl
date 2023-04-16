@@ -22,7 +22,7 @@ The format of these language is specified in the :ref:`lang-config` section.
    user_guide/installation
    user_guide/lang_config
    user_guide/cli
-   user_guide/usage
+   user_guide/other
 
 Gallery
 -------
