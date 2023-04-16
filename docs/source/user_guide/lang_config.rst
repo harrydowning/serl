@@ -240,11 +240,60 @@ For non-terminals with multiple productions the same applies but the list elemen
   If the first property doesn't correspond to a defined grammar non-terminal (as seen above) then it acts as the main functionality executed in global scope.
 
 If no main functionality is defined then traversal, and thus execution is initiated with the code of the grammar start symbol.
-Otherwise, it is the responsibility of the main function to start traversal, which is done by calling functions whose name correspond to non-terminal of a grammar production.
+Otherwise, it is the responsibility of the main function to start traversal, which is done by calling the function corresponding to the start non-terminal.
 
-Each code block has access to the global scope and variables that correspond to the symbols in the corresponding grammar production.
-Terminal (token) variables will be a tuple of regex capture where the first is the entire match.
-Non-terminal variables will be a function which when called traverse down, executing the code of the corresponding non-terminal.
+Each code block has access to the global scope and variables that correspond to the symbols in the grammar production.
+Terminal (token) variables will be a tuple of regex captures with the first element being the entire match.
+Non-terminal variables will be a function which when called traverse down the AST, executing the code of the corresponding non-terminal.
+
+:Example:
+
+.. code-block:: yaml
+  
+  tokens:
+    name: (\w+):(\w+)
+
+  grammar:
+    tag: |
+      <name>
+        value
+      </name>
+    value: ...
+
+  code:
+    main: ...
+    tag: ...
+    value: ...
+
+For the configuration above and the following source (details of :code:`value` omitted):
+
+.. code-block:: console
+
+  <a:b>
+    value
+  </c:d>
+
+
+The code block :code:`code.tag` (corresponding to :code:`grammar.tag`) would have access to the following environment:
+
+.. code-block:: python
+
+  {
+    # Any global variables, or keyword variables passed down through tag(...)
+    '<': ('<',),
+    '>': ('>',),
+    'name': [('a:b', 'a', 'b'),('c:d', 'c', 'd')],
+    'value': <function execute at 0x000002273B488AE0>
+  }
+
+.. Note::
+  Notice that :code:`name` is a terminal variable returned as a list since the symbol is used multiple times in the :code:`grammar.tag` production.
+  Elements of this list correspond to the order they appear in the grammar production.
+
+Calling the function :code:`value` will execute the code block :code:`code.value`
+
+Details about returning values can be found within :ref:`python-code` and :ref:`shell-commands`.
+
 
 Properties defined within this object but not within the :ref:`grammar` object will be ignored, except for the first property, but only if it doesn't have a corresponding property in the :ref:`grammar` object.
 This property is taken as the main or entry point, allowing the user to write any .
@@ -257,49 +306,73 @@ If multiple of the same symbol is used within a grammar production
 The functionality for properties defined within the :ref:`grammar` object but not within this object will default to returning a Python dictionary of their local values.
 
 
+Global scope
+~~~~~~~~~~~~
+main function
+
 .. Note::
   args available?
 
 
+Traversal
+
 The following sections provide more detail regarding the two functionality modes.
+
+
+If the main function or start grammar functionality (whichever is used) returns a value it will be sent to stdout
+
+.. _python-code:
 
 Python Code
 ~~~~~~~~~~~
 
-.. Tip::
-  variables are accessed with Python syntax and so can only use valid Python identifier characters.
-  However, the `locals <https://docs.python.org/3/library/functions.html#locals>`_ function or `vars <https://docs.python.org/3/library/functions.html#vars>`_ function can be used to access variables with arbitrary names.
+Without the :ref:`shell-commands` modifier (:code:`$`), blocks are by default interpreted as normal Python code.
 
-If you don't want to return anything you can explicitly make the final statement ``pass``
+.. Note::
+  Variables in Python can only be accessed by a `limited character set <https://docs.python.org/3/reference/lexical_analysis.html#identifiers>`_.
+  However, :term:`grammar variables` that use characters outside this set can still be accessed through the `locals <https://docs.python.org/3/library/functions.html#locals>`_ or `vars <https://docs.python.org/3/library/functions.html#vars>`_ functions, which allow access to variables with arbitrary names.
+
+The value of the final `Python statement <https://docs.python.org/3/reference/simple_stmts.html#simple-statements>`_ of a code block will be used as the return value.
+If you don't wan't to return anything you can explicitly make the final statement :code:`None` or :code:`pass`.
+
+.. Note::
+  * Only the value of the final statement is used, and so if this is an assignment (e.g., :code:`a = 5`) then the variable :code:`a` would never be created, but :code:`5` would be returned.
+  * If the final statement doesn't have a value (e.g., a function definition) then :code:`None` will be returned.
+  * The :code:`return` keyword can only be used in the final statement, but is not strictly necessary.
 
 :Example:
 
 .. code-block:: yaml
 
+  grammar:
+    tag: ...
+
   code:
     main: | # python
-      # import modules ...
-      # Create classes/functions ...
-      start() # Result of grammar start non-terminal
-    
-    start: | # python
-      # Code for start
-    ...
+      # import modules, create classes/functions etc.
+      val = tag() # Main execution on grammar start symbol called 'tag'
+      # Do something with val
+      val # return val to stdout
+    tag: # Code for tag
 
 .. Note::
   Currently available for `VS Code <https://code.visualstudio.com/>`_ the `YAML Embedded Languages <https://marketplace.visualstudio.com/items?itemName=harrydowning.yaml-embedded-languages>`_ extension provides syntax highlighting within YAML block-scalars by specifying the language name in a comment next to the block to highlight as shown above.
 
+.. _shell-commands:
+
 Shell Commands
 ~~~~~~~~~~~~~~
 
-.. Tip::
-  Bit on variables names and locals() work around
-
-Shell commands can be used by making the first character of the property value :code:`$`.
+Shell commands can be used by making the first character of the code-block :code:`$`.
 Global, local, and :term:`grammar variables` can be accessed through the Python `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_.
 
 .. Note::
-  Use of ``{`` or ``}`` in other contexts than for format strings require escaping with ``{{`` or  ``}}``.
+  * Use of ``{`` or ``}`` in other contexts than for format strings require escaping with ``{{`` or  ``}}`` e.g., :code:`$ echo ${{HOME}}`.
+  * :term:`Grammar variables` with incompatible syntax with the `format language <https://docs.python.org/3/library/string.html#format-string-syntax>`_, can be accessed through the special key :code:`locals()` e.g., :code:`{locals()[{]}` for a variable named :code:`{`.
+
+
+The output (:code:`stdout`) of a command will be used as the return value for the code block.
+If the command fails it will raise a `CalledProcessError <https://docs.python.org/3/library/subprocess.html#subprocess.CalledProcessError>`_, which if caught allows access to :code:`stderr` and the :code:`returncode`.
 
 :Example:
 
