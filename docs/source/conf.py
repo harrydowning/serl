@@ -5,12 +5,11 @@
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-from serl.constants import NAME, VERSION
 
-project = NAME.title()
+project = 'Serl'
 copyright = '2023, Harry Downing'
 author = 'Harry Downing'
-release = VERSION
+release = '0.0.2-alpha'
 
 master_doc = 'index'
 
