@@ -50,7 +50,7 @@ Glossary
     A function for a specific :term:`non-terminal` that can be used to traverse the :term:`AST`.
     This function will execute and return a value from the code block whose name corresponds to the same :term:`non-terminal`.
 
-See `Compilers: Principles, Techniques, and Tools <https://books.google.co.uk/books/about/Compilers_Principles_Techniques_and_Tool.html>`_ to learn more terminology and methods relating to language compilers.
+See `Compilers: Principles, Techniques, and Tools <https://www.google.co.uk/books/edition/Compilers/yHTLngEACAAJ>`_ to learn more terminology and methods relating to language compilers.
 
 .. rubric:: Footnotes
 
