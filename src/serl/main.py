@@ -127,7 +127,7 @@ def command_line_link(args):
 def command_line_run(args):
     language = args['<language>']
     lang_name = utils.get_language_name(language)
-    config = get_config(language)
+    config = get_config(language, get_link_filename())
 
     venv_name = config.get('environment', None)
     venv_created = False
@@ -381,7 +381,7 @@ def command_line_install(args):
     alias = args['<alias>'] or utils.get_language_name(language)
     upgrade = args['--upgrade']
     
-    config_text = get_config_text(language)
+    config_text = get_config_text(language, False)
     config_dir = get_config_dir()
     filename = os.path.join(config_dir, alias)
     
@@ -462,11 +462,15 @@ def get_args(version):
     
     return base_args, args
 
+def get_link_filename() -> None | str:
+    filename = extension(sys.argv[0])
+    return filename if os.path.islink(filename) else None
+
 def main():
     version = f'{NAME} {VERSION}'
-    filename = extension(sys.argv[0])
+    filename = get_link_filename()
 
-    if os.path.islink(filename):
+    if filename:
         base_args, args = get_symlink_args(filename, version)
     else:
         base_args, args = get_args(version)

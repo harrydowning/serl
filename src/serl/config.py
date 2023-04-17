@@ -38,7 +38,7 @@ def get_url_config_text(url: str) -> str | None:
     r.raise_for_status()
     return r.text
 
-def get_config_text(language: str) -> str | None:
+def get_config_text(language: str, symlink: bool) -> str | None:
     if re.match(r'https?://.*', language):
         try:
             config_text = get_url_config_text(language)
@@ -49,16 +49,19 @@ def get_config_text(language: str) -> str | None:
         except requests.exceptions.RequestException as rqe:
             logger.error(rqe, code=1)
     else:
-        # File config has higher precedence than system
-        config_text = get_file_config_text(language) or \
+        config_text = None
+        if not symlink:
+            # File config has higher precedence than system
+            config_text = get_file_config_text(language)
+        config_text = config_text or \
             get_file_config_text(language, get_config_dir())
         if config_text == None:
             logger.error(f"Could not find system or file config for " 
                          f"\'{language}\'.", code=1)
     return config_text
 
-def get_config(language: str) -> dict:
-    config_text = get_config_text(language)
+def get_config(language: str, symlink: bool) -> dict:
+    config_text = get_config_text(language, symlink)
     try:
         config = yaml.safe_load(config_text)
     except yaml.YAMLError as err:
