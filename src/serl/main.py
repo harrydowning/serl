@@ -222,6 +222,11 @@ def command_line_run(args):
     tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
     symbol_map = token_map | grammar_map
     
+    if error_sym in symbol_map:
+        logger.error(f'Multiple definitions for \'{error_sym}\'.', code=1)
+    else:
+        symbol_map[error_sym] = 'error'
+
     if len(implicit_map):
         logger.info(f'Implicit tokens: \'{s.join(implicit_map.keys())}\'')
 
@@ -255,7 +260,7 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parse(src, lexer=lexer)
+    serl_ast = parser.parse(src, lexer=lexer, tracking=True)
     if (not permissive and logger.error_seen) or not serl_ast:
         logger.error('Parse Failed', code=1)
     

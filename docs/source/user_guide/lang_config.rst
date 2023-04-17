@@ -85,7 +85,7 @@ Tokens can be referenced and substituted into other tokens through :term:`token 
 See the :ref:`meta-tokens-ref` property for details on the syntax used to reference other tokens.
 
 .. Note::
-  Any tokens defined but not used within the :ref:`grammar` will be ignored.
+  Any tokens defined but not used within the :ref:`grammar` object will be ignored.
   This could be because those tokens are used only to be substituted into another token for readability.
 
 Tokens can also be specified implicitly.
@@ -122,7 +122,7 @@ This can be used to disambiguate shift/reduce or reduce/reduce parser conflicts.
 Precedence levels are specified with an association type followed by a whitespace separated list of identifiers from the :ref:`tokens` object.
 Association type can be ``left``, ``right``, or ``nonassoc``.
 
-The precedence of a specific :ref:`grammar` production can also be overridden by specifying the non-terminal name and position (:code:`name[pos]`).
+The precedence of a specific :term:`grammar production` can also be overridden by specifying the non-terminal name and position (:code:`name[pos]`).
 This will only affect the rightmost terminal of the production.
 For example, this could be used to give higher precedence to unary minus.
 
@@ -142,9 +142,9 @@ For example, this could be used to give higher precedence to unary minus.
 :Type: ``string``
 :Required: False
 
-The name of an error token to be used in the :ref:`grammar` property.
+The name of an error token to be used in the :ref:`grammar` object.
 The error token can be used to support :term:`panic-mode` parsing.
-Typically, a good place to use error tokens is before delimiters.
+Typically, a good place to use an error token is before a delimiter.
 
 This can be used to find more errors, rather than stop on the first, or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
 
@@ -180,7 +180,7 @@ The language grammar specified as an object of productions.
 A grammar production consists of a head and a body, where the head is a non-terminal and the body is an arrangement of terminals (i.e., tokens) and other non-terminals.
 
 A key of this property represents the head of a production, with the value being the corresponding body.
-If the value is a list, then each element will be its own grammar production but all will correspond to the same head. 
+To define multiple productions with the same head specify the value as a list.
 
 Whitespace is ignored and so rules can be spread across multiple lines.
 The grammar start symbol will be taken as the head of the production defined first.
@@ -251,7 +251,7 @@ The following variables are initially available in the global scope:
 
 * :code:`__name__`: The name of the executing language
 * :code:`args`: A dictionary of the parsed command line argument values (see :ref:`usage`)
-* Start symbol :term:`non-terminal variable <non-terminal variable >` (only in main functionality)
+* Start symbol :term:`non-terminal variable <non-terminal variable >` (only with main functionality)
 
 :Example:
 

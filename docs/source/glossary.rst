@@ -10,7 +10,7 @@ Glossary
   Grammar Variables [#tool]_
     Variables created based on the symbols used in a :term:`grammar production`.
     These can be :term:`terminal variables <terminal variable >` or :term:`non-terminal variables <non-terminal variable >`.
-    If the same symbol is used multiple times, then the variable will be a list.
+    If the same symbol is used multiple times, then the variable will be a list of occurrences.
 
   System Configuration [#tool]_
     The directory located at :code:`~/.serl` which is used to store system-wide languages and environments.

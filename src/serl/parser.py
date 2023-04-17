@@ -8,10 +8,21 @@ import serl.utils as utils
 from serl.lexer import get_whole_match
 
 import ply.yacc as yacc
+from ply.lex import LexToken
 
 class SerlAST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(SerlAST, cls).__new__(cls, (name, pos, value))
+
+def get_value(p, i):
+    input = p.lexer.lexdata
+    if isinstance(p[i], LexToken):
+        start, end = p.lexspan(i)
+        if i + 1 < len(p):
+            start, end = p.lexpos(i), p.lexpos(i + 1)
+        return (input[start:end],)
+    else:
+        return p[i]
 
 def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
     rule = prod[2].rsplit('%prec', 1)[0]
@@ -24,8 +35,8 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
             flipped_symbol_map[prod[0]], 
             prod[1], 
             {
-                flipped_symbol_map[symbol]: [p[i] for i in idxs] 
-                for symbol, idxs in groups.items() if symbol != 'error'
+                flipped_symbol_map[symbol]: [get_value(p, i) for i in idxs] 
+                for symbol, idxs in groups.items()
             }
         )
     
