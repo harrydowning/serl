@@ -48,7 +48,7 @@ link
 :Description:
 
 The link command can be used to create a `symbolic link <https://en.wikipedia.org/wiki/Symbolic_link>`_ for a language.
-The name of the symbolic link (:code:`<language>`) should be the same as the name of a language in the :term:`system configuration`.
+The name of the symbolic link (:code:`<language>`) should be the same as the name of a language in the :term:`system configuration <system configuration >`.
 This allows a language to be used directly through the symbolic link, where the command :code:`serl run <language> ...` would be equivalent to :code:`<language> ...`.
 
 .. Note::
@@ -110,14 +110,14 @@ install
 
 :Description:
 
-The install command can be used to add a language to the :term:`system configuration`.
+The install command can be used to add a language to the :term:`system configuration <system configuration >`.
 The specified :code:`<language>` can either be a relative or absolute file path, or a HTTP URL which when resolved returns a language configuration.
 Installed languages can be renamed by specifying an :code:`<alias>`.
 
 .. Note::
   Languages are determined uniquely by their filename.
-  This means that multiple languages in the :term:`system configuration` cannot have the same name.
-  By default, the install command won't override languages in the :term:`system configuration`, however this can be changed with the :code:`-U` or :code:`--upgrade` command.
+  This means that multiple languages in the :term:`system configuration <system configuration >` cannot have the same name.
+  By default, the install command won't override languages in the :term:`system configuration <system configuration >`, however this can be changed with the :code:`-U` or :code:`--upgrade` command.
   This ensures languages won't be accidentally overridden.
 
 uninstall
@@ -140,7 +140,7 @@ uninstall
 
 :Description:
 
-The uninstall command can be used to remove languages or :ref:`environments <environment>` from the :term:`system configuration`.
+The uninstall command can be used to remove languages or :ref:`environments <environment>` from the :term:`system configuration <system configuration >`.
 
 list
 ----
