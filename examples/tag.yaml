@@ -1,0 +1,11 @@
+tokens:
+  name: (\w+):(\w+)
+
+grammar:
+  tag: |
+    <name>
+      value
+    </name>
+
+code:
+  tag: $ echo {name[0][1]}

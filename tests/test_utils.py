@@ -125,10 +125,18 @@ def test_normalise_grammar():
     expected = norm_grammar
     assert actual == expected
 
-def test_get_tokens_in_grammar():
-    actual = utils.get_tokens_in_grammar(token_map, norm_grammar)
-    expected = ['<', '>', 'foo', 'foos', 'bar']
-    assert actual == expected
+@pytest.mark.parametrize('token_map, norm_grammar, expected', [
+    ({'num': 'TERMINAL0'}, {'NT0': ['NT0 + NT0', 'NT0 - NT0', '- NT0', 'TERMINAL0']}, 
+     (['num'], {'+': 'ITERMINAL0', '-': 'ITERMINAL1'}, 
+      {'NT0': ['NT0 ITERMINAL0 NT0', 'NT0 ITERMINAL1 NT0', 'ITERMINAL1 NT0', 'TERMINAL0']})),
+])
+def test_get_tokens_in_grammar(token_map, norm_grammar, expected):
+    expected_used, expected_map, expected_grammar = expected
+
+    actual_used, actual_map = utils.get_tokens_in_grammar(token_map, norm_grammar)
+    assert actual_used == expected_used
+    assert actual_map == expected_map
+    assert expected_grammar == norm_grammar
 
 def test_flip_dict():
     expected = utils.flip_dict({'key_str': 'value', 'key_num': 1})

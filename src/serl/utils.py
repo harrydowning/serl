@@ -1,6 +1,6 @@
 import re
 import os
-from typing import Callable
+from typing import Callable, Iterable
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], 
            symbol_f: Callable[[str], str] = lambda x: x, 
@@ -49,29 +49,45 @@ def expand_tokens(exp_order: list[str], repl_tokens: dict[str, str]):
 def normalise_dict(d: dict) -> dict[str, list[str]]:
     return {k:v if type(v) == list else [v] for k,v in d.items()}
 
+def expand_grammar_rule(rule, sorted_symbol_map):
+    exp_rule = expand(rule, sorted_symbol_map, re.escape, lambda x: f' {x} ')
+    return re.sub(r'\s+', ' ', exp_rule).strip()
+
 def normalise_grammar(symbol_map: dict[str, str],
                       grammar: dict) -> dict[str, list[str]]:
     sorted_symbol_map = list(get_sorted_map(symbol_map).items())
     norm_grammar = {}
     for nt, rules in normalise_dict(grammar).items():       
         for i, rule in enumerate(rules):
-            exp_rule = expand(rule, sorted_symbol_map, re.escape, lambda x: f' {x} ')
-            rules[i] = re.sub(r'\s+', ' ', exp_rule).strip()
+            rules[i] = expand_grammar_rule(rule, sorted_symbol_map)
         norm_grammar[symbol_map[nt]] = rules
     return norm_grammar
 
-def get_tokens_in_grammar(token_map: dict[str, str], 
-                          norm_grammar: dict[str, list[str]]) -> list[str]:
+def get_tokens_in_grammar(token_map: dict[str, str], error: str,
+                          norm_grammar: dict[str, list[str]]):
     tokens = list(token_map.values())
-    rules = [rule for rules in norm_grammar.values() for rule in rules]
-    used = set()
-    for rule in rules:
-        for token in tokens:
-            if re.search(fr'\b{token}\b', rule):
-                rule = re.sub(fr'\b{token}\b', '', rule)
-                used.add(token)
-    return [token for token, token_name in token_map.items() 
-            if token_name in used]
+    nonterms = norm_grammar.keys()
+    flipped_token_map = flip_dict(token_map)
+    
+    tokens_used, implicit_map = set(), dict()
+    for nt, rules in norm_grammar.items():
+        for i, rule in enumerate(rules):
+            new_rule = ''
+            for symbol in rule.split(' '):
+                if symbol in tokens:
+                    tokens_used.add(flipped_token_map[symbol])
+                elif symbol in nonterms:
+                    pass
+                elif symbol == error:
+                    symbol = 'error'
+                else:
+                    if not implicit_map.get(symbol, None):
+                        implicit_map[symbol] = f'ITERMINAL{len(implicit_map)}'
+                    symbol = implicit_map[symbol]
+                new_rule += f'{symbol} '
+            norm_grammar[nt][i] = new_rule.strip()
+    # Order implicit tokens by length
+    return list(tokens_used), get_sorted_map(implicit_map)
 
 def flip_dict(d: dict) -> dict:
     return {v: k for k, v in d.items()}
@@ -80,8 +96,8 @@ def get_language_name(language: str):
     name, ext = os.path.splitext(os.path.basename(language))
     return name
 
-def keep_keys_in_list(d: dict, l: list):
-    return {k: v for k, v in d.items() if k in l}
+def keep_keys_in_list(d: dict, i: Iterable):
+    return {k: v for k, v in d.items() if k in i}
 
 def get_valid_identifier(s: str):
    s = re.sub('[^0-9a-zA-Z_]', '', s)

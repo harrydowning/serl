@@ -15,13 +15,14 @@ import traceback
 
 from serl.lexer import build_lexer
 from serl.parser import build_parser, SerlAST
+import serl.parser
 import serl.utils as utils
 import serl.logger as logger
 from serl.highlight import get_pygments_output, parse_key_value
 from serl.config import get_config, get_config_dir, get_config_env_dir, \
     get_config_text, system_config_exists, system_config_languages
 from serl.constants import CLI, SYMLINK_CLI, CLI_COMMANDS, NAME, VERSION, \
-    DEFAULT_REF, SHELL_CHAR, VENV_CONFIG
+    DEFAULT_REF, SHELL_CHAR, VENV_CONFIG, EXCEPTION_ATTR 
 
 from docopt import docopt
 import networkx as nx
@@ -90,9 +91,10 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
     filename = args['--highlight']
     format = args['--format'] or os.path.splitext(filename)[1][1:]
     format_options = parse_key_value(args['--format-options'] or '')
+    style_defs_arg = args['--style-defs-arg']
         
     output = get_pygments_output(src, tokens, ignore, tokentypes, user_styles, 
-                                 format, format_options)
+                                 format, format_options, style_defs_arg)
     highlighted_src, style_defs = output
     if type(highlighted_src) == bytes:
         mode = 'wb'
@@ -102,7 +104,7 @@ def highlight(args: dict, src: str, tokens: dict, ignore: str,
     with open(filename, mode) as file:
         file.write(highlighted_src)
     
-    if args['--style-defs']:
+    if args['--style-defs'] and style_defs:
         with open(args['--style-defs'], 'w') as file:
             file.write(style_defs)
     exit(0)
@@ -177,7 +179,7 @@ def command_line_run(args):
     meta = config.get('meta', {})
     meta_tokens = meta.get('tokens', {})
 
-    tokens = config['tokens']
+    tokens = config.get('tokens', {})
     ref = meta_tokens.get('ref', DEFAULT_REF)
     using_regex = meta_tokens.get('regex', False)
     ignore = meta_tokens.get('ignore', '.')
@@ -197,25 +199,36 @@ def command_line_run(args):
             logger.info(f'Token \'{token}\' expanded: \'{tb}\' -> \'{ta}\'')
 
     precedence = config.get('precedence', [])
-    sync = config.get('sync', None)
     grammar = config['grammar']
-    permissive = meta.get('permissive', True)
+    error_sym = config.get('error', None)
+    meta_grammar = meta.get('grammar', {})
+    permissive = meta_grammar.get('permissive', True)
 
     token_map = {k: f'TERMINAL{i}' for i, k, in enumerate(tokens.keys())}
     grammar_map = {k: f'NONTERMINAL{i}' for i, k in enumerate(grammar.keys())}
     common_keys = set(token_map.keys()).intersection(grammar_map.keys())
+    s = '\', \''
     if common_keys:
-        s = '\', \''
         logger.error(f'Grammar identifiers \'{s.join(common_keys)}\' already '
                      f'used in tokens', code=1)
     
     symbol_map = token_map | grammar_map
     grammar = utils.normalise_grammar(symbol_map, grammar)
 
-    tokens_in_grammar = utils.get_tokens_in_grammar(token_map, grammar)
-    tokens = utils.keep_keys_in_list(tokens, tokens_in_grammar)
-    token_map = utils.keep_keys_in_list(token_map, tokens_in_grammar)
+    tokens_used, implicit_map = utils.get_tokens_in_grammar(token_map, 
+                                                            error_sym, grammar)
+    tokens = utils.keep_keys_in_list(tokens, tokens_used)
+    token_map = utils.keep_keys_in_list(token_map, tokens_used) | implicit_map
+    tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
     symbol_map = token_map | grammar_map
+    
+    if error_sym in symbol_map:
+        logger.error(f'Multiple definitions for \'{error_sym}\'.', code=1)
+    else:
+        symbol_map[error_sym] = 'error'
+
+    if len(implicit_map):
+        logger.info(f'Implicit tokens: \'{s.join(implicit_map.keys())}\'')
 
     if args['--highlight']:
         tokentypes = config.get('tokentypes', {})
@@ -224,8 +237,8 @@ def command_line_run(args):
 
     lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
     parser = build_parser(
-        lang_name, list(token_map.values()), symbol_map, grammar, precedence, 
-        debug_parser_file, sync, permissive
+        lang_name, list(token_map.values()), symbol_map, grammar, precedence,
+        debug_parser_file
     )
 
     # Debug lexer
@@ -247,7 +260,10 @@ def command_line_run(args):
         logger.info(f'  {lineno}: {" ".join(line)}', important=debug_lexer)
     # Debug lexer
 
-    serl_ast = parser.parse(src, lexer=lexer)
+    serl_ast = parser.parse(src, lexer=lexer, tracking=True)
+    if (not permissive and logger.error_seen) or not serl_ast:
+        logger.error('Parse Failed', code=1)
+    
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)
     
@@ -285,14 +301,20 @@ def command_line_run(args):
         err.__notes__ = None
         logger.error(f'In {err.filename}:\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
-        lineno = traceback.extract_tb(sys.exc_info()[2])[-1][1]
+        frames = traceback.extract_tb(err.__traceback__)
+        frame = next((frame for frame in frames[::-1] 
+                      if frame.filename == '<string>'), frames[-1])
+        lineno = frame.lineno
         err.__traceback__ = None
         err.__context__ = None
-        code_name, i = err.__notes__[0].rsplit(' ', 1)
-        code_line = code[code_name][int(i)].split('\n')[lineno - 1]
+        code_name, i = getattr(err, EXCEPTION_ATTR, ('', -1))
+        filename = f'$.code.{code_name}[{i}]'
+        code_lines = code[code_name][i].split('\n')
+        code_line = ':'
+        if frame.filename == '<string>' and lineno - 1 < len(code_lines):
+            code_line = f', line {lineno}:\n\n  {code_lines[lineno - 1]}'
         err.__notes__ = None
-        logger.error(f'In {err.filename}, line {lineno}:\n\n  {code_line}\n\n', 
-                     exc_info=True, code=1)
+        logger.error(f'In {filename}{code_line}\n\n', exc_info=True,code=1)
 
     if result:
         print(result, end='')
@@ -320,13 +342,13 @@ def exec_or_error(name, i, code_str, global_env, local_env=None):
     try:
         if code_str.startswith(SHELL_CHAR):
             local_env = local_env or {}
+            local_env = {'locals()': local_env} | local_env
             return run_command(code_str[1:], global_env | local_env)
         else:
             return exec_and_eval(code_str, global_env, local_env)
     except Exception as err:
-        if not getattr(err, '__notes__', None):
-            err.filename = f'$.code.{name}[{i}]'
-            err.add_note(f'{name} {i}')
+        if not getattr(err, EXCEPTION_ATTR, None):
+            setattr(err, EXCEPTION_ATTR, (name, i))
         raise
 
 def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
@@ -349,8 +371,8 @@ def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
         code_str = code_list[i] if code_list and len(code_list) > i else None
         
         if not code_str:
-            return env
-        
+            return env # TODO should 'None' be returned?
+
         return exec_or_error(name, i, code_str, global_env, local_env | env)
     
     return Traversable(execute)
@@ -452,10 +474,10 @@ def main():
 
     logger.verbose = base_args.get('--verbose', False) or \
         args.get('--verbose', False)
-
+    # TODO sys.setrecursionlimit(20000)
     try:
         globals()[f'command_line_{base_args["<command>"]}'](args)
     except Exception:
         if not logger.error_seen:
             raise
-        exit(1)
+        raise # TODO exit(1)

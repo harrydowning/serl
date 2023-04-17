@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 import serl.parser as parser
 from serl.parser import SerlAST
@@ -18,6 +20,7 @@ flipped_symbol_map = {
      SerlAST('e', 1, {'a': ['1', '3', '5', '7'], 'b': ['2', '6'], 'c': ['4']})),
 ])
 def test_get_prod_function(prod, p, expected):
+    parser.parser = SimpleNamespace(symstack=[])
     actual_prod = parser.get_prod_func(prod, flipped_symbol_map)
     assert actual_prod.__doc__ == f'{prod[0]} : {prod[2]}'
     actual_prod(p)
@@ -26,3 +29,25 @@ def test_get_prod_function(prod, p, expected):
     assert actual_name == expected_name
     assert actual_i == expected_i
     assert actual_value == expected_value 
+
+grammar = {
+    'NT0': ['', '', ''],
+    'NT1': ['']
+}
+
+symbol_map = {
+    'first': 'NT0',
+    'second': 'NT1',
+    'third': 'T0'
+}
+
+@pytest.mark.parametrize('token, prec_map, expected_token, expected_prec_map', [
+    ('first[2]', {}, 'PTERMINAL0', {('NT0', 2): ' %prec PTERMINAL0'}), 
+    ('second[0]', {'': ''}, 'PTERMINAL1', {'': '', ('NT1', 0): ' %prec PTERMINAL1'}), 
+    ('first[6]', {}, 'first[6]', {}), 
+    ('third', {}, 'T0', {}), 
+])
+def test_get_prec_token(token, prec_map, expected_token, expected_prec_map):
+    actual_token = parser.get_prec_token(token, grammar, symbol_map, prec_map)
+    assert actual_token == expected_token
+    assert prec_map == expected_prec_map

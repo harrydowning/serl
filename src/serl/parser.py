@@ -8,13 +8,25 @@ import serl.utils as utils
 from serl.lexer import get_whole_match
 
 import ply.yacc as yacc
+from ply.lex import LexToken
 
 class SerlAST(tuple):
     def __new__(cls, name: str, pos: int, value):
         return super(SerlAST, cls).__new__(cls, (name, pos, value))
 
+def get_value(p, i):
+    input = p.lexer.lexdata
+    if isinstance(p[i], LexToken):
+        start, end = p.lexspan(i)
+        if i + 1 < len(p):
+            start, end = p.lexpos(i), p.lexpos(i + 1)
+        return (input[start:end],)
+    else:
+        return p[i]
+
 def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]):
-    symbols = prod[2].split(' ')
+    rule = prod[2].rsplit('%prec', 1)[0]
+    symbols = re.split(r'\s+', rule.strip())
     symbols = sorted([(s, i + 1) for i, s, in enumerate(symbols)])
     groups = {name: [i for _, i in group] for name, group in 
                        itertools.groupby(symbols, lambda x: x[0])}
@@ -23,7 +35,7 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
             flipped_symbol_map[prod[0]], 
             prod[1], 
             {
-                flipped_symbol_map[symbol]: [p[i] for i in idxs] 
+                flipped_symbol_map[symbol]: [get_value(p, i) for i in idxs] 
                 for symbol, idxs in groups.items()
             }
         )
@@ -33,15 +45,15 @@ def get_prod_func(prod: tuple[str, int, str], flipped_symbol_map: dict[str, str]
 
 def get_error_msg(p, parser, flipped_symbol_map):
     expected = [
-        'end of file' if symbol == '$end' else flipped_symbol_map[symbol] 
-        for symbol in parser.action[parser.state].keys()
+        'EOF' if symbol == '$end' else flipped_symbol_map[symbol] 
+        for symbol in parser.action[parser.state].keys() if symbol != 'error'
     ]
     
     if expected == []:
         expected_msg = ''
     else:
-        s = '\' or \''
-        expected_msg = f' Expected \'{s.join(expected)}\'.'
+        s = '\', \''
+        expected_msg = f' Expected one of: \'{s.join(expected)}\'.'
 
     if not p:
         return f'Parsing error: Reached end of file.{expected_msg}'
@@ -55,22 +67,41 @@ def get_error_msg(p, parser, flipped_symbol_map):
     
     return f'Parsing error: {tok_msg} on line {p.lineno}.{expected_msg}'
 
-def get_error_func(parser, sync, permissive, flipped_symbol_map):
-    def p_error(p):
-        logger.error(get_error_msg(p, parser, flipped_symbol_map), code=1)
-    return p_error
+def get_error_func(parser, flipped_symbol_map):
+    def error_func(p):
+        logger.error(get_error_msg(p, parser, flipped_symbol_map))
+    return error_func
+
+def p_error(p):
+    pass
+
+def get_prec_token(token: str, grammar: dict, symbol_map: dict, prec_map: dict):
+    internal = symbol_map.get(token, None)
+    m = re.match(r'^(.*)\[(\d+)\]$', token)
+    if internal:
+        return internal
+    elif m:
+        nt, i = m.groups()
+        nt, i = symbol_map[nt], int(i)
+        if grammar.get(nt, None) and i < len(grammar[nt]):
+            name = f'PTERMINAL{len(prec_map)}'
+            prec_map[(nt, i)] = f' %prec {name}'
+            return name
+    return token
 
 def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
-                 grammar: dict[str, list[str]], _precedence: list[str],
-                 debug_file: str | None, sync: str, permissive: bool):
+                 grammar: dict[str, list[str]], _precedence: list[str], 
+                 debug_file: str | None):
     g = globals()
     g['tokens'] = _tokens
     
     precedence = []
+    prec_map = {}
     for rule in _precedence:
         split = re.split(r'\s+', rule.strip())
-        tag = split.pop(0)
-        toks = [symbol_map.get(tok, tok) for tok in split]# if symbol_map.get(tok, None)]
+        tag = split.pop(0)  
+        toks = [get_prec_token(tok, grammar, symbol_map, prec_map) 
+                for tok in split]
         if len(toks) > 0:
             precedence.append((tag, *toks))
     g['precedence'] = precedence
@@ -78,6 +109,7 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
     flipped_symbol_map = utils.flip_dict(symbol_map)
     for nt in grammar:
         for i, rule in enumerate(grammar[nt]):
+            rule += prec_map.get((nt, i), '')
             g[f'p_{nt}_{i}'] = get_prod_func((nt, i, rule), flipped_symbol_map)
 
     sorted_flipped_symbol_map = utils.get_sorted_map(flipped_symbol_map)
@@ -103,10 +135,9 @@ def build_parser(lang_name: str, _tokens: list[str], symbol_map: dict[str, str],
             pass
 
     parser = yacc.yacc(**options)
-
-    sync = [] if not sync else re.split(r'\s+', sync.strip())
-    error_func = get_error_func(parser, sync, permissive, flipped_symbol_map)
+    error_func = get_error_func(parser, flipped_symbol_map)
     parser.errorfunc = error_func
+    g['parser'] = parser
     
     if debug_parser:
         exit(0)

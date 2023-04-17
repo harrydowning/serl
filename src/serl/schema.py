@@ -55,7 +55,7 @@ config_schema = {
                 'type': 'string'
             }
         },
-        'sync': {
+        'error': {
             'type': 'string'
         },
         'grammar': {
@@ -103,7 +103,7 @@ config_schema = {
             'type': 'string'
         }
     },
-    'required': ['tokens', 'grammar', 'code'] 
+    'required': ['grammar', 'code'] 
 }
 
 def validate(config: dict) -> list[str]:

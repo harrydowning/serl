@@ -15,7 +15,9 @@ release = VERSION
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = [
+    'sphinx_search.extension'
+]
 templates_path = ['_templates']
 exclude_patterns = []
 
@@ -28,7 +30,7 @@ html_static_path = ['_static']
 # see https://sphinx-rtd-theme.readthedocs.io/en/stable/configuring.html
 html_theme_options = {
     'style_external_links': True,
-    'sticky_navigation': False,
+    # 'sticky_navigation': False,
     'navigation_depth': 2,
 }
 
