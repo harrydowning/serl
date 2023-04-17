@@ -59,7 +59,11 @@ def get_config_text(language: str) -> str | None:
 
 def get_config(language: str) -> dict:
     config_text = get_config_text(language)
-    config = yaml.safe_load(config_text) # TODO handle errors
+    try:
+        config = yaml.safe_load(config_text)
+    except yaml.YAMLError as err:
+        err.with_traceback(None)
+        logger.error(f'YAML parser error:\n\n{err}', code=1)
 
     errs = validate(config)
     if errs == []:
