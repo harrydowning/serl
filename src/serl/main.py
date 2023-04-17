@@ -129,29 +129,6 @@ def command_line_run(args):
     lang_name = utils.get_language_name(language)
     config = get_config(language, get_link_filename())
 
-    venv_name = config.get('environment', None)
-    venv_created = False
-    if venv_name:
-        for sitepackage in site.getsitepackages():
-            sys.path.remove(sitepackage)
-        
-        venv_path = os.path.join(get_config_env_dir(), venv_name)
-        if not glob.glob(os.path.join(venv_path, VENV_CONFIG)):
-            logger.info(f'Creating virtual environment \'{venv_name}\'.', 
-                        important=True)
-            venv.create(venv_path, with_pip=True)
-            venv_created = True
-        
-        for sitepackage in site.getsitepackages([venv_path]):
-            sys.path.append(sitepackage)
-        
-        context = venv.EnvBuilder().ensure_directories(venv_path)
-        sys.executable = context.env_exe
-
-    if args['--requirements'] or venv_created:
-        logger.info(f'Installing requirements.', important=True)
-        requirements(config.get('requirements', None))
-
     version = config.get('version', None)
     usage = config.get('usage', None)
     
@@ -274,6 +251,31 @@ def command_line_run(args):
             if value == None:
                 logger.warning(f'Code missing for $.code.{code_name}[{i}]')
     
+    # #################################################################
+
+    venv_name = config.get('environment', None)
+    venv_created = False
+    if venv_name:
+        for sitepackage in site.getsitepackages():
+            sys.path.remove(sitepackage)
+        
+        venv_path = os.path.join(get_config_env_dir(), venv_name)
+        if not glob.glob(os.path.join(venv_path, VENV_CONFIG)):
+            logger.info(f'Creating virtual environment \'{venv_name}\'.', 
+                        important=True)
+            venv.create(venv_path, with_pip=True)
+            venv_created = True
+        
+        for sitepackage in site.getsitepackages([venv_path]):
+            sys.path.append(sitepackage)
+        
+        context = venv.EnvBuilder().ensure_directories(venv_path)
+        sys.executable = context.env_exe
+
+    if args['--requirements'] or venv_created:
+        logger.info(f'Installing requirements.', important=True)
+        requirements(config.get('requirements', None))
+
     # Remove module cache to allow for correct user import
     for module in sys.modules.copy().keys():
         if not module in init_modules:
@@ -318,7 +320,7 @@ def command_line_run(args):
         logger.error(f'In {filename}{code_line}\n\n', exc_info=True,code=1)
 
     if result:
-        print(result, end='')
+        print(result)
     
 def exec_and_eval(code, global_env, local_env=None):
     code_ast = ast.parse(code)
