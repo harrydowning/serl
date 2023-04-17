@@ -220,7 +220,7 @@ def command_line_run(args):
     token_map = utils.keep_keys_in_list(token_map, tokens_used) | implicit_map
     tokens |= {k: re.escape(k) for k, v in implicit_map.items()}
     symbol_map = token_map | grammar_map
-    
+
     if error_sym in symbol_map:
         logger.error(f'Multiple definitions for \'{error_sym}\'.', code=1)
     elif error_sym:
@@ -298,7 +298,9 @@ def command_line_run(args):
         logger.error(f'In {err.filename}:\n\n', exc_info=True, code=1)
     except subprocess.CalledProcessError as err:
         err.__notes__ = None
-        logger.error(f'In {err.filename}:\n\n{err.stderr}',code=err.returncode)
+        code_name, i = getattr(err, EXCEPTION_ATTR, ('', -1))
+        filename = f'$.code.{code_name}[{i}]'
+        logger.error(f'In {filename}:\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
         frames = traceback.extract_tb(err.__traceback__)
         frame = next((frame for frame in frames[::-1] 
