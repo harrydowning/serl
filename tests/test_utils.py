@@ -125,11 +125,6 @@ def test_normalise_grammar():
     expected = norm_grammar
     assert actual == expected
 
-# def test_get_tokens_in_grammar():
-#     actual = utils.get_tokens_in_grammar(token_map, norm_grammar)
-#     expected = ['<', '>', 'foo', 'foos', 'bar']
-#     assert actual == expected
-
 @pytest.mark.parametrize('token_map, norm_grammar, expected', [
     ({'num': 'TERMINAL0'}, {'NT0': ['NT0 + NT0', 'NT0 - NT0', '- NT0', 'TERMINAL0']}, 
      (['num'], {'+': 'ITERMINAL0', '-': 'ITERMINAL1'}, 

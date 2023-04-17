@@ -148,6 +148,8 @@ Typically, a good place to use an error token is before a delimiter.
 
 This can be used to find more errors, rather than stop on the first, or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
 
+The error token is accessable within code like other :term:`terminal variables <terminal variable >`, however it won't contain any capture groups, just the whole error span.
+
 :Example:
 
 In the following grammar snippet, a new production has been added with the error token (:code:`err`) placed before a semi-colon (marking the end of a statement).
@@ -167,6 +169,9 @@ The following would happen if :code:`stmt` contained a syntax error:
 * All :term:`tokens <token>` will be discarded until a semi-colon.
 * The :code:`$.grammar.err-stmt[1]` :term:`production <grammar production>` will be reduced.
 * On execution :code:`$.code.err-stmt[1]` will be run.
+
+.. Note::
+  It is recommended to not use the error token at the end of a :term:`production <grammar production>`.
 
 .. _grammar:
 
