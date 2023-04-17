@@ -15,7 +15,6 @@ import traceback
 
 from serl.lexer import build_lexer
 from serl.parser import build_parser, SerlAST
-import serl.parser
 import serl.utils as utils
 import serl.logger as logger
 from serl.highlight import get_pygments_output, parse_key_value
@@ -224,7 +223,7 @@ def command_line_run(args):
     
     if error_sym in symbol_map:
         logger.error(f'Multiple definitions for \'{error_sym}\'.', code=1)
-    else:
+    elif error_sym:
         symbol_map[error_sym] = 'error'
 
     if len(implicit_map):
