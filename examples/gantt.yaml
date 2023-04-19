@@ -6,203 +6,97 @@ usage: |
     gantt [options] [<src>]
 
   Options:
-    -h --help        Show this screen.
-    -v --version     Show version.
-    -o --ouput=FILE  pecify output file. If no file is specified output is sent 
-                     to stdout.
-    --doc            Create as full document.
-    --pdf            Output as pdf.
+    -h --help          Show this screen.
+    -v --version       Show version.
+    -o --ouput=FILE    Output file [default: stdout].
+    -c, --config=FILE  Path to a YAML config file for Gantt chart
 
 tokens:
+  config: ^(.*?\n)---
   text: (\w[\w ]*)
   -----: ---+
-  ===: ([ ]* =+)
-  width: \[(\d+)\]
+  ===: ([ =]*=)
+  <>: <(.*?)>
 
 grammar:
+  start:
+    - config gantt
+    - gantt
   gantt: | 
     text
     -----
-    heading
+    titles
     rows
     -----
-  heading:
-    - width titles
-    - titles
   titles:
     - titles | text
     - "| text"
   rows:
-    - row
-      rows
+    - rows row
     - row
   row: 
     - text | ===
-    - text | === < >
-    - text | === <text>
+    - text | === <>
 
 code:
-  first: |
-    valid = 5
-    invalid $ sdfa
-    pass
-# main: | # py
-#   from pylatex import Package
-#   from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
-#   from pylatex.utils import NoEscape
+  main: | # py
+    import yaml
+    from pylatex import Package
+    from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
+    from pylatex.utils import NoEscape
 
-#   class GanttChart(Environment):
-#     packages = [Package('pgfgantt')]
-#     content_separator = "\n"
-#   class ResizeBox(ContainerCommand): pass
-#   class GanttTitle(CommandBase): pass
-#   class GanttBar(CommandBase): pass
-#   class GanttMilestone(CommandBase): pass
-  
-#   def get_row(text, bar, milestone=None):
-#     return (text, bar.find('='), len(bar), milestone)
-  
-#   return gantt()
-# gantt: | # py
-#   title_width, titles = titles(),
-#   rows = rows()
-#   max_width = max(rows, key=lambda row: row[2])[2]
-#   start, end = 0, min(len(titles) * title_width, max_width)
+    class GanttChart(Environment):
+      packages = [Package('pgfgantt')]
+      content_separator = "\n"
+    class ResizeBox(ContainerCommand): pass
+    class GanttTitle(CommandBase): pass
+    class GanttBar(CommandBase): pass
+    class GanttMilestone(CommandBase): pass
+    
+    return start()
+  start:
+    - gantt(config=yaml.safe_load(config[1]))
+    - gantt(config={})
+  gantt: | # py
+    title_width = config.get('title_width', 4)
+    options = config.get('options', [])
+    default_options = [
+      'vgrid', 'hgrid', 'x unit = 1cm', 'y unit = 1cm', 
+      'bar/.append style={fill = lightgray}'
+    ]
+    options = map(NoEscape, default_options + options)
+    titles = titles()
 
-#   gantt_options = map(NoEscape, ['vgrid', 'hgrid', 'x unit = 1cm', 'y unit = 1cm', 'bar/.append style={fill = lightgray}'])
-#   gantt = GanttChart(options=gantt_options, arguments=[start, end])
-#   gantt.append(GanttTitle(arguments=[text[1], max_width]))
-#   gantt.append(NoEscape(r'\\'))
+    gantt = GanttChart(options=options, arguments=[start, len(titles)])
+    gantt.append(GanttTitle(arguments=[text[1], len(titles) * title_width]))
+    gantt.append(NoEscape(r'\\'))
 
-#   for title in titles:
-#     gantt.append(GanttTitle(arguments=[title, title_width]))
-#   gantt.append(NoEscape(r'\\'))
+    for title in titles:
+      gantt.append(GanttTitle(arguments=[title, title_width]))
+    gantt.append(NoEscape(r'\\'))
 
-#   for text, start, end, milestone in rows:
-#     gantt.append(GanttBar(arguments=[text, start, end]))
-#     if milestone != None:
-#       gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
-#     gantt.append(NoEscape(r'\\'))
+    rows = rows()
+    for text, (start, end), milestone in rows:
+      gantt.append(GanttBar(arguments=[text, start, end]))
+      if milestone != None:
+        gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
+      gantt.append(NoEscape(r'\\'))
 
-#   # TODO add noindent before
-#   return ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt)
-# heading:
-#   - (width[1], titles())
-#   - (4, titles())
-# titles:
-#   - "[text[1]] + titles()"
-#   - "[text[1]]"
-# rows:
-#   - "[row()] + rows()"
-#   - "[row()]"
-# row:
-#   - get_row(text[1], vars()['==='])
-#   - get_row(text[1], vars()['==='], '')
-#   - get_row(text[0][1], vars()['==='], text[1][1])
-
-environment: harry/venv-gantt
+    return NoEscape(r'\noindent') + ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt).dumps()
+  titles:
+    - titles() + [text[1]]
+    - "[text[1]]"
+  rows:
+    - rows() + [row()]
+    - "[row()]"
+  row:
+    - | # py
+      bar = vars()['==='][1]
+      (text[1], (bar.find('='), bar.rfind('=')), None)
+    - | # py
+      bar = vars()['==='][1]
+      (text[1], (bar.find('='), bar.rfind('=')), vars()['<>'][1])
 
 requirements: | # pip
   PyLaTex==1.4.1
-  networkx==2.8
-
-# code:
-#   setup: | # python
-#     doc = lambda content: r'''
-#     \documentclass{article}
-#     \usepackage[utf8]{inputenc}
-#     \usepackage[margin = 2.5cm]{geometry}
-#     \usepackage{pgfgantt}
-#     \usepackage[figuresleft]{rotating}
-
-#     \begin{document}
-    
-#     %s
-
-#     \end{document}
-#     ''' % content
-
-#     sideways = False
-#     scale = 1
-#     fig_type = ['figure', 'sidewaysfigure']
-
-#     gantt = lambda width, content, fig_label, caption: r'''
-#     \begin{%s}
-#     \noindent\resizebox{\textwidth}{!}{
-#     \begin{ganttchart}[
-#       vgrid, 
-#       hgrid, 
-#       x unit = 1cm, 
-#       y unit chart= 1cm, 
-#       bar/.append style={fill = lightgray}]{1}{%s}
-
-#     %s
-
-#     \end{ganttchart}
-#     }
-#     \label{%s}
-#     \caption{%s}
-#     \end{%s}''' % (fig_type[sideways], width, content, fig_label, caption, fig_type[sideways])
-
-#     gantt_title = lambda title, width: r'\gantttitle{%s}{%s}' % (title, width)
-#     gantt_bar = lambda label, start, end: r'\ganttbar{%s}{%s}{%s}' % (label, start, end)
-#     gantt_milestone = lambda text, pos: r'\ganttmilestone[inline]{%s}{%s}' % (text, pos)
-
-#     content = ''
-  
-#   vertical: | # python
-#     sideways = True
-  
-#   horizontal: | # python
-#     sideways = False
-
-#   scale: | # python
-#     scale = float(captures[1][0])
-
-#   gantt: | # python
-#     _, title, titles, labels, bars, milestones, fig_label, caption = captures
-#     width = len(max(bars, key=len))
-#     width += len(titles) - (width % len(titles))
-#     t_width = width // len(titles)
-
-#     t_width = round(t_width * scale)
-#     width = t_width * len(titles)
-
-#     rows = len(labels)
-#     fig_label = fig_label[0]
-#     caption = caption[0].strip()
-    
-#     _content = gantt_title(title[0].strip(), width) + r'\\' + '\n'
-
-#     for title in titles:
-#       _content += gantt_title(title.strip(), t_width)
-    
-#     _content += r'\\' + '\n'
-
-#     for row in range(rows):
-#       label = labels[row].strip()
-#       start = round(bars[row].find('=') * scale)
-#       end = round(len(bars[row]) * scale)
-#       m = milestones[row]
-
-#       if start != -1:
-#         _content += gantt_bar(label, start + 1, end)
-
-#       if m != '':
-#         _content += gantt_milestone(m[1:].strip(), end)
-      
-#       if row == rows - 1:
-#         _content += '\n'
-#       else:
-#         _content += r'\\' + '\n'
-    
-#     content += gantt(width, _content, fig_label, caption)
-  
-#   default: pass
-  
-#   result: | # python
-#     document = doc(content)
-#     with open(f'{src.split(".")[0]}.tex', 'w') as file:
-#       file.write(document)
-
-
+  PyYaml
