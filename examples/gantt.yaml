@@ -12,10 +12,10 @@ usage: |
     -c, --config=FILE  Path to a YAML config file for Gantt chart
 
 tokens:
-  config: ^(.*?\n)---
-  text: (\w[\w ]*)
+  config: ^([\s\S]*?\n)---
+  text: (\w[\w ]*)(?<=\w)
   -----: ---+
-  ===: ([ =]*=)
+  ===: (?:\[ text \])?([ =]*=)
   <>: <(.*?)>
 
 grammar:
@@ -61,14 +61,14 @@ code:
     title_width = config.get('title_width', 4)
     options = config.get('options', [])
     default_options = [
-      'vgrid', 'hgrid', 'x unit = 1cm', 'y unit = 1cm', 
+      'vgrid', 'hgrid', 'x unit = 1cm', 'y unit chart = 1cm', 
       'bar/.append style={fill = lightgray}'
     ]
     options = map(NoEscape, default_options + options)
     titles = titles()
-
-    gantt = GanttChart(options=options, arguments=[start, len(titles)])
-    gantt.append(GanttTitle(arguments=[text[1], len(titles) * title_width]))
+    full_width = len(titles) * title_width
+    gantt = GanttChart(options=options, arguments=[0, full_width - 1])
+    gantt.append(GanttTitle(arguments=[text[1], full_width]))
     gantt.append(NoEscape(r'\\'))
 
     for title in titles:
@@ -76,10 +76,11 @@ code:
     gantt.append(NoEscape(r'\\'))
 
     rows = rows()
-    for text, (start, end), milestone in rows:
-      gantt.append(GanttBar(arguments=[text, start, end]))
+    for text, shortcut, (start, end), milestone in rows:
+      offset = titles.index(shortcut) * title_width if shortcut in titles else 0
+      gantt.append(GanttBar(arguments=[text, start + offset, end + offset]))
       if milestone != None:
-        gantt.append(GanttMilestone(options='inline', arguments=[milestone, end]))
+        gantt.append(GanttMilestone(options='inline', arguments=[milestone, end + offset]))
       gantt.append(NoEscape(r'\\'))
 
     return NoEscape(r'\noindent') + ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt).dumps()
@@ -91,11 +92,11 @@ code:
     - "[row()]"
   row:
     - | # py
-      bar = vars()['==='][1]
-      (text[1], (bar.find('='), bar.rfind('=')), None)
+      shortcut, bar = vars()['==='][1:]
+      (text[1], shortcut, (bar.find('='), bar.rfind('=')), None)
     - | # py
-      bar = vars()['==='][1]
-      (text[1], (bar.find('='), bar.rfind('=')), vars()['<>'][1])
+      shortcut, bar = vars()['==='][1:]
+      (text[1], shortcut, (bar.find('='), bar.rfind('=')), vars()['<>'][1])
 
 requirements: | # pip
   PyLaTex==1.4.1
