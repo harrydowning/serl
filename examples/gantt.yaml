@@ -92,9 +92,11 @@ code:
     gantt.append(NoEscape(r'\\'))
 
     rows = rows()
+    rows_options = {text: map(NoEscape, options) for text, options in config.get('rows', {}).items()}
     for GanttType, text, shortcut, (start, end), milestone in rows:
       offset = titles.index(shortcut) * title_width if shortcut in titles else 0
-      gantt.append(GanttType(arguments=[text, start + offset, end + offset]))
+      row_options = rows_options.get(text, [])
+      gantt.append(GanttType(options=row_options, arguments=[text, start + offset, end + offset]))
       if milestone != None:
         gantt.append(GanttMilestone(options='inline', arguments=[milestone, end + offset]))
       gantt.append(NoEscape(r'\\'))

@@ -1,0 +1,27 @@
+options:
+  - bar/.append style={fill=green}
+  - bar incomplete/.append style={fill=red}
+  - inline
+
+rows:
+  Objective B:
+    - progress=60
+  Task Four:
+    - progress=50
+  Task Five:
+    - progress=0
+
+title_width: 7
+---
+
+             An Example Gantt Chart
+--------------------------------------------------
+            | Week 1 | Week 2 | Week 3 | Week 4
+Objective A |~~~~~~~
+Task One    |===
+Task Two    |   ====<>
+Objective B |       ~~~~~~~~~~~~~~~~~~~~~
+Task Three  |       =========
+Task Four   | [Week 3]  =======
+Task Five   | [Week 4]=======
+--------------------------------------------------
