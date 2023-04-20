@@ -6,9 +6,9 @@ usage: |
     gantt [options] [<src>]
 
   Options:
-    -h --help          Show this screen.
-    -v --version       Show version.
-    -o --ouput=FILE    Output file [default: stdout].
+    -h, --help         Show this screen.
+    -v, --version      Show version.
+    -o, --output=FILE  Output file.
     -c, --config=FILE  Path to a YAML config file for Gantt chart
 
 tokens:
@@ -53,10 +53,20 @@ code:
     class GanttBar(CommandBase): pass
     class GanttMilestone(CommandBase): pass
     
-    return start()
+    if args['--config']:
+      with open(args['--config']) as f:
+        fconfig = yaml.safe_load(f)
+    else:
+      fconfig = {}
+    
+    code = start()
+    file = args['--output'] or 1
+    with open(file, 'w') as f:
+      f.write(code)
+      
   start:
-    - gantt(config=yaml.safe_load(config[1]))
-    - gantt(config={})
+    - gantt(config=fconfig | yaml.safe_load(config[1]))
+    - gantt(config=fconfig)
   gantt: | # py
     title_width = config.get('title_width', 4)
     options = config.get('options', [])
