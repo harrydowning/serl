@@ -12,9 +12,9 @@ usage: |
     -c, --config=FILE  Path to a YAML config file for Gantt chart
 
 tokens:
-  config: ^([\s\S]*?\n)---
+  config: ^([\s\S]*?\n)---(?!-)
   text: (\w[\w ]*)(?<=\w)
-  -----: ---+
+  ----: ----+
   ===: (?:\[ text \])?([ =]*= | [ ~]*~)
   <>: <(.*?)>
 
@@ -24,10 +24,10 @@ grammar:
     - gantt
   gantt: | 
     text
-    -----
+    ----
     titles
     rows
-    -----
+    ----
   titles:
     - titles | text
     - "| text"
@@ -98,6 +98,7 @@ code:
       if milestone != None:
         gantt.append(GanttMilestone(options='inline', arguments=[milestone, end + offset]))
       gantt.append(NoEscape(r'\\'))
+    gantt.pop()
 
     return NoEscape(r'\noindent') + ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt).dumps()
   titles:
