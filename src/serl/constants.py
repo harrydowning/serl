@@ -108,7 +108,7 @@ CLI_COMMANDS = {
     'help': CLI_HELP
 }
 
-DEFAULT_REF = r'^token(?!$)|(?<= )token'
+DEFAULT_REF = r'^token(?= )|(?<= )token(?= )|(?<= )token$'
 
 PLY_ERR_MSG = {
     # lex 3.11 errorlog messages

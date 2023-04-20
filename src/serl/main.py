@@ -286,7 +286,7 @@ def command_line_run(args):
         'args': language_args,
     }
     execute_func = get_execute_func(serl_ast, code, global_env)
-
+    # TODO sys.setrecursionlimit(20000)
     try:
         if main_code:
             global_env[serl_ast[0]] = execute_func
@@ -297,44 +297,46 @@ def command_line_run(args):
         err.__traceback__ = None
         err.__context__ = None
         err.__notes__ = None
+        err.filename = getattr(err, EXCEPTION_ATTR, '')
         logger.error(f'In {err.filename}:\n\n', exc_info=True, code=1)
     except subprocess.CalledProcessError as err:
         err.__notes__ = None
-        code_name, i = getattr(err, EXCEPTION_ATTR, ('', -1))
-        filename = f'$.code.{code_name}[{i}]'
+        filename = getattr(err, EXCEPTION_ATTR, '')
         logger.error(f'In {filename}:\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
+        filename_re = r'^\$\.code\.(.*?)\[(\d+)\]$'
         frames = traceback.extract_tb(err.__traceback__)
         frame = next((frame for frame in frames[::-1] 
-                      if frame.filename == '<string>'), frames[-1])
+                        if re.match(filename_re, frame.filename)), frames[-1])
+        name, i = re.match(filename_re, frame.filename).groups()
+        i = int(i)
         lineno = frame.lineno
         err.__traceback__ = None
         err.__context__ = None
-        code_name, i = getattr(err, EXCEPTION_ATTR, ('', -1))
-        filename = f'$.code.{code_name}[{i}]'
-        code_lines = code[code_name][i].split('\n')
-        code_line = ':'
-        if frame.filename == '<string>' and lineno - 1 < len(code_lines):
-            code_line = f', line {lineno}:\n\n  {code_lines[lineno - 1]}'
+        code_lines = code[name][i].split('\n')
+        code_line = code_lines[lineno - 1]
         err.__notes__ = None
-        logger.error(f'In {filename}{code_line}\n\n', exc_info=True,code=1)
+        err_msg = f'In {frame.filename}, line {lineno}:\n\n{code_line}\n\n'
+        logger.error(err_msg, exc_info=True, code=1)
 
     if result:
         print(result)
-    
-def exec_and_eval(code, global_env, local_env=None):
+
+def exec_and_eval(name, i, code, global_env, local_env=None):
+    filename = f'$.code.{name}[{i}]'
     code_ast = ast.parse(code)
 
     try:
         last_stmt = code_ast.body.pop()
         expr = ast.Expression(last_stmt.value)
     except AttributeError:
-        return exec(code, global_env, local_env)
+        return exec(compile(ast.parse(code), filename, mode='exec'), 
+                    global_env, local_env)
     except IndexError:
         return None
 
-    exec(compile(code_ast, '<string>', mode='exec'), global_env, local_env)
-    return eval(compile(expr, '<string>', mode='eval'), global_env, local_env)
+    exec(compile(code_ast, filename, mode='exec'), global_env, local_env)
+    return eval(compile(expr, filename, mode='eval'), global_env, local_env)
 
 def run_command(command: str, env: dict):
     command = command.format_map(TraversableFormat(**env))
@@ -348,10 +350,10 @@ def exec_or_error(name, i, code_str, global_env, local_env=None):
             local_env = {'locals()': local_env} | local_env
             return run_command(code_str[1:], global_env | local_env)
         else:
-            return exec_and_eval(code_str, global_env, local_env)
+            return exec_and_eval(name, i, code_str, global_env, local_env)
     except Exception as err:
         if not getattr(err, EXCEPTION_ATTR, None):
-            setattr(err, EXCEPTION_ATTR, (name, i))
+            setattr(err, EXCEPTION_ATTR, f'$.code.{name}[{i}]')
         raise
 
 def get_execute_func(serl_ast: SerlAST, code: dict, global_env: dict):
@@ -481,10 +483,10 @@ def main():
 
     logger.verbose = base_args.get('--verbose', False) or \
         args.get('--verbose', False)
-    # TODO sys.setrecursionlimit(20000)
+    
     try:
         globals()[f'command_line_{base_args["<command>"]}'](args)
     except Exception:
         if not logger.error_seen:
             raise
-        raise # TODO exit(1)
+        exit(1)

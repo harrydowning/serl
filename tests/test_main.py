@@ -40,7 +40,7 @@ def test_exec_and_eval(
     code, global_env, local_env, expected, 
     expected_global_env, expected_local_env
 ):
-    actual = main.exec_and_eval(code, global_env, local_env)
+    actual = main.exec_and_eval('test', 0, code, global_env, local_env)
     assert actual == expected
     global_env.pop('__builtins__', None)
     assert global_env == expected_global_env

@@ -75,7 +75,7 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
     for flag_str in re.split(r'\s+', flags.strip()):
         try:
             flag = getattr(lex.re, flag_str)
-            if isinstance(flag, re.RegexFlag):
+            if isinstance(flag, lex.re.RegexFlag):
                 flag_value |= flag
                 continue
         except AttributeError:

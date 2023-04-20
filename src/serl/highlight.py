@@ -6,10 +6,11 @@ import pygments
 from pygments.style import Style, StyleMeta
 from pygments.util import ClassNotFound
 from pygments.lexer import RegexLexer
-from pygments.token import string_to_tokentype, Text, Comment, Whitespace
+from pygments.token import string_to_tokentype, Token, Comment, Whitespace
 from pygments.formatters import get_formatter_by_name
 from pygments.styles import get_style_by_name
 
+SerlToken = string_to_tokentype('Token.Serl')
 def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
     tokentypes = {t: ttype.title() for t, ttype in tokentypes.items()}
     class PygmentsLexer(RegexLexer):
@@ -21,8 +22,7 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
                  string_to_tokentype(ttype)) 
                 for name_or_pattern, ttype in tokentypes.items()
             ] + [
-                (pattern, Text) for name, pattern in _tokens.items()
-            ] + [
+                ('.', SerlToken),
                 (r'\s', Whitespace), # TODO may not need
                 (ignore, Comment)
             ]
@@ -43,6 +43,7 @@ def get_pygments_style(style: StyleMeta, user_styles: dict[str, str]):
         string_to_tokentype(tokentype.title()): user_style
         for tokentype, user_style in user_styles.items()
     }
+    attrs['styles'][SerlToken] = attrs['styles'][Token]
     # Create class with type(...) to allow dynamic creation of attrs
     PygmentsStyle = type('PygmentsStyle', (Style,), attrs)
     return PygmentsStyle
