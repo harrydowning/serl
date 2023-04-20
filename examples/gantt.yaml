@@ -15,7 +15,7 @@ tokens:
   config: ^([\s\S]*?\n)---
   text: (\w[\w ]*)(?<=\w)
   -----: ---+
-  ===: (?:\[ text \])?([ =]*=)
+  ===: (?:\[ text \])?([ =]*= | [ ~]*~)
   <>: <(.*?)>
 
 grammar:
@@ -50,9 +50,15 @@ code:
       content_separator = "\n"
     class ResizeBox(ContainerCommand): pass
     class GanttTitle(CommandBase): pass
+    class GanttGroup(CommandBase): pass
     class GanttBar(CommandBase): pass
     class GanttMilestone(CommandBase): pass
     
+    def get_bar(text, shortcut, bar, milestone=None):
+      bar_type, GanttType = ('=', GanttBar) if '=' in bar else ('~', GanttGroup)
+      span = (bar.find(bar_type), bar.rfind(bar_type))
+      return (GanttType, text, shortcut, span, milestone)
+
     if args['--config']:
       with open(args['--config']) as f:
         fconfig = yaml.safe_load(f)
@@ -86,9 +92,9 @@ code:
     gantt.append(NoEscape(r'\\'))
 
     rows = rows()
-    for text, shortcut, (start, end), milestone in rows:
+    for GanttType, text, shortcut, (start, end), milestone in rows:
       offset = titles.index(shortcut) * title_width if shortcut in titles else 0
-      gantt.append(GanttBar(arguments=[text, start + offset, end + offset]))
+      gantt.append(GanttType(arguments=[text, start + offset, end + offset]))
       if milestone != None:
         gantt.append(GanttMilestone(options='inline', arguments=[milestone, end + offset]))
       gantt.append(NoEscape(r'\\'))
@@ -101,12 +107,8 @@ code:
     - rows() + [row()]
     - "[row()]"
   row:
-    - | # py
-      shortcut, bar = vars()['==='][1:]
-      (text[1], shortcut, (bar.find('='), bar.rfind('=')), None)
-    - | # py
-      shortcut, bar = vars()['==='][1:]
-      (text[1], shortcut, (bar.find('='), bar.rfind('=')), vars()['<>'][1])
+    - get_bar(text[1], *vars()['==='][1:])
+    - get_bar(text[1], *vars()['==='][1:], vars()['<>'][1])
 
 requirements: | # pip
   PyLaTex==1.4.1
