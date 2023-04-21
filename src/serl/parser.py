@@ -59,6 +59,9 @@ def get_error_msg(p, parser, flipped_symbol_map):
         return f'Parsing error: Reached end of file.{expected_msg}'
 
     tok = get_whole_match(p)
+    if p.type == 'default':
+        return f'Parsing error: default token \'{tok}\' on line {p.lineno}.{expected_msg}'
+    
     tok_type = flipped_symbol_map[p.type]
     if tok == tok_type:
         tok_msg = f'Token \'{tok}\''

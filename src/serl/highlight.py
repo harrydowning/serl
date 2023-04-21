@@ -21,12 +21,11 @@ def get_pygments_lexer(_tokens: dict, ignore: str, tokentypes: dict):
                 (_tokens.get(name_or_pattern, name_or_pattern), 
                  string_to_tokentype(ttype)) 
                 for name_or_pattern, ttype in tokentypes.items()
-            ] + [
-                ('.', SerlToken),
-                (r'\s', Whitespace), # TODO may not need
-                (ignore, Comment)
-            ]
+            ] + [(r'\s', Whitespace)]
         }
+        if ignore:
+            tokens['root'].append((ignore, Comment))
+        tokens['root'].append(('.', SerlToken))
     try:
         return PygmentsLexer()
     except ValueError as err:

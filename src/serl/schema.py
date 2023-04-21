@@ -17,6 +17,9 @@ meta = {
                 },
                 'flags': {
                     'type': 'string'
+                },
+                'default': {
+                    'type': 'boolean'
                 }
             }
         },

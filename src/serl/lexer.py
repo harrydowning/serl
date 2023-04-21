@@ -48,9 +48,9 @@ def get_whole_match(token):
         return token.value[0]
 
 def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
-                using_regex: bool, flags: str):
+                using_regex: bool, flags: str, default: bool):
     g = globals()
-    g['tokens'] = ()
+    g['tokens'] = ('default',) if default else ()
 
     for token, pattern in _tokens.items():
         token_name = token_map[token]
@@ -63,6 +63,9 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
     if ignore != None:
         g['t_ignore_func'] = get_ignore_func(ignore)
     
+    if default:
+        g['t_default'] = '.'
+
     if using_regex:
         if using_cpython:
             lex.re = regex

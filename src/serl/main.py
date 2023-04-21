@@ -158,8 +158,9 @@ def command_line_run(args):
     tokens = config.get('tokens', {})
     ref = meta_tokens.get('ref', DEFAULT_REF)
     using_regex = meta_tokens.get('regex', False)
-    ignore = meta_tokens.get('ignore', '.')
+    ignore = meta_tokens.get('ignore', r'\s')
     flags = meta_tokens.get('flags', 'VERBOSE')
+    default = meta_tokens.get('default', True)
     
     tokens_copy = tokens.copy()
     if ref != None:
@@ -211,7 +212,7 @@ def command_line_run(args):
         user_styles = config.get('styles', {})
         highlight(args, src, tokens, ignore, tokentypes, user_styles)
 
-    lexer = build_lexer(tokens, token_map, ignore, using_regex, flags)
+    lexer = build_lexer(tokens, token_map, ignore, using_regex, flags, default)
     parser = build_parser(
         lang_name, list(token_map.values()), symbol_map, grammar, precedence,
         debug_parser_file
@@ -228,7 +229,10 @@ def command_line_run(args):
         tok = lexer_clone.token()
         if not tok: 
             break
-        tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])
+        if tok.type == 'default':
+            tokens_by_line[tok.lineno - 1].append('default')
+        else:
+            tokens_by_line[tok.lineno - 1].append(flipped_token_map[tok.type])
     
     logger.info(f'Tokens Found:', important=debug_lexer)
     for i, line in enumerate(tokens_by_line):
