@@ -1,0 +1,123 @@
+version: gantt 0.0.1
+usage: |
+  gantt
+  
+  Usage:
+    gantt [options] [<src>]
+
+  Options:
+    -h, --help         Show this screen.
+    -v, --version      Show version.
+    -o, --output=FILE  Output file.
+    -c, --config=FILE  Path to a YAML config file for Gantt chart
+
+tokens:
+  config: ^([\s\S]*?\n)---(?!-)
+  text: (\w[\w ]*)(?<=\w)
+  ----: ----+
+  ===: (?:\[ text \])?([ =]*= | [ ~]*~)
+  <>: <(.*?)>
+
+grammar:
+  start:
+    - config gantt
+    - gantt
+  gantt: | 
+    text
+    ----
+    titles
+    rows
+    ----
+  titles:
+    - titles | text
+    - "| text"
+  rows:
+    - rows row
+    - row
+  row: 
+    - text | ===
+    - text | === <>
+
+code:
+  main: | # py
+    import yaml
+    from pylatex import Package
+    from pylatex.base_classes import Environment, Command, CommandBase, ContainerCommand
+    from pylatex.utils import NoEscape
+
+    class GanttChart(Environment):
+      packages = [Package('pgfgantt')]
+      content_separator = "\n"
+    class ResizeBox(ContainerCommand): pass
+    class GanttTitle(CommandBase): pass
+    class GanttGroup(CommandBase): pass
+    class GanttBar(CommandBase): pass
+    class GanttMilestone(CommandBase): pass
+    
+    def get_bar(text, shortcut, bar, milestone=None):
+      bar_type, GanttType = ('=', GanttBar) if '=' in bar else ('~', GanttGroup)
+      span = (bar.find(bar_type), bar.rfind(bar_type))
+      return (GanttType, text, shortcut, span, milestone)
+
+    if args['--config']:
+      with open(args['--config']) as f:
+        fconfig = yaml.safe_load(f)
+    else:
+      fconfig = {}
+    
+    code = start()
+    file = args['--output'] or 1
+    with open(file, 'w') as f:
+      f.write(code)
+      
+  start:
+    - gantt(config=fconfig | yaml.safe_load(config[1]))
+    - gantt(config=fconfig)
+  gantt: | # py
+    title_width = config.get('title_width', 4)
+    options = config.get('options', [])
+    default_options = [
+      'vgrid', 'hgrid', 'x unit = 1cm', 'y unit chart = 1cm', 
+      'bar/.append style={fill = lightgray}'
+    ]
+    options = map(NoEscape, default_options + options)
+    titles = titles()
+    full_width = len(titles) * title_width
+    gantt = GanttChart(options=options, arguments=[0, full_width - 1])
+    gantt.append(GanttTitle(arguments=[text[1], full_width]))
+    gantt.append(NoEscape(r'\\'))
+
+    for title in titles:
+      gantt.append(GanttTitle(arguments=[title, title_width]))
+    gantt.append(NoEscape(r'\\'))
+
+    rows = rows()
+    rows_options = {text: map(NoEscape, options) for text, options in config.get('rows', {}).items()}
+    for GanttType, text, shortcut, (start, end), milestone in rows:
+      offset = titles.index(shortcut) * title_width if shortcut in titles else 0
+      row_options = rows_options.get(text, [])
+      gantt.append(GanttType(options=row_options, arguments=[text, start + offset, end + offset]))
+      if milestone != None:
+        gantt.append(GanttMilestone(options='inline', arguments=[milestone, end + offset]))
+      gantt.append(NoEscape(r'\\'))
+    gantt.pop()
+
+    return NoEscape(r'\noindent') + ResizeBox(arguments=[Command('textwidth'), '!'], data=gantt).dumps()
+  titles:
+    - titles() + [text[1]]
+    - "[text[1]]"
+  rows:
+    - rows() + [row()]
+    - "[row()]"
+  row:
+    - get_bar(text[1], *vars()['==='][1:])
+    - get_bar(text[1], *vars()['==='][1:], vars()['<>'][1])
+
+requirements: | # pip
+  PyLaTex==1.4.1
+  PyYaml
+
+tokentypes:
+  text: String
+  =+: Name.Constant
+  ~+: Operator

@@ -1,0 +1,35 @@
+tokens:
+  num: \d+
+
+precedence:
+  - left + -
+  - left * /
+  - right exp[4]
+
+grammar:
+  exp:
+    - exp + exp
+    - exp - exp
+    - exp * exp
+    - exp / exp
+    - -exp
+    - (exp)
+    - num
+  
+code:
+  exp:
+    - exp[0]() + exp[1]()
+    - exp[0]() - exp[1]()
+    - exp[0]() * exp[1]()
+    - exp[0]() / exp[1]()
+    - -exp()
+    - exp()
+    - int(num[0])
+
+tokentypes:
+  +: Operator
+  '-': Operator
+  '*': Operator
+  /: Operator
+  num: Number
+  

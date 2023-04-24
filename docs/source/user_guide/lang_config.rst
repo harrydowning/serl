@@ -137,6 +137,8 @@ For example, this could be used to give higher precedence to unary minus.
     - right exp[4]
 
 
+.. _error:
+
 :code:`error`
 -------------
 :Type: ``string``
@@ -335,7 +337,7 @@ If you don't wan't to return anything you can explicitly make the final statemen
 .. Note::
   * Only the value of the final statement is used, and so if this is an assignment (e.g., :code:`a = 5`) then the variable :code:`a` would never be created, but :code:`5` would be returned.
   * If the final statement doesn't have a value (e.g., a function definition) then :code:`None` will be returned.
-  * The :code:`return` keyword can only be used in the final statement, but is not strictly necessary.
+  * The :code:`return` keyword can only be used within functions or the final statement, but is not necessary for the latter.
 
 :Example:
 
@@ -588,10 +590,10 @@ Setting this property to :code:`True` allows for the use of the more feature ric
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 :Type: ``string``
 :Required: ``False``
-:Default: ``.``
+:Default: ``\s``
 
 A regex specifying characters to be ignored by the :term:`lexer`.
-This will have the lowest precedence in the :term:`lexer` and so the default value can be interpreted as any character not matched in a token by the patterns in the :ref:`tokens` object.
+This will have the lowest precedence in the :term:`lexer`.
 
 .. Note::
   The regex flags used for this property will be the same as those used in the :ref:`tokens` object.
@@ -603,7 +605,7 @@ This will have the lowest precedence in the :term:`lexer` and so the default val
 
   meta:
     tokens:
-      ignore: \s
+      ignore: \s | \#.*
 
 .. _meta-tokens-flags:
 
@@ -623,6 +625,24 @@ Valid flags include any defined in the `re <https://docs.python.org/3/library/re
   meta:
     tokens:
       flags: VERBOSE MULTILINE I
+
+:code:`meta.tokens.default`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+:Type: ``boolean``
+:Required: ``False``
+:Default: ``True``
+
+If set to :code:`True`, the :term:`lexer` won't produce invalid character errors.
+Instead, characters that would normally be invalid are now matched as a *default tokens*.
+This means they can be matched by the :ref:`error` token.
+
+:Example:
+
+.. code-block:: yaml
+
+  meta:
+    tokens:
+      default: False
 
 :code:`meta.grammar`
 ~~~~~~~~~~~~~~~~~~~~

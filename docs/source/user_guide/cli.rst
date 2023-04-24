@@ -225,6 +225,7 @@ Each of which has there own options that can be specified with :code:`-O` or :co
 
 .. Tip::
   Some particularly useful format options are :code:`style`, :code:`full`, and :code:`linenos`.
+  Also see :code:`noclasses` for HTML snippets.
 
 These format options can be specified as comma-separated list of :code:`key=value` pairs.
 The :code:`value` will be interpreted as a Python expression, however if that fails, it will fall back to a string.
