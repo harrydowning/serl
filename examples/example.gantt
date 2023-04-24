@@ -1,6 +1,14 @@
 options:
-  - bar/.append style={fill=green}
-  - bar incomplete/.append style={fill=red}
+  - canvas/.style={fill=yellow!25, draw=blue, dashed, very thick}
+  - today = 8
+  - title/.style={fill=olive, draw=none}
+  - title label font=\color{white}\bfseries
+  - title left shift=.1
+  - title right shift=-.1
+  - title top shift=.05
+  - title height=.75
+  - bar/.append style={fill=green!50}
+  - bar incomplete/.append style={fill=red!30}
   - inline
 
 rows:

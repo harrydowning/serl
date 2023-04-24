@@ -1,0 +1,17 @@
+rows:
+  Objective A:
+    - inline
+  Objective B:
+    - inline
+---
+                  Project Schedule
+-------------------------------------------------
+            |Oct|Nov|Dec|Jan|Feb|Mar|Apr
+Objective A |~~~~~~~~~~
+Task One    |======
+Task Two    |    ======<>
+Objective B |             ~~~~~~~~~~~~~
+Task Three  |             ===
+Task Four   |                =========
+Task Five   |                      ====<Finished>
+---------------------------------------------------

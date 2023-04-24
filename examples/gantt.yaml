@@ -56,7 +56,7 @@ code:
     
     def get_bar(text, shortcut, bar, milestone=None):
       bar_type, GanttType = ('=', GanttBar) if '=' in bar else ('~', GanttGroup)
-      span = (bar.find(bar_type), bar.rfind(bar_type))
+      span = (bar.find(bar_type) + 1, bar.rfind(bar_type) + 1)
       return (GanttType, text, shortcut, span, milestone)
 
     if args['--config']:
@@ -83,7 +83,7 @@ code:
     options = map(NoEscape, default_options + options)
     titles = titles()
     full_width = len(titles) * title_width
-    gantt = GanttChart(options=options, arguments=[0, full_width - 1])
+    gantt = GanttChart(options=options, arguments=[1, full_width])
     gantt.append(GanttTitle(arguments=[text[1], full_width]))
     gantt.append(NoEscape(r'\\'))
 
@@ -116,3 +116,8 @@ code:
 requirements: | # pip
   PyLaTex==1.4.1
   PyYaml
+
+tokentypes:
+  text: String
+  =+: Name.Constant
+  ~+: Operator

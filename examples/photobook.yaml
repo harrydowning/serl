@@ -1,0 +1,40 @@
+tokens:
+  config: ^([\s\S]*?\n)---
+  <image>: <(.*?)>
+  lcaption: (.*?)
+
+error: err
+grammar:
+  book:
+    - config pages
+    - pages
+  pages:
+    - pages page
+    - page
+  page:
+    - |
+      [
+        err
+      ]
+    - |
+      [
+        err
+        <image>
+        err
+      ]
+    - |
+      [
+        caption
+        <image>
+      ]
+    - |
+      [
+        <image>
+        caption
+      ]
+  caption:
+    - < text <
+
+code:
+  main: $ pdflatex {book}
+  book: none # return file of generated latex
