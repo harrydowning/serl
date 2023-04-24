@@ -290,7 +290,7 @@ def command_line_run(args):
         'args': language_args,
     }
     execute_func = get_execute_func(serl_ast, code, global_env)
-    # TODO sys.setrecursionlimit(20000)
+    sys.setrecursionlimit(10000)
     try:
         if main_code:
             global_env[serl_ast[0]] = execute_func
