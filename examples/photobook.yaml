@@ -1,7 +1,20 @@
+version: photobook 0.0.1
+usage: |
+  photobook
+  
+  Usage:
+    photobook [options] [<src>]
+
+  Options:
+    -h, --help         Show this screen.
+    -v, --version      Show version.
+    -c, --config=FILE  Path to a YAML config file for photobook
+
 tokens:
   config: ^([\s\S]*?\n)---
-  <image>: <(.*?)>
-  lcaption: (.*?)
+  <image>: (T|B|L|R)?<(.*?)>
+  caption: (?<=>)[\s\S]+?(?=\])
+  scale: ([0-9]*\.)?[0-9]+
 
 error: err
 grammar:
@@ -12,29 +25,75 @@ grammar:
     - pages page
     - page
   page:
-    - |
-      [
-        err
-      ]
-    - |
-      [
-        err
-        <image>
-        err
-      ]
-    - |
-      [
-        caption
-        <image>
-      ]
-    - |
-      [
-        <image>
-        caption
-      ]
-  caption:
-    - < text <
+    - '[ err ]'
+    - '[ err <image> err ]'
+    - '[ options <image> caption ]'
+    - '[ <image> caption ]'
+    - '[ options <image> ]'
+    - '[ <image> ]'
+  options:
+    - options option
+    - option
+  option:
+    - ^
+    - ^^
+    - '|'
+    - scale
 
 code:
-  main: $ pdflatex {book}
-  book: none # return file of generated latex
+  main:
+    - | # py
+      import yaml, os
+      from pylatex import Document, NoEscape
+      from pylatex.base_classes import Command
+
+      if args['--config']:
+        with open(args['--config']) as f:
+          fconfig = yaml.safe_load(f)
+      else:
+        fconfig = {}
+
+      options = map(NoEscape, ['layoutmode=block','blockwidth=96mm',
+        'blockheight=108mm','bleed=0mm','bindingoffset=0mm',
+        'imageblockwidth=0.98','imageblockheight=0.98',] + fconfig.get('options', []))
+      doc = Document(documentclass='photobook', document_options=options)
+
+      def get_command(caption, image, ptype='ImagePage', bleed='',scale=1):
+        options = [f'scale={scale}']
+        arguments = map(NoEscape, [caption, image[2]])
+        bleed = 'Clear' if ptype =='ImagePage' and bleed == '' else bleed
+        name = ptype + bleed + (image[1] or '')
+        return Command(name, options=options, arguments=arguments)
+
+      book()
+
+      latex_file = os.path.splitext(args['<src>'])[0] + '.tex'
+      with open(latex_file, 'w') as file:
+        doc.dump(file)
+      pass
+    # - $ pdflatex -interaction=nonstopmode --quiet {latex_file}
+  book:
+    - pages(config=fconfig | yaml.safe_load(config[1]))
+    - pages(config=fconfig)
+  pages:
+    - pages(config=config); page(config=config)
+    - page(config=config)
+  page:
+    - doc.append( get_command(err[0], '') )
+    - doc.append( get_command(err[1][0], vars()['<image>']) )
+    - doc.append( get_command(caption[0], vars()['<image>'], **options()) )
+    - doc.append( get_command(caption[0], vars()['<image>']) )
+    - doc.append( get_command('', vars()['<image>'], **options()) )
+    - doc.append( get_command('', vars()['<image>']) )
+  options:
+    - options() | option()
+    - option()
+  option:
+    - '{"bleed": "Fit"}'
+    - '{"bleed": "Fill"}'
+    - '{"ptype": "ImageSpread"}'
+    - '{"scale": scale[0]}'
+  
+requirements: | # pip
+  PyLaTex==1.4.1
+  PyYaml
