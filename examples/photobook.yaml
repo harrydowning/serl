@@ -1,4 +1,4 @@
-version: photobook 0.2.3
+version: photobook 0.3.0
 usage: |
   photobook
   
@@ -27,11 +27,11 @@ grammar:
     - page
   page:
     - '[ err ]'
-    - '[ err <image> err ]'
-    - '[ options <image> caption ]'
-    - '[ <image> caption ]'
-    - '[ options <image> ]'
-    - '[ <image> ]'
+    - '[ err image err ]'
+    - '[ options image caption ]'
+    - '[ image caption ]'
+    - '[ options image ]'
+    - '[ image ]'
     - '[ ]'
   options:
     - options option
@@ -41,6 +41,7 @@ grammar:
     - ^^
     - '|'
     - scale
+  image: <image>
 
 code:
   main:
@@ -67,8 +68,7 @@ code:
 
       def get_command(caption, image, ptype='ImagePage', bleed='',scale=1):
         options = [f'scale={scale}']
-        filename = fconfig.get('dir', '') + image[2]
-        arguments = map(NoEscape, [caption, filename])
+        arguments = map(NoEscape, [caption, image[2]])
         bleed = 'Clear' if ptype =='ImagePage' and bleed == '' else bleed
         pos = '' if bleed == 'Fill' else (image[1] or '')
         name = ptype + bleed + pos
@@ -96,11 +96,11 @@ code:
     - page()
   page:
     - doc.append( get_command(err[0], ('', '', '')) )
-    - doc.append( get_command(err[1][0], vars()['<image>']) )
-    - doc.append( get_command(caption[0], vars()['<image>'], **options()) )
-    - doc.append( get_command(caption[0], vars()['<image>']) )
-    - doc.append( get_command('', vars()['<image>'], **options()) )
-    - doc.append( get_command('', vars()['<image>']) )
+    - doc.append( get_command(err[1][0], image()) )
+    - doc.append( get_command(caption[0], image(), **options()) )
+    - doc.append( get_command(caption[0], image()) )
+    - doc.append( get_command('', image(), **options()) )
+    - doc.append( get_command('', image()) )
     - doc.append( Command('emptypage') )
   options:
     - options() | option()
@@ -110,15 +110,18 @@ code:
     - '{"bleed": "Fill"}'
     - '{"ptype": "ImageSpread"}'
     - '{"scale": scale[0]}'
-# image: $ {fconfig[script]} {<image>[2]} {outdir}{os.sep}{fconfig[prefix]}{<image>[2]} && echo {<image>[2]}
-# image: | # py
-#   import subprocess
-#   image = vars()['<image>']
-#   script = fconfig.get('script', None)
-#   outfile = outdir + os.sep + fconfig.get('prefix', '') + image[2]
-#   if script:
-#     subprocess.run(f'{script} {image[2]} {outfile}', shell=True)
-#   image
+  image: | # py
+    import subprocess
+    image = vars()['<image>']
+    script = fconfig.get('script', None)
+    linux_outdir = outdir.replace('\\', '/')
+    outfile = linux_outdir + '/' + fconfig.get('prefix', '') + os.path.basename(image[2])
+    if script:
+      script = script.replace('infile', image[2]) if script.find('infile') != -1 else f'{script} {image[2]}'
+      script = script.replace('outfile', outfile) if script.find('outfile') != -1 else f'{script} {outfile}'
+      subprocess.run(script, shell=True)
+      image = (image[0], image[1], outfile)
+    image
   
 requirements: | # pip
   PyLaTex==1.4.1
