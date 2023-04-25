@@ -1,4 +1,4 @@
-version: photobook 0.0.1
+version: photobook 0.2.0
 usage: |
   photobook
   
@@ -53,14 +53,20 @@ code:
       else:
         fconfig = {}
 
-      options = map(NoEscape, ['layoutmode=block','blockwidth=96mm',
-        'blockheight=108mm','bleed=0mm','bindingoffset=0mm',
-        'imageblockwidth=0.98','imageblockheight=0.98',] + fconfig.get('options', []))
-      doc = Document(documentclass='photobook', document_options=options)
+      def get_doc_options(options=[]):
+        return map(NoEscape, [
+          'layoutmode=block','blockwidth=96mm','blockheight=108mm','bleed=0mm',
+          'bindingoffset=0mm','imageblockwidth=0.98','imageblockheight=0.98',
+        ] + options)
+
+      file_options = fconfig.get('options', [])
+      doc = Document(documentclass='photobook', 
+                     document_options=get_doc_options(file_options))
 
       def get_command(caption, image, ptype='ImagePage', bleed='',scale=1):
         options = [f'scale={scale}']
-        arguments = map(NoEscape, [caption, image[2]])
+        filename = fconfig.get('dir', '') + image[2]
+        arguments = map(NoEscape, [caption, filename])
         bleed = 'Clear' if ptype =='ImagePage' and bleed == '' else bleed
         pos = '' if bleed == 'Fill' else (image[1] or '')
         name = ptype + bleed + pos
@@ -72,13 +78,18 @@ code:
       with open(latex_file, 'w') as file:
         doc.dump(file)
       pass
-    # - $ pdflatex -interaction=nonstopmode --quiet {latex_file}
+    - $ pdflatex -interaction=nonstopmode --quiet {latex_file}
   book:
-    - pages(config=fconfig | yaml.safe_load(config[1]))
-    - pages(config=fconfig)
+    - | # py
+      global doc, fconfig
+      fconfig |= yaml.safe_load(config[1])
+      inline_options = fconfig.get('options', [])
+      doc = Document(documentclass='photobook', document_options=get_doc_options(inline_options))
+      return pages()
+    - pages()
   pages:
-    - pages(config=config); page(config=config)
-    - page(config=config)
+    - pages(); page()
+    - page()
   page:
     - doc.append( get_command(err[0], ('', '', '')) )
     - doc.append( get_command(err[1][0], vars()['<image>']) )
@@ -98,3 +109,7 @@ code:
 requirements: | # pip
   PyLaTex==1.4.1
   PyYaml
+
+meta:
+  tokens:
+    ignore: \s|\#\+[\s\S]*?\+\#
