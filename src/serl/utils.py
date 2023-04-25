@@ -1,6 +1,7 @@
 import re
 import os
 from typing import Callable, Iterable
+import serl.logger as logger
 
 def expand(rule: str, symbol_map: list[tuple[str, str]], 
            symbol_f: Callable[[str], str] = lambda x: x, 
@@ -79,6 +80,9 @@ def get_tokens_in_grammar(token_map: dict[str, str], error: str,
                 elif symbol in nonterms:
                     pass
                 elif symbol == error:
+                    if i == len(rules) - 1:
+                        logger.error(f'Error token \'{symbol}\' appears at the'
+                                     f' end of a production.', code=1)
                     symbol = 'error'
                 else:
                     if not implicit_map.get(symbol, None):
