@@ -10,16 +10,19 @@ implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'
 
 def get_pattern_func(token, pattern, using_regex):
-    def f(t):
+    def f(t):        
+        for m in lex.re.finditer(pattern, t.lexer.lexmatch.string):
+            if t.value != m.group():
+                continue
+            if using_regex and using_cpython:
+                t.value = m.allcaptures()
+                break
+            else:
+                t.value = (m.group(), *m.groups())
+                break
+
         s, e = t.lexer.lexmatch.span()
         string = t.lexer.lexmatch.string[s:e]
-        # Obtain capture groups
-        if using_regex and using_cpython:
-            m = regex.match(pattern, string, regex.VERBOSE)
-            t.value = m.allcaptures()
-        else:
-            m = re.match(pattern, string, re.VERBOSE)
-            t.value = (m.group(), *m.groups())
         t.lexer.lineno += string.count('\n')
         return t
     

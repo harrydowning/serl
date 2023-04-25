@@ -306,8 +306,8 @@ def command_line_run(args):
         if main_code:
             name = main_code[0]
             global_env[serl_ast[0]] = execute_func
-            for i, code in enumerate(main_code[1]):
-                result = exec_or_error(name, i, code, global_env)
+            for i, m_code in enumerate(main_code[1]):
+                result = exec_or_error(name, i, m_code, global_env)
                 if result:
                     print(result)
         else:
