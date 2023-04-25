@@ -1,7 +1,7 @@
 # Serialized Language (serl)
 Serl is a command line tool used to manage and execute programming languages serialized with YAML.
 
-Documentation can be found on [Read The Docs](https://serl.readthedocs.io/en/latest/user_guide/getting_started.html).
+Documentation can be found on [Read The Docs](https://serl.readthedocs.io/en/latest/index.html).
 
 ### Development Workflow
 | Command | Description |

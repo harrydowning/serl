@@ -62,7 +62,8 @@ code:
         options = [f'scale={scale}']
         arguments = map(NoEscape, [caption, image[2]])
         bleed = 'Clear' if ptype =='ImagePage' and bleed == '' else bleed
-        name = ptype + bleed + (image[1] or '')
+        pos = '' if bleed == 'Fill' else (image[1] or '')
+        name = ptype + bleed + pos
         return Command(name, options=options, arguments=arguments)
 
       book()
@@ -79,7 +80,7 @@ code:
     - pages(config=config); page(config=config)
     - page(config=config)
   page:
-    - doc.append( get_command(err[0], '') )
+    - doc.append( get_command(err[0], ('', '', '')) )
     - doc.append( get_command(err[1][0], vars()['<image>']) )
     - doc.append( get_command(caption[0], vars()['<image>'], **options()) )
     - doc.append( get_command(caption[0], vars()['<image>']) )
