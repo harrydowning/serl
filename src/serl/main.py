@@ -166,8 +166,8 @@ def command_line_run(args):
     if ref != None:
         # if 'token' not used assume given string is prefix of token repl.
         ref += '' if 'token' in ref else 'token'
-        logger.info(f'Performing token expansion with \'ref\' pattern '
-                    f'\'{ref}\' (default: \'{DEFAULT_REF}\')')
+        logger.info(f'Performing token expansion with $.meta.tokens.ref '
+                    f'pattern \'{ref}\'')
         tokens = token_expansion(tokens, ref.split('token'))
     
     for token in tokens_copy:
@@ -191,6 +191,14 @@ def command_line_run(args):
     
     symbol_map = token_map | grammar_map
     grammar = utils.normalise_grammar(symbol_map, grammar)
+    
+    flipped_grammar_map = utils.flip_dict(grammar_map)
+    for nt, rules in grammar.items():
+        for i, rule in enumerate(rules):
+            if rule.strip() == '':
+                name = flipped_grammar_map[nt]
+                msg = f'Empty production in $.grammar.{name}[{i}] not allowed'
+                logger.error(msg, code=1)
 
     tokens_used, implicit_map = utils.get_tokens_in_grammar(token_map, 
                                                             error_sym, grammar)
