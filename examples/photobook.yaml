@@ -1,4 +1,4 @@
-version: photobook 0.2.0
+version: photobook 0.2.3
 usage: |
   photobook
   
@@ -9,6 +9,7 @@ usage: |
     -h, --help         Show this screen.
     -v, --version      Show version.
     -c, --config=FILE  Path to a YAML config file for photobook
+    --outdir=DIR       Output directory
 
 tokens:
   config: ^([\s\S]*?\n)---
@@ -31,6 +32,7 @@ grammar:
     - '[ <image> caption ]'
     - '[ options <image> ]'
     - '[ <image> ]'
+    - '[ ]'
   options:
     - options option
     - option
@@ -72,13 +74,15 @@ code:
         name = ptype + bleed + pos
         return Command(name, options=options, arguments=arguments)
 
+      outdir = os.path.join(os.getcwd(), args['--outdir'] or '')
       book()
 
       latex_file = os.path.splitext(args['<src>'])[0] + '.tex'
-      with open(latex_file, 'w') as file:
+      latex_path = os.path.join(outdir, latex_file)
+      with open(latex_path, 'w') as file:
         doc.dump(file)
       pass
-    - $ pdflatex -interaction=nonstopmode --quiet {latex_file}
+    - $ pdflatex -interaction=nonstopmode --quiet --output-directory={outdir} {latex_path}
   book:
     - | # py
       global doc, fconfig
@@ -97,6 +101,7 @@ code:
     - doc.append( get_command(caption[0], vars()['<image>']) )
     - doc.append( get_command('', vars()['<image>'], **options()) )
     - doc.append( get_command('', vars()['<image>']) )
+    - doc.append( Command('emptypage') )
   options:
     - options() | option()
     - option()
@@ -105,6 +110,15 @@ code:
     - '{"bleed": "Fill"}'
     - '{"ptype": "ImageSpread"}'
     - '{"scale": scale[0]}'
+# image: $ {fconfig[script]} {<image>[2]} {outdir}{os.sep}{fconfig[prefix]}{<image>[2]} && echo {<image>[2]}
+# image: | # py
+#   import subprocess
+#   image = vars()['<image>']
+#   script = fconfig.get('script', None)
+#   outfile = outdir + os.sep + fconfig.get('prefix', '') + image[2]
+#   if script:
+#     subprocess.run(f'{script} {image[2]} {outfile}', shell=True)
+#   image
   
 requirements: | # pip
   PyLaTex==1.4.1
