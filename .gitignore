@@ -7,5 +7,6 @@ dist/
 dist/
 
 working/
+project/
 notes.txt
 *.exe

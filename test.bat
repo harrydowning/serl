@@ -1,3 +1,3 @@
 pip install .
-pytest -s -v --cov --cov-report term tests
+pytest -v --cov --cov-report term tests
 del .coverage
