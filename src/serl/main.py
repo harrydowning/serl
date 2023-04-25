@@ -247,13 +247,16 @@ def command_line_run(args):
     code = utils.normalise_dict(config['code'])
     main_code = utils.get_main_code(code, grammar_map)
     
-    for code_name, code_list in code.items():
-        internal_name = grammar_map.get(code_name, None)
-        if not internal_name: continue
-        for i in range(len(grammar[internal_name])):
-            value = code_list[i] if len(code_list) > i else None
-            if value == None:
-                logger.warning(f'Code missing for $.code.{code_name}[{i}]')
+    flipped_grammar_map = utils.flip_dict(grammar_map)
+    for nt, rules in grammar.items():
+        name = flipped_grammar_map.get(nt, None)
+        code_list = code.get(name, None)
+        if code_list != None:
+            for i in range(len(rules)):
+                if len(code_list) <= i or not code_list[i]:
+                    logger.warning(f'Code missing for $.code.{name}[{i}]')
+            continue
+        logger.warning(f'Code missing for $.code.{name}')
     
     # #################################################################
 
@@ -293,10 +296,16 @@ def command_line_run(args):
     sys.setrecursionlimit(10000)
     try:
         if main_code:
+            name = main_code[0]
             global_env[serl_ast[0]] = execute_func
-            result = exec_or_error(main_code[0], 0, main_code[1], global_env)
+            for i, code in enumerate(main_code[1]):
+                result = exec_or_error(name, i, code, global_env)
+                if result:
+                    print(result)
         else:
             result = execute_func()
+            if result:
+                print(result)
     except SyntaxError as err:
         err.__traceback__ = None
         err.__context__ = None
@@ -306,7 +315,7 @@ def command_line_run(args):
     except subprocess.CalledProcessError as err:
         err.__notes__ = None
         filename = getattr(err, EXCEPTION_ATTR, '')
-        logger.error(f'In {filename}:\n\n{err.stderr}',code=err.returncode)
+        logger.error(f'In {filename}:\n\n{err.cmd}\n\n{err.stderr}',code=err.returncode)
     except Exception as err:
         filename_re = r'^\$\.code\.(.*?)\[(\d+)\]$'
         frames = traceback.extract_tb(err.__traceback__)
@@ -322,9 +331,7 @@ def command_line_run(args):
         err.__notes__ = None
         err_msg = f'In {frame.filename}, line {lineno}:\n\n{code_line}\n\n'
         logger.error(err_msg, exc_info=True, code=1)
-
-    if result:
-        print(result)
+    # End of run
 
 def exec_and_eval(name, i, code, global_env, local_env=None):
     filename = f'$.code.{name}[{i}]'

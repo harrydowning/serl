@@ -169,7 +169,7 @@ def test_get_valid_identifier(string, expected):
     assert actual == expected
 
 @pytest.mark.parametrize('code, expected', [
-    ({'init': ['c1', 'c2'], 'MAIN': ['c3'], 'OTHER': ['c4']}, ('init', 'c1')),
+    ({'init': ['c1', 'c2'], 'MAIN': ['c3'], 'OTHER': ['c4']}, ('init', ['c1', 'c2'])),
     ({'MAIN': ['c2'], 'OTHER': ['c3']}, None),
     ({'MAIN': ['c1'], 'init': ['c2'], 'OTHER': ['c3']}, None)
 ])
