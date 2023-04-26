@@ -1,0 +1,28 @@
+script: bash crystallize.sh -n 500 -s 3
+---
+
+[^
+  T<images/img2.jpg>
+  {\large Example Photobook}
+]
+
+[ 0.95
+  L<images/img1.jpg>
+  Janice!
+]
+
+[ 0.9
+  R<images/img5.jpg>
+  A Honey Bee
+]
+
+
+[^ |
+  L<images/img4.jpg>
+  The Eden Project
+]
+
+[^
+  R<images/img3.jpg>
+  End
+]

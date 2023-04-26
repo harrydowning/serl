@@ -68,7 +68,7 @@ code:
 
       def get_command(caption, image, ptype='ImagePage', bleed='',scale=1):
         options = [f'scale={scale}']
-        arguments = map(NoEscape, [caption, image[2]])
+        arguments = map(NoEscape, [caption.strip(), image[2]])
         bleed = 'Clear' if ptype =='ImagePage' and bleed == '' else bleed
         pos = '' if bleed == 'Fill' else (image[1] or '')
         name = ptype + bleed + pos
@@ -76,6 +76,7 @@ code:
 
       outdir = os.path.join(os.getcwd(), args['--outdir'] or '')
       book()
+      doc.preamble.append(Command('pagestyle', arguments='empty'))
 
       latex_file = os.path.splitext(args['<src>'])[0] + '.tex'
       latex_path = os.path.join(outdir, latex_file)
@@ -86,7 +87,8 @@ code:
   book:
     - | # py
       global doc, fconfig
-      fconfig |= yaml.safe_load(config[1])
+      inline_config = yaml.safe_load(config[1])
+      fconfig |= inline_config or {}
       inline_options = fconfig.get('options', [])
       doc = Document(documentclass='photobook', document_options=get_doc_options(inline_options))
       return pages()
