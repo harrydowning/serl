@@ -4,10 +4,12 @@ import serl.lexer as lexer
 import re, regex
 
 class MockLexToken(object):
-    def __init__(self, span=None, string=None, lineno=None, value=None):
+    def __init__(self, span=(0,0), string=None, lineno=None, value=None):
         self.lexer = SimpleNamespace(
             lexmatch = SimpleNamespace(span=lambda: span, string=string),
-            lineno = lineno
+            lineno = lineno,
+            lexpos = span[0],
+            lexdata = string
         )
         self.value = value
 
@@ -23,7 +25,7 @@ class MockLexToken(object):
 def test_get_pattern_func(token, pattern, using_regex, using_cpython, t, expected):
     lexer.using_cpython = using_cpython
     lexer.lex.re = regex if using_regex and using_cpython else re
-    pattern_func = lexer.get_pattern_func(token, pattern, using_regex)
+    pattern_func = lexer.get_pattern_func(token, pattern, using_regex, re.VERBOSE)
     assert pattern_func.__doc__ == pattern
     assert pattern_func.__name__ == token
     t = pattern_func(t)

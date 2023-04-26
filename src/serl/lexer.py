@@ -9,21 +9,35 @@ import regex
 implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'
 
-def get_pattern_func(token, pattern, using_regex):
-    def f(t):        
-        for m in lex.re.finditer(pattern, t.lexer.lexmatch.string):
-            if t.value != m.group():
+class SerlToken(tuple):
+    def __new__(cls, lineno, pos, captures):
+        return super(SerlToken, cls).__new__(cls, (*captures,))
+    
+    def __init__(self, lineno, pos, *captures):
+        super().__init__()
+        self.lineno = lineno
+        self.pos = pos
+
+def get_pattern_func(token, pattern, using_regex, flag_value):
+    def f(t):  
+        span = t.lexer.lexmatch.span()
+        lineno = t.lexer.lineno
+        pos = (span[0] + 1) - getattr(t.lexer, 'lastlinepos', 0)
+        for m in lex.re.finditer(pattern, t.lexer.lexdata, flag_value):
+            if span != m.span():
                 continue
             if using_regex and using_cpython:
-                t.value = m.allcaptures()
+                t.value = SerlToken(lineno, pos, m.allcaptures())
                 break
             else:
-                t.value = (m.group(), *m.groups())
+                t.value = SerlToken(lineno, pos, (m.group(), *m.groups()))
                 break
 
-        s, e = t.lexer.lexmatch.span()
-        string = t.lexer.lexmatch.string[s:e]
-        t.lexer.lineno += string.count('\n')
+        string = t.lexer.lexdata[span[0]:span[1]]
+        newlines = string.count('\n')
+        if newlines:
+            t.lexer.lineno += newlines
+            t.lexer.lastlinepos = t.lexer.lexpos
         return t
     
     f.__doc__ = pattern
@@ -33,6 +47,7 @@ def get_pattern_func(token, pattern, using_regex):
 def newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+    t.lexer.lastlinepos = t.lexer.lexpos
 
 def t_error(t):
     logger.error(f'Illegal character \'{t.value[0]}\' on line '
@@ -50,25 +65,7 @@ def get_whole_match(token):
     else:
         return token.value[0]
 
-def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
-                using_regex: bool, flags: str, default: bool):
-    g = globals()
-    g['tokens'] = ('default',) if default else ()
-
-    for token, pattern in _tokens.items():
-        token_name = token_map[token]
-
-        g['tokens'] = (*g['tokens'], token_name)
-        g[f't_{token_name}'] = get_pattern_func(token, pattern, using_regex)
-
-    # Lower precedence than user rules
-    g['t_newline'] = newline
-    if ignore != None:
-        g['t_ignore_func'] = get_ignore_func(ignore)
-    
-    if default:
-        g['t_default'] = '.'
-
+def get_flag_value(using_regex, flags):
     if using_regex:
         if using_cpython:
             lex.re = regex
@@ -87,6 +84,29 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
         except AttributeError:
             pass
         logger.warning(f'Can\'t find regex flag \'{flag_str}\'.')
+    return flag_value
+
+def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
+                using_regex: bool, flags: str, default: bool): 
+    flag_value = get_flag_value(using_regex, flags)
+    
+    g = globals()
+    g['tokens'] = ('default',) if default else ()
+
+    for token, pattern in _tokens.items():
+        token_name = token_map[token]
+
+        g['tokens'] = (*g['tokens'], token_name)
+        g[f't_{token_name}'] = get_pattern_func(token, pattern, using_regex, 
+                                                flag_value)
+
+    # Lower precedence than user rules
+    g['t_newline'] = newline
+    if ignore != None:
+        g['t_ignore_func'] = get_ignore_func(ignore)
+    
+    if default:
+        g['t_default'] = '.'
     
     errorlog = logger.LoggingWrapper(ply_repl=True)
     return lex.lex(errorlog=errorlog, reflags=flag_value)
