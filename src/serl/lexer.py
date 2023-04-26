@@ -18,20 +18,21 @@ class SerlToken(tuple):
         self.lineno = lineno
         self.col = col
 
-def get_pattern_func(token, pattern, using_regex, flag_value):
-    def f(t):  
-        span = t.lexer.lexmatch.span()
+def get_pattern_func(token, pattern, using_regex, g_span):
+    def f(t):
+        lexmatch = t.lexer.lexmatch
+        span = lexmatch.span()
         lineno = t.lexer.lineno
         col = (span[0] + 1) - getattr(t.lexer, 'lastlinepos', 0)
-        for m in lex.re.finditer(pattern, t.lexer.lexdata, flag_value):
-            if span != m.span():
-                continue
-            if using_regex and using_cpython:
-                t.value = SerlToken(lineno, col, m.allcaptures())
-                break
-            else:
-                t.value = SerlToken(lineno, col, (m.group(), *m.groups()))
-                break
+        
+        g_start, g_end = g_span
+        if using_regex and using_cpython:
+            groups = lexmatch.allcaptures()
+            # Add 1 as allcaptures has 1 whole capture first
+            t.value = SerlToken(lineno, col, groups[g_start + 1: g_end + 1])
+        else:
+            groups = lexmatch.groups()
+            t.value = SerlToken(lineno, col, groups[g_start:g_end])
 
         string = t.lexer.lexdata[span[0]:span[1]]
         newlines = string.count('\n')
@@ -93,12 +94,17 @@ def build_lexer(_tokens: dict[str, str], token_map: dict[str,str], ignore: str,
     g = globals()
     g['tokens'] = ('default',) if default else ()
 
+    g_start = 0
     for token, pattern in _tokens.items():
         token_name = token_map[token]
+        # Add 1 as PLY surrounds each token pattern i.e., an extra group
+        groups = lex.re.compile(pattern).groups + 1
+        g_end = g_start + groups
 
         g['tokens'] = (*g['tokens'], token_name)
-        g[f't_{token_name}'] = get_pattern_func(token, pattern, using_regex, 
-                                                flag_value)
+        g[f't_{token_name}'] = get_pattern_func(token, pattern, using_regex,
+                                                (g_start, g_end))
+        g_start += groups
 
     # Lower precedence than user rules
     g['t_newline'] = newline
