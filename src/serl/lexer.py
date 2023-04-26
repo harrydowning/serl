@@ -10,27 +10,27 @@ implementation = platform.python_implementation()
 using_cpython = implementation == 'CPython'
 
 class SerlToken(tuple):
-    def __new__(cls, lineno, pos, captures):
+    def __new__(cls, lineno, col, captures):
         return super(SerlToken, cls).__new__(cls, (*captures,))
     
-    def __init__(self, lineno, pos, *captures):
+    def __init__(self, lineno, col, *captures):
         super().__init__()
         self.lineno = lineno
-        self.pos = pos
+        self.col = col
 
 def get_pattern_func(token, pattern, using_regex, flag_value):
     def f(t):  
         span = t.lexer.lexmatch.span()
         lineno = t.lexer.lineno
-        pos = (span[0] + 1) - getattr(t.lexer, 'lastlinepos', 0)
+        col = (span[0] + 1) - getattr(t.lexer, 'lastlinepos', 0)
         for m in lex.re.finditer(pattern, t.lexer.lexdata, flag_value):
             if span != m.span():
                 continue
             if using_regex and using_cpython:
-                t.value = SerlToken(lineno, pos, m.allcaptures())
+                t.value = SerlToken(lineno, col, m.allcaptures())
                 break
             else:
-                t.value = SerlToken(lineno, pos, (m.group(), *m.groups()))
+                t.value = SerlToken(lineno, col, (m.group(), *m.groups()))
                 break
 
         string = t.lexer.lexdata[span[0]:span[1]]
