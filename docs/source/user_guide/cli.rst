@@ -213,7 +213,7 @@ Static Syntax Highlighting
 The run command also allows static syntax highlighting to be performed on a language source file.
 Highlighting is performed by `Pygments <https://pygments.org/>`_ and always starts with a default to limit the work of the user.
 
-The :ref:`tokentypes` property can be used to override the default lexer, which tags anything matched by a pattern in :ref:`tokens` as :code:`Token.Text` and anything matched by :ref:`meta-tokens-ignore` as :code:`Token.Comment`.
+The :ref:`tokentypes` property can be used to override the default lexer, which tags everything with the token type :code:`Token`, except for :term:`tokens <token>` matched by  :ref:`meta-tokens-ignore`, which are tagged with :code:`Token.Comment`.
 
 The :ref:`styles` property can be used add style to user defined token types, or to override the style of token types in `Pygments default style <https://pygments.org/styles/#default>`_ or another `Pygments style <https://pygments.org/styles/>`_ specified with the :code:`style` key of :code:`--format-options`.
 

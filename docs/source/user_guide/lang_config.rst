@@ -74,7 +74,7 @@ It can be used in the following ways:
 :code:`tokens`
 --------------
 :Type: ``object``
-:Required: ``True``
+:Required: ``False``
 :Property Type: ``string``
 
 Tokens to be used when constructing the :term:`lexer`.
@@ -150,7 +150,8 @@ Typically, a good place to use an error token is before a delimiter.
 
 This can be used to find more errors, rather than stop on the first, or if :ref:`meta-grammar-permissive` is set to :code:`True` allow execution to continue.
 
-The error token is accessable within code like other :term:`terminal variables <terminal variable >`, however it won't contain any capture groups, just the whole error span.
+The error token is accessible within code like other :term:`terminal variables <terminal variable >`, however it won't contain any capture groups.
+Instead it will be a tuple containing the whole error span as the first element.
 
 :Example:
 
@@ -173,7 +174,7 @@ The following would happen if :code:`stmt` contained a syntax error:
 * On execution :code:`$.code.err-stmt[1]` will be run.
 
 .. Note::
-  It is recommended to not use the error token at the end of a :term:`production <grammar production>`.
+  The error token shouldn't be used at the end of a :term:`grammar production`.
 
 .. _grammar:
 
@@ -295,7 +296,8 @@ The code block :code:`code.tag` (corresponding to :code:`grammar.tag`) would hav
   {
     # Any global variables, or keyword variables passed down through tag(...)
     '<': ('<',),
-    '>': ('>',),
+    '</': ('</',)
+    '>': [('>',), ('>',)],
     'name': [('a:b', 'a', 'b'),('c:d', 'c', 'd')],
     'value': <function execute at 0x000002273B488AE0>
   }
@@ -304,6 +306,8 @@ The code block :code:`code.tag` (corresponding to :code:`grammar.tag`) would hav
   * The :term:`terminal variable <terminal variable >` :code:`name` is returned as a list since the symbol is used multiple times in the :code:`grammar.tag` production.
     Elements of this list correspond to the order they appear in the grammar production.
   * Calling the function :code:`value` will execute the code block :code:`code.value`.
+  * :code:`</` is a single token because it is an implicit token (see :ref:`tokens`).
+    To avoid this a space could be added between the symbols in the grammar, or :code:`<` and :code:`>` could be defined explicitly within the :ref:`tokens` object.
 
 
 
@@ -313,10 +317,13 @@ Main functionality
 If the first property doesn't correspond to a defined grammar non-terminal then it acts as the main functionality and is executed in a global context.
 This allows code to be executed before and after the main :term:`AST` traversal.
 
+.. Note::
+  If the main functionality is defined as a list then each element of the list will be executed separately in order.
+
 If no main functionality is defined then traversal, and thus execution is initiated with the code of the grammar start symbol.
 Otherwise, it is the responsibility of the main function to start traversal, which is done by calling the :term:`non-terminal variable <non-terminal variable >` corresponding to the grammar start symbol.
 
-If the code that initiates execution (either main or start symbol code) returns a value it will be sent to :code:`stdout`.
+Any values returned from a main functionality code-block or the code-block corresponding to the grammar start symbol (if no main functionality defined) will be sent to :code:`stdout`.
 
 .. _python-code:
 
@@ -396,7 +403,7 @@ This is represented as a mapping between token identifiers from the :ref:`tokens
 Arbitrary regex can also be assigned a token type.
 
 .. Important::
-  To take advantage of built-in `Pygments styles <https://pygments.org/styles/>`_ it is recommended to use standard tokens names, see `Pygments built-in tokens <https://pygments.org/docs/tokens/#module-pygments.token>`_.
+  To take advantage of built-in `Pygments styles <https://pygments.org/styles/>`_ it is recommended to use standard token names, see `Pygments built-in tokens <https://pygments.org/docs/tokens/#module-pygments.token>`_.
 
 
 :Example:
@@ -521,7 +528,7 @@ Properties relating to the :ref:`tokens` object.
 ^^^^^^^^^^^^^^^^^^^^^^^
 :Type: ``string``, ``null``
 :Required: ``False``
-:Default: ``^token(?!$)|(?<= )token``
+:Default: ``^token(?= )|(?<= )token(?= )|(?<= )token$``
 
 A regex used to determine how tokens can be referenced in other tokens and consequently expanded (substituted).
 If the value of this property is set to null or equivalently defined but not given a value, :term:`token expansion <token expansion >` will not take place.

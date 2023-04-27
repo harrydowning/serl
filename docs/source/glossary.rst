@@ -10,7 +10,7 @@ Glossary
   Grammar Variables [#tool]_
     Variables created based on the symbols used in a :term:`grammar production`.
     These can be :term:`terminal variables <terminal variable >` or :term:`non-terminal variables <non-terminal variable >`.
-    If the same symbol is used multiple times, then the variable will be a list of occurrences.
+    If the same symbol is used multiple times, then the variable will be a list of the occurrences.
 
   System Configuration [#tool]_
     The directory located at :code:`~/.serl` which is used to store system-wide languages and environments.
@@ -45,10 +45,11 @@ Glossary
   
   Terminal Variable [#tool]_
     A tuple of regex captures for a specific token with the first element being the entire token match.
+    This tuple object also has access to the :code:`lineno` and :code:`col` property which represent the line number and column of the token in source (1-indexed).
 
   Non-terminal Variable [#tool]_
     A function for a specific :term:`non-terminal` that can be used to traverse the :term:`AST`.
-    This function will execute and return a value from the code block whose name corresponds to the same :term:`non-terminal`.
+    This function will execute and return a value from the code block with the same name.
 
 See `Compilers: Principles, Techniques, and Tools <https://www.google.co.uk/books/edition/Compilers/yHTLngEACAAJ>`_ to learn more terminology and methods relating to language compilers.
 

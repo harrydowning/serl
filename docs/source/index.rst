@@ -22,5 +22,6 @@ The format of these language is specified in the :ref:`lang-config` section.
   user_guide/getting_started
   user_guide/lang_config
   user_guide/cli
-  .. user_guide/examples
   user_guide/other
+
+.. user_guide/examples
