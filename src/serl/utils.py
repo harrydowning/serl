@@ -74,13 +74,14 @@ def get_tokens_in_grammar(token_map: dict[str, str], error: str,
     for nt, rules in norm_grammar.items():
         for i, rule in enumerate(rules):
             new_rule = ''
-            for symbol in rule.split(' '):
+            symbols = rule.split(' ')
+            for j, symbol in enumerate(symbols):
                 if symbol in tokens:
                     tokens_used.add(flipped_token_map[symbol])
                 elif symbol in nonterms:
                     pass
                 elif symbol == error:
-                    if i == len(rules) - 1:
+                    if j == len(symbols) - 1:
                         logger.error(f'Error token \'{symbol}\' appears at the'
                                      f' end of a production.', code=1)
                     symbol = 'error'

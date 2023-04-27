@@ -1,5 +1,5 @@
 NAME = __package__
-VERSION = '0.2.0-beta'
+VERSION = '0.2.1-beta'
 
 SYSTEM_CONFIG_DIR = f'.{NAME}'
 SYSTEM_CONFIG_ENV_DIR = 'environments'
