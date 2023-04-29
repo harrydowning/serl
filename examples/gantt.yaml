@@ -118,6 +118,11 @@ requirements: | # pip
   PyYaml
 
 tokentypes:
+  config: Text
   text: String
-  =+: Name.Constant
-  ~+: Operator
+  =+: Bar
+  ~+: Group
+styles:
+  String: '#4f807c'
+  Group: '#c73440'
+  Bar: '#3295a8'

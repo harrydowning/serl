@@ -129,6 +129,13 @@ requirements: | # pip
   PyLaTex==1.4.1
   PyYaml
 
-meta:
-  tokens:
-    ignore: \s|\#\+[\s\S]*?\+\#
+tokentypes:
+  config: Text
+  \[|\]: Page
+  \^{1,2}|\|: Option
+  scale: Number
+  <image>: Image
+styles:
+  Page: 'bold #3832a8'
+  Option: '#c40818'
+  Image: '#44703e'
