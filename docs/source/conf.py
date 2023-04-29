@@ -9,7 +9,7 @@
 project = 'Serl'
 copyright = '2023, Harry Downing'
 author = 'Harry Downing'
-release = '0.2.1-beta'
+release = '0.2.2-beta'
 
 master_doc = 'index'
 
