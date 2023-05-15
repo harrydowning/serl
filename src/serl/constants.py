@@ -22,6 +22,7 @@ Commands:
     install    install language to {SYSTEM_CONFIG_DIR} in home directory.
     uninstall  Uninstall language from {SYSTEM_CONFIG_DIR} in home directory.
     list       list installed languages.
+    show       Display language.
     run        Execute language.
     help       Show help for commands.
 
@@ -60,6 +61,16 @@ Usage:
 List Options:
     --venv  List installed virtual environments.
 
+{OPTIONS}"""
+
+CLI_SHOW = f"""{NAME} show
+
+Usage:
+    show [options] <language>
+
+Show Options:
+    -o, --output=FILE  Write language config to file.
+    
 {OPTIONS}"""
 
 RUN_OPTIONS = f"""Run Options:
@@ -104,6 +115,7 @@ CLI_COMMANDS = {
     'install': CLI_INSTALL,
     'uninstall': CLI_UNINSTALL,
     'list': CLI_LIST,
+    'show': CLI_SHOW,
     'run': CLI_RUN,
     'help': CLI_HELP
 }

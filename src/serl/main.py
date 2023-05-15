@@ -454,6 +454,13 @@ def command_line_list(args):
     else:
         print(*files, sep='\n')
 
+def command_line_show(args):
+    language = args['<language>']
+    config_text = get_config_text(language, get_link_filename())
+    filename = args['--output'] or 1
+    with open(filename, 'w') as file:
+      file.write(config_text)
+
 def get_symlink_args(filename, version) -> dict:
     # Stop initial args acting on the tool and not the language
     if not '--' in sys.argv:
