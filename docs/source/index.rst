@@ -1,12 +1,9 @@
 Overview
 ========
 
-Serl is a command line tool used to manage and execute programming languages serialized with YAML.
-The format of these language is specified in the :ref:`lang-config` section.
-
-..
-  .. Note::
-    At the moment the tool is in an early stage of its development and so its interface may change.
+Serl (serialized languages) is a format and corresponding command line tool for creating and using textual domain specific or markup languages with arbitrary syntax.
+This is achieved through the concept of :ref:`language configurations <lang-config>`, which are YAML files for specifying language syntax and functionality, used by the tool to execute language programs.
+These configurations can then be :ref:`linked <link>`, allowing languages to be used like any other command line tool.
 
 .. toctree::
   :caption: Home

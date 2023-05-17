@@ -1,3 +1,5 @@
+.. _cli:
+
 Command Line Interface
 ======================
 
@@ -27,6 +29,8 @@ The following usage pattern shows the tool's main interface.
       -V, --version  Show version.
       -v, --verbose  Provide more output.
 
+
+.. _link:
 
 link
 ----
